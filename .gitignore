@@ -31,7 +31,6 @@ env/
 
 # FastAPI / uv / pyproject.toml
 *.egg-info/
-uv.lock
 *.pyc
 
 # IDE
