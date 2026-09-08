@@ -1,0 +1,16 @@
+Metadata-Version: 2.4
+Name: airglass-backend
+Version: 0.1.0
+Summary: FastAPI backend airglass
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: fastapi==0.104.1
+Requires-Dist: uvicorn[standard]==0.24.0
+Requires-Dist: sqlalchemy==2.0.40
+Requires-Dist: python-dotenv==1.0.0
+Requires-Dist: asyncpg
+Requires-Dist: pydantic-settings
+Requires-Dist: alembic
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0.0; extra == "dev"
+Requires-Dist: black>=23.0.0; extra == "dev"
