@@ -1,7 +1,8 @@
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import text  # ← добавили для безопасного выполнения SQL
-from app.core.db import get_db, engine, Base
+from backend.app.core.database import get_db, engine
+from backend.app.models.base import Base
 
 # Создаём таблицы (если их нет)
 Base.metadata.create_all(bind=engine)
