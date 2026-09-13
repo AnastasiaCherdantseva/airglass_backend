@@ -24,7 +24,9 @@ from app.models.catalog import (
     ColorGroup,
     CategoryColorGroup,
     MaterialGroup,
-    CategoryMaterialGroup
+    CategoryMaterialGroup,
+    VisualType,
+    ColorVisualType
 
 )
 
@@ -163,6 +165,8 @@ __all__ = [
     "CategoryColorGroup",
     "MaterialGroup",
     "CategoryMaterialGroup",
+    "ColorVisualType",
+    "VisualType",
 
     # Attributes
     "Attribute",

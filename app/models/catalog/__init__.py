@@ -12,6 +12,8 @@ from app.models.catalog.material_group import MaterialGroup
 from app.models.catalog.category_material_group import (
     CategoryMaterialGroup                                  
 )
+from app.models.catalog.visual_type import VisualType            
+from app.models.catalog.color_visual_type import ColorVisualType
 
 __all__ = [
     "Category",
@@ -26,4 +28,6 @@ __all__ = [
     "MaterialGroup",
     "CategoryColorGroup",
     "CategoryMaterialGroup",
+    "VisualType",
+    "ColorVisualType",
 ]

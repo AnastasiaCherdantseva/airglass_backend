@@ -39,3 +39,15 @@ class Color(Base):
     # Связи
     group = relationship("ColorGroup", back_populates="colors")   # ← ДОБАВИТЬ
     variants = relationship("ProductVariant", back_populates="color")
+
+    color_visual_types = relationship(
+        "ColorVisualType",
+        back_populates="color",
+        cascade="all, delete-orphan",
+        order_by="ColorVisualType.sort_order",
+    )
+
+    @property
+    def visual_types(self) -> list[str]:
+        """Список кодов типов визуализации."""
+        return [cvt.visual_type.code for cvt in self.color_visual_types]
