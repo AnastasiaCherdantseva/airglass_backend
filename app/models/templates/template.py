@@ -21,11 +21,16 @@ class Template(Base, TimestampMixin, SoftDeleteMixin):
     description = Column(Text, nullable=True)
     type = Column(Enum(TemplateType), nullable=False, default=TemplateType.STANDARD, server_default=text("'STANDARD'"))
     is_active = Column(
-    Boolean,
-    default=True,
-    nullable=False,
-    server_default=text("true"),
-)
+        Boolean,
+        default=True,
+        nullable=False,
+        server_default=text("true"),
+    )
+    binding_type_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("binding_types.id", ondelete="RESTRICT"),
+        nullable=True,
+    )
     created_by = Column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="SET NULL"),
@@ -51,3 +56,9 @@ class Template(Base, TimestampMixin, SoftDeleteMixin):
         back_populates="template",
         cascade="all, delete-orphan",
     )
+    binding_type = relationship("BindingType", back_populates="templates")
+
+    @property
+    def has_gallery(self) -> bool:
+        """Есть ли у шаблона галерея (по правилам)."""
+        return len(self.media_rules) > 0

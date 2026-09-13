@@ -81,6 +81,7 @@ from app.models.templates import (
     GalleryRule,
     GalleryRuleCondition,
     TemplateGallery,
+    BindingType
 )
 
 # ============================================
@@ -197,6 +198,7 @@ __all__ = [
     "GalleryRule",
     "GalleryRuleCondition",
     "TemplateGallery",
+    "BindingType",
 
     # System
     "User",

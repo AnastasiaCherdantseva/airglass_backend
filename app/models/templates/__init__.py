@@ -5,7 +5,7 @@ from app.models.templates.template_media_rule import TemplateMediaRule
 from app.models.templates.gallery_rule import GalleryRule
 from app.models.templates.gallery_rule_condition import GalleryRuleCondition
 from app.models.templates.template_gallery import TemplateGallery
-
+from app.models.templates.binding_type import BindingType
 __all__ = [
     "Template",
     "TemplateType",
@@ -14,4 +14,5 @@ __all__ = [
     "GalleryRule",
     "GalleryRuleCondition",
     "TemplateGallery",
+    "BindingType",
 ]
