@@ -1,6 +1,6 @@
 import uuid
 import enum
-from sqlalchemy import Column, String, Text, Enum, Boolean, Index,ForeignKey
+from sqlalchemy import Column, String, Text, Enum, Boolean, Index,ForeignKey, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -65,17 +65,27 @@ class Permission(Base, TimestampMixin):
         Index("ix_permission_code", "code"),
     )
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4,server_default=text("gen_random_uuid()"))
     code = Column(String(150), unique=True, nullable=False)  # users.create.all
-    name = Column(String(255), nullable=False)               # Создание пользователей
+    name = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
 
     resource = Column(Enum(PermissionResource), nullable=False)
     action = Column(Enum(PermissionAction), nullable=False)
-    scope = Column(Enum(PermissionScope), nullable=False, default=PermissionScope.ALL)
+    scope = Column(Enum(PermissionScope), nullable=False, default=PermissionScope.ALL, server_default=text("'ALL'"))
 
-    is_active = Column(Boolean, default=True, nullable=False)
-    is_system = Column(Boolean, default=False, nullable=False)  # системное право (нельзя удалить)
+    is_active = Column(
+    Boolean,
+    default=True,
+    nullable=False,
+    server_default=text("true"),
+)
+    is_system = Column(
+    Boolean,
+    default=False,
+    nullable=False,
+    server_default=text("false"),
+)  # системное право (нельзя удалить)
 
     # Связи
     role_permissions = relationship(
@@ -123,7 +133,7 @@ class PermissionCondition(Base):
     """
     __tablename__ = "permission_conditions"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4,server_default=text("gen_random_uuid()"))
     permission_id = Column(
         UUID(as_uuid=True),
         ForeignKey("permissions.id", ondelete="CASCADE"),

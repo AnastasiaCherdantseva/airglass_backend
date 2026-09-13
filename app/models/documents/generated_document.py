@@ -1,13 +1,15 @@
 import uuid
 import enum
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import (
     Column,
     ForeignKey,
     Enum,
     DateTime,
-    Index,
+    Index, 
+    text
+    
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
@@ -42,7 +44,7 @@ class GeneratedDocument(Base):
         Index("ix_generated_document_generated_at", "generated_at"),
     )
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4,server_default=text("gen_random_uuid()"))
 
     # ========================================
     # ССЫЛКИ (RESTRICT — защита истории)
@@ -70,6 +72,7 @@ class GeneratedDocument(Base):
         Enum(DocumentType),
         default=DocumentType.COMMERCIAL_PROPOSAL,
         nullable=False,
+        server_default=text("'COMMERCIAL_PROPOSAL'")
     )
 
     # ========================================
@@ -91,8 +94,9 @@ class GeneratedDocument(Base):
     )
     generated_at = Column(
         DateTime(timezone=True),
-        default=datetime.utcnow,
+        default=lambda: datetime.now(timezone.utc),
         nullable=False,
+        server_default=text("now()")
     )
 
     # ========================================

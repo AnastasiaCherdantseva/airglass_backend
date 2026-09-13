@@ -1,8 +1,8 @@
 import uuid
 import enum
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import (
-    Column, String, Text, Numeric, Integer, ForeignKey, Enum, Index, DateTime
+    Column, String, Text, Numeric, Integer, ForeignKey, Enum, Index, DateTime, text
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
@@ -32,7 +32,7 @@ class QuoteItem(Base):
         Index("ix_quote_item_product_id", "product_id"),
     )
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4,server_default=text("gen_random_uuid()"))
     quote_version_id = Column(
         UUID(as_uuid=True),
         ForeignKey("quote_versions.id", ondelete="CASCADE"),
@@ -48,6 +48,7 @@ class QuoteItem(Base):
         Enum(QuoteItemSourceType),
         default=QuoteItemSourceType.PRODUCT,
         nullable=False,
+        server_default=text("'PRODUCT'")
     )
 
     # ========================================
@@ -91,18 +92,23 @@ class QuoteItem(Base):
     # ========================================
     # ЦЕНЫ И КОЛИЧЕСТВО
     # ========================================
-    quantity = Column(Numeric(14, 4), nullable=False, default=1)
-    purchase_price_snapshot = Column(Numeric(14, 2), nullable=False, default=0)
-    base_sale_price = Column(Numeric(14, 2), nullable=False, default=0)
+    quantity = Column(Numeric(14, 4), nullable=False, default=1, server_default=text("1"))
+    purchase_price_snapshot = Column(Numeric(14, 2), nullable=False, default=0, server_default=text("0"))
+    base_sale_price = Column(Numeric(14, 2), nullable=False, default=0, server_default=text("0"))
     manual_price = Column(Numeric(14, 2), nullable=True)
-    discount_percent = Column(Numeric(5, 2), default=0, nullable=False)
-    markup_percent = Column(Numeric(5, 2), default=0, nullable=False)
-    final_unit_price = Column(Numeric(14, 2), nullable=False, default=0)
-    final_total = Column(Numeric(14, 2), nullable=False, default=0)
+    discount_percent = Column(Numeric(5, 2), default=0, nullable=False, server_default=text("0"))
+    markup_percent = Column(Numeric(5, 2), default=0, nullable=False, server_default=text("0"))
+    final_unit_price = Column(Numeric(14, 2), nullable=False, default=0, server_default=text("0"))
+    final_total = Column(Numeric(14, 2), nullable=False, default=0, server_default=text("0"))
 
-    sort_order = Column(Integer, default=0, nullable=False)
+    sort_order = Column(
+    Integer,
+    default=0,
+    nullable=False,
+    server_default=text("0"),
+)
     comment = Column(Text, nullable=True)
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False,server_default=text("now()"))
 
     # ========================================
     # СВЯЗИ

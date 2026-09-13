@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, Numeric, Boolean, ForeignKey, UniqueConstraint
+from sqlalchemy import Column, String, Numeric, Boolean, ForeignKey, UniqueConstraint, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -13,7 +13,7 @@ class SupplierVariant(Base, TimestampMixin):
         UniqueConstraint("supplier_id", "supplier_sku", name="uq_supplier_sku"),
     )
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4,server_default=text("gen_random_uuid()"))
     supplier_id = Column(
         UUID(as_uuid=True),
         ForeignKey("suppliers.id", ondelete="CASCADE"),
@@ -26,10 +26,10 @@ class SupplierVariant(Base, TimestampMixin):
     )
     supplier_sku = Column(String(100), nullable=False)
     supplier_name = Column(String(255), nullable=True)
-    purchase_price = Column(Numeric(14, 2), nullable=False, default=0)
+    purchase_price = Column(Numeric(14, 2), nullable=False, default=0, server_default=text("0"))
     minimum_quantity = Column(Numeric(14, 4), nullable=True)
-    is_available = Column(Boolean, default=True, nullable=False)
-    is_preferred = Column(Boolean, default=False, nullable=False)
+    is_available = Column(Boolean, default=True, nullable=False, server_default=text("true"))
+    is_preferred = Column(Boolean, default=False, nullable=False, server_default=text("false"))
 
     # Связи
     supplier = relationship("Supplier", back_populates="offers")

@@ -1,6 +1,6 @@
 import uuid
-from datetime import datetime
-from sqlalchemy import Column, ForeignKey, DateTime, Boolean, UniqueConstraint, Index
+from datetime import datetime, timezone
+from sqlalchemy import Column, ForeignKey, DateTime, Boolean, UniqueConstraint, Index, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -22,7 +22,7 @@ class UserPermission(Base):
         Index("ix_user_permission_user_id", "user_id"),
     )
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4,server_default=text("gen_random_uuid()"))
     user_id = Column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -33,8 +33,8 @@ class UserPermission(Base):
         ForeignKey("permissions.id", ondelete="CASCADE"),
         nullable=False,
     )
-    granted = Column(Boolean, default=True, nullable=False)  # True = дать, False = забрать
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    granted = Column(Boolean, default=True, nullable=False, server_default=text("true"))  # True = дать, False = забрать
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False, server_default=text("now()"))
 
     # Связи
     user = relationship("User", back_populates="user_permissions")

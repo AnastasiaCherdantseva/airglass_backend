@@ -1,6 +1,6 @@
 import uuid
 import enum
-from sqlalchemy import Column, String, Text, Boolean, ForeignKey, Enum
+from sqlalchemy import Column, String, Text, Boolean, ForeignKey, Enum, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -17,7 +17,7 @@ class ProductStatus(str, enum.Enum):
 class Product(Base, TimestampMixin, SoftDeleteMixin):
     __tablename__ = "products"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4,server_default=text("gen_random_uuid()"))
     category_id = Column(
         UUID(as_uuid=True),
         ForeignKey("categories.id", ondelete="RESTRICT"),
@@ -31,11 +31,17 @@ class Product(Base, TimestampMixin, SoftDeleteMixin):
         ForeignKey("units.id", ondelete="RESTRICT"),
         nullable=False,
     )
-    is_active = Column(Boolean, default=True, nullable=False)
+    is_active = Column(
+    Boolean,
+    default=True,
+    nullable=False,
+    server_default=text("true"),
+)
     status = Column(
         Enum(ProductStatus),
         default=ProductStatus.ACTIVE,
         nullable=False,
+        server_default=text("'ACTIVE'")
     )
 
     # Связи

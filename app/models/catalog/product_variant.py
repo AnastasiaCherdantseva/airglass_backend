@@ -1,7 +1,7 @@
 import uuid
 import enum
 from sqlalchemy import (
-    Column, String, Boolean, ForeignKey, UniqueConstraint, Enum, Index
+    Column, String, Boolean, ForeignKey, UniqueConstraint, Enum, Index, text
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
@@ -31,7 +31,7 @@ class ProductVariant(Base, TimestampMixin, SoftDeleteMixin):
         Index("ix_variant_status", "status"),
     )
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4,server_default=text("gen_random_uuid()"))
     product_id = Column(
         UUID(as_uuid=True),
         ForeignKey("products.id", ondelete="RESTRICT"),
@@ -49,11 +49,17 @@ class ProductVariant(Base, TimestampMixin, SoftDeleteMixin):
     )
     internal_sku = Column(String(100), unique=True, nullable=True)
     name_override = Column(String(255), nullable=True)
-    is_active = Column(Boolean, default=True, nullable=False)
+    is_active = Column(
+    Boolean,
+    default=True,
+    nullable=False,
+    server_default=text("true"),
+)
     status = Column(
         Enum(ProductVariantStatus),
         default=ProductVariantStatus.ACTIVE,
         nullable=False,
+        server_default=text("'ACTIVE'")
     )
 
     # Связи

@@ -1,6 +1,6 @@
 import uuid
-from datetime import datetime
-from sqlalchemy import Column, ForeignKey, DateTime, UniqueConstraint, Index
+from datetime import datetime, timezone
+from sqlalchemy import Column, ForeignKey, DateTime, UniqueConstraint, Index, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -19,7 +19,7 @@ class RolePermission(Base):
         Index("ix_role_permission_permission_id", "permission_id"),
     )
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4,server_default=text("gen_random_uuid()"))
     role_id = Column(
         UUID(as_uuid=True),
         ForeignKey("roles.id", ondelete="CASCADE"),
@@ -30,7 +30,7 @@ class RolePermission(Base):
         ForeignKey("permissions.id", ondelete="CASCADE"),
         nullable=False,
     )
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False, server_default=text("now()"))
 
     # Связи
     role = relationship("Role", back_populates="role_permissions")

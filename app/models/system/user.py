@@ -1,20 +1,25 @@
 import uuid
-from sqlalchemy import Column, String, Boolean
+from sqlalchemy import Column, String, Boolean, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
 from app.models.base import Base
-from app.models.mixins import TimestampMixin
+from app.models.mixins import TimestampMixin, SoftDeleteMixin
 
 
-class User(Base, TimestampMixin):
+class User(Base, TimestampMixin, SoftDeleteMixin):
     __tablename__ = "users"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4,server_default=text("gen_random_uuid()"))
     name = Column(String(255), nullable=False)
     email = Column(String(255), unique=True, nullable=False, index=True)
     password_hash = Column(String(255), nullable=False)
-    is_active = Column(Boolean, default=True, nullable=False)
+    is_active = Column(
+    Boolean,
+    default=True,
+    nullable=False,
+    server_default=text("true"),
+)
 
     # Связи
     user_roles = relationship(
@@ -27,6 +32,12 @@ class User(Base, TimestampMixin):
         back_populates="user",
         cascade="all, delete-orphan",
     )
+    user_media = relationship(
+        "UserMedia",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
     audit_logs = relationship("AuditLog", back_populates="user")
     created_templates = relationship("Template", foreign_keys="Template.created_by")
     uploaded_media = relationship("MediaFile", foreign_keys="MediaFile.created_by")
@@ -124,3 +135,19 @@ class User(Base, TimestampMixin):
     def has_any_role(self, role_codes: list[str]) -> bool:
         """Проверяет, есть ли у пользователя хотя бы одна из ролей."""
         return any(ur.role.code in role_codes for ur in self.user_roles)
+
+    @property
+    def logo(self):
+        """Лого компании (primary)."""
+        for media in self.user_media:
+            if media.media_type.code == "COMPANY_LOGO" and media.is_primary:
+                return media.media_file
+        return None
+
+    @property
+    def avatar(self):
+        """Аватарка (primary)."""
+        for media in self.user_media:
+            if media.media_type.code == "USER_AVATAR" and media.is_primary:
+                return media.media_file
+        return None

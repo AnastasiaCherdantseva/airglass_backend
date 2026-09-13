@@ -8,8 +8,6 @@ from app.models.quotes.quote_item import (
     QuoteItem,
     QuoteItemSourceType,
 )
-from app.models.quotes.quote_glass_item import QuoteGlassItem
-from app.models.quotes.quote_glass_media import QuoteGlassMedia
 
 __all__ = [
     "Quote",
@@ -19,6 +17,4 @@ __all__ = [
     "QuoteItemGroupType",
     "QuoteItem",
     "QuoteItemSourceType",
-    "QuoteGlassItem",
-    "QuoteGlassMedia",
 ]

@@ -1,6 +1,6 @@
 import uuid
 import enum
-from sqlalchemy import Column, String, ForeignKey, Enum, Index
+from sqlalchemy import Column, String, ForeignKey, Enum, Index, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -40,7 +40,7 @@ class Quote(Base, TimestampMixin, SoftDeleteMixin):
         Index("ix_quote_status", "status"),
     )
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4,server_default=text("gen_random_uuid()"))
     project_id = Column(
         UUID(as_uuid=True),
         ForeignKey("projects.id", ondelete="CASCADE"),
@@ -51,6 +51,7 @@ class Quote(Base, TimestampMixin, SoftDeleteMixin):
         Enum(QuoteStatus),
         default=QuoteStatus.DRAFT,
         nullable=False,
+        server_default=text("'DRAFT'")
     )
     created_by = Column(
         UUID(as_uuid=True),

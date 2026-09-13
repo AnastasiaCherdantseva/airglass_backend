@@ -1,6 +1,6 @@
 import uuid
 import enum
-from sqlalchemy import Column, String, Text, Enum, ForeignKey, Index
+from sqlalchemy import Column, String, Text, Enum, ForeignKey, Index, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -20,7 +20,7 @@ class PermissionCondition(Base):
         Index("ix_permission_condition_permission_id", "permission_id"),
     )
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4,server_default=text("gen_random_uuid()"))
     permission_id = Column(
         UUID(as_uuid=True),
         ForeignKey("permissions.id", ondelete="CASCADE"),

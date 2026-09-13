@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, Numeric, Text, Integer, ForeignKey, Index
+from sqlalchemy import Column, Numeric, Text, Integer, ForeignKey, Index, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -14,7 +14,7 @@ class TemplateItem(Base, TimestampMixin):
         Index("ix_template_item_variant_id", "variant_id"),
     )
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4,server_default=text("gen_random_uuid()"))
     template_id = Column(
         UUID(as_uuid=True),
         ForeignKey("templates.id", ondelete="CASCADE"),
@@ -30,8 +30,13 @@ class TemplateItem(Base, TimestampMixin):
         ForeignKey("supplier_variants.id", ondelete="SET NULL"),
         nullable=True,
     )
-    quantity = Column(Numeric(14, 4), nullable=False, default=1)
-    sort_order = Column(Integer, default=0, nullable=False)
+    quantity = Column(Numeric(14, 4), nullable=False, default=1,    server_default=text("1"))
+    sort_order = Column(
+    Integer,
+    default=0,
+    nullable=False,
+    server_default=text("0"),
+)
     comment = Column(Text, nullable=True)
 
     # Связи
@@ -39,10 +44,5 @@ class TemplateItem(Base, TimestampMixin):
     variant = relationship("ProductVariant", back_populates="template_items")
     preferred_supplier_offer = relationship(
         "SupplierVariant", back_populates="template_items"
-    )
-    media = relationship(
-        "TemplateItemMedia",
-        back_populates="template_item",
-        cascade="all, delete-orphan",
     )
     quote_items = relationship("QuoteItem", back_populates="template_item")

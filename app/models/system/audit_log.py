@@ -1,6 +1,6 @@
 import uuid
-from datetime import datetime
-from sqlalchemy import Column, String, ForeignKey, DateTime, Index
+from datetime import datetime,timezone
+from sqlalchemy import Column, String, ForeignKey, DateTime, Index, text
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 
@@ -15,7 +15,7 @@ class AuditLog(Base):
         Index("ix_audit_log_created_at", "created_at"),
     )
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4,server_default=text("gen_random_uuid()"))
     user_id = Column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="RESTRICT"),
@@ -26,7 +26,7 @@ class AuditLog(Base):
     action = Column(String(20), nullable=False)  # CREATE / UPDATE / DELETE
     old_data = Column(JSONB, nullable=True)
     new_data = Column(JSONB, nullable=True)
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False, server_default=text("now()"))
 
     # Связи
     user = relationship("User", back_populates="audit_logs")

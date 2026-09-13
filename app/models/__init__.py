@@ -21,6 +21,11 @@ from app.models.catalog import (
     Color,
     Material,
     Unit,
+    ColorGroup,
+    CategoryColorGroup,
+    MaterialGroup,
+    CategoryMaterialGroup
+
 )
 
 # ============================================
@@ -62,6 +67,7 @@ from app.models.media import (
     ProductMedia,
     ProductMediaType,
     CategoryMediaRule,
+    UserMedia
 )
 
 # ============================================
@@ -71,8 +77,10 @@ from app.models.templates import (
     Template,
     TemplateType,
     TemplateItem,
-    TemplateItemMedia,
     TemplateMediaRule,
+    GalleryRule,
+    GalleryRuleCondition,
+    TemplateGallery,
 )
 
 # ============================================
@@ -121,8 +129,6 @@ from app.models.quotes import (
     QuoteItemGroupType,
     QuoteItem,
     QuoteItemSourceType,
-    QuoteGlassItem,
-    QuoteGlassMedia,
 )
 
 # ============================================
@@ -152,6 +158,10 @@ __all__ = [
     "Color",
     "Material",
     "Unit",
+    "ColorGroup",
+    "CategoryColorGroup",
+    "MaterialGroup",
+    "CategoryMaterialGroup",
 
     # Attributes
     "Attribute",
@@ -177,13 +187,16 @@ __all__ = [
     "ProductMedia",
     "ProductMediaType",
     "CategoryMediaRule",
+    "UserMedia",
 
     # Templates
     "Template",
     "TemplateType",
     "TemplateItem",
-    "TemplateItemMedia",
     "TemplateMediaRule",
+    "GalleryRule",
+    "GalleryRuleCondition",
+    "TemplateGallery",
 
     # System
     "User",
@@ -216,8 +229,6 @@ __all__ = [
     "QuoteItemGroupType",
     "QuoteItem",
     "QuoteItemSourceType",
-    "QuoteGlassItem",
-    "QuoteGlassMedia",
 
     # Documents
     "GeneratedDocument",

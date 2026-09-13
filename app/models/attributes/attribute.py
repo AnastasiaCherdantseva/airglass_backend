@@ -1,6 +1,6 @@
 import uuid
 import enum
-from sqlalchemy import Column, String, Boolean, ForeignKey, Enum
+from sqlalchemy import Column, String, Boolean, ForeignKey, Enum, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -19,7 +19,7 @@ class AttributeDataType(str, enum.Enum):
 class Attribute(Base, TimestampMixin):
     __tablename__ = "attributes"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, server_default=text("gen_random_uuid()"))
     code = Column(String(100), unique=True, nullable=False)
     name = Column(String(255), nullable=False)
     data_type = Column(Enum(AttributeDataType), nullable=False)
@@ -28,8 +28,8 @@ class Attribute(Base, TimestampMixin):
         ForeignKey("units.id", ondelete="RESTRICT"),
         nullable=True,
     )
-    is_filterable = Column(Boolean, default=False, nullable=False)
-    is_required = Column(Boolean, default=False, nullable=False)
+    is_filterable = Column(Boolean, default=False, nullable=False, server_default=text("false"))
+    is_required = Column(Boolean, default=False, nullable=False, server_default=text("false"))
 
     # Связи
     unit = relationship("Unit", back_populates="attributes")

@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, Text, Integer, Boolean, ForeignKey
+from sqlalchemy import Column, String, Text, Integer, Boolean, ForeignKey, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -10,7 +10,7 @@ from app.models.mixins import TimestampMixin, SoftDeleteMixin
 class Category(Base, TimestampMixin, SoftDeleteMixin):
     __tablename__ = "categories"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4,server_default=text("gen_random_uuid()"))
     parent_id = Column(
         UUID(as_uuid=True),
         ForeignKey("categories.id", ondelete="RESTRICT"),
@@ -19,8 +19,18 @@ class Category(Base, TimestampMixin, SoftDeleteMixin):
     name = Column(String(255), nullable=False)
     code = Column(String(100), unique=True, nullable=False)
     description = Column(Text, nullable=True)
-    sort_order = Column(Integer, default=0, nullable=False)
-    is_active = Column(Boolean, default=True, nullable=False)
+    sort_order = Column(
+    Integer,
+    default=0,
+    nullable=False,
+    server_default=text("0"),
+)
+    is_active = Column(
+    Boolean,
+    default=True,
+    nullable=False,
+    server_default=text("true"),
+)
 
     # Связи
     parent = relationship("Category", remote_side=[id], backref="children")
@@ -37,6 +47,16 @@ class Category(Base, TimestampMixin, SoftDeleteMixin):
     )
     category_media_rules = relationship(
         "CategoryMediaRule",
+        back_populates="category",
+        cascade="all, delete-orphan",
+    )
+    category_color_groups = relationship(
+        "CategoryColorGroup",
+        back_populates="category",
+        cascade="all, delete-orphan",
+    )
+    category_material_groups = relationship(
+        "CategoryMaterialGroup",
         back_populates="category",
         cascade="all, delete-orphan",
     )

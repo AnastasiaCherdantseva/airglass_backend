@@ -1,6 +1,6 @@
 import uuid
 import enum
-from sqlalchemy import Column, String, Integer, ForeignKey, Enum, Index
+from sqlalchemy import Column, String, Integer, ForeignKey, Enum, Index, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -34,7 +34,7 @@ class QuoteItemGroup(Base):
         Index("ix_quote_item_group_version_id", "quote_version_id"),
     )
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4,server_default=text("gen_random_uuid()"))
     quote_version_id = Column(
         UUID(as_uuid=True),
         ForeignKey("quote_versions.id", ondelete="CASCADE"),
@@ -44,6 +44,7 @@ class QuoteItemGroup(Base):
         Enum(QuoteItemGroupType),
         default=QuoteItemGroupType.MANUAL,
         nullable=False,
+        server_default=text("'MANUAL'")
     )
     source_template_id = Column(
         UUID(as_uuid=True),
@@ -51,7 +52,12 @@ class QuoteItemGroup(Base):
         nullable=True,
     )
     name = Column(String(255), nullable=False)  # "ОГРАЖДЕНИЕ №1"
-    sort_order = Column(Integer, default=0, nullable=False)
+    sort_order = Column(
+    Integer,
+    default=0,
+    nullable=False,
+    server_default=text("0"),
+)
 
     # Связи
     quote_version = relationship("QuoteVersion", back_populates="groups")

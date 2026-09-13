@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, Text, ForeignKey, Index
+from sqlalchemy import Column, String, Text, ForeignKey, Index, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -14,7 +14,7 @@ class Project(Base, TimestampMixin, SoftDeleteMixin):
         Index("ix_project_status_id", "status_id"),
     )
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4,server_default=text("gen_random_uuid()"))
     number = Column(String(50), unique=True, nullable=False)
     customer_id = Column(
         UUID(as_uuid=True),

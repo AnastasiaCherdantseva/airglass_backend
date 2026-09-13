@@ -1,16 +1,16 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, ForeignKey, String, Integer, Numeric, Boolean, DateTime
+from sqlalchemy import Column, ForeignKey, String, Integer, Numeric, Boolean, DateTime, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-
+from app.models.mixins import TimestampMixin
 from app.models.base import Base
 
 # Конкретные значения специфичных атрибутов для конкретных вариаций товаров
-class VariantAttributeValue(Base):
+class VariantAttributeValue(Base, TimestampMixin):
     __tablename__ = "variant_attribute_values"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, server_default=text("gen_random_uuid()"))
     variant_id = Column(
         UUID(as_uuid=True),
         ForeignKey("product_variants.id", ondelete="CASCADE"),
@@ -30,14 +30,6 @@ class VariantAttributeValue(Base):
         UUID(as_uuid=True),
         ForeignKey("attribute_options.id", ondelete="RESTRICT"),
         nullable=True,
-    )
-
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(
-        DateTime(timezone=True),
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
-        nullable=False,
     )
 
     # Связи

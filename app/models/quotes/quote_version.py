@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, Integer, Numeric, Text, ForeignKey, Index
+from sqlalchemy import Column, Integer, Numeric, Text, ForeignKey, Index, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -21,17 +21,17 @@ class QuoteVersion(Base, TimestampMixin):
         Index("ix_quote_version_created_at", "created_at"),
     )
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4,server_default=text("gen_random_uuid()"))
     quote_id = Column(
         UUID(as_uuid=True),
         ForeignKey("quotes.id", ondelete="CASCADE"),
         nullable=False,
     )
-    version_number = Column(Integer, nullable=False, default=1)
+    version_number = Column(Integer, nullable=False, default=1, server_default=text("1"))
 
     # Глобальные скидки/наценки на всё КП
-    global_discount_percent = Column(Numeric(5, 2), default=0, nullable=False)
-    global_markup_percent = Column(Numeric(5, 2), default=0, nullable=False)
+    global_discount_percent = Column(Numeric(5, 2), default=0, nullable=False, server_default=text("0"))
+    global_markup_percent = Column(Numeric(5, 2), default=0, nullable=False, server_default=text("0"))
 
     # Snapshot данных заказчика (не меняются после сохранения)
     customer_name_snapshot = Column(Text, nullable=True)
@@ -59,11 +59,6 @@ class QuoteVersion(Base, TimestampMixin):
         back_populates="quote_version",
         cascade="all, delete-orphan",
         order_by="QuoteItem.sort_order",
-    )
-    glass_items = relationship(
-        "QuoteGlassItem",
-        back_populates="quote_version",
-        cascade="all, delete-orphan",
     )
     generated_documents = relationship(
         "GeneratedDocument",
