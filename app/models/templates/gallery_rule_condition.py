@@ -19,8 +19,6 @@ class GalleryRuleCondition(Base):
     __table_args__ = (
         Index("ix_gallery_rule_condition_rule_id", "rule_id"),
         Index("ix_gallery_rule_condition_category_id", "category_id"),
-        Index("ix_gallery_rule_condition_product_id", "product_id"),
-        Index("ix_gallery_rule_condition_variant_id", "variant_id"),
     )
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4,server_default=text("gen_random_uuid()"))
@@ -30,22 +28,12 @@ class GalleryRuleCondition(Base):
         nullable=False,
     )
     
-    # ✅ Одно из трёх (или несколько)
     category_id = Column(
         UUID(as_uuid=True),
         ForeignKey("categories.id", ondelete="CASCADE"),
         nullable=True,
     )
-    product_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("products.id", ondelete="CASCADE"),
-        nullable=True,
-    )
-    variant_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("product_variants.id", ondelete="CASCADE"),
-        nullable=True,
-    )
+    
     
     sort_order = Column(
     Integer,
@@ -58,6 +46,4 @@ class GalleryRuleCondition(Base):
     # СВЯЗИ
     # ========================================
     rule = relationship("GalleryRule", back_populates="conditions")
-    category = relationship("Category")
-    product = relationship("Product")
-    variant = relationship("ProductVariant")
+    category = relationship("Category", back_populates="gallery_rule_conditions")

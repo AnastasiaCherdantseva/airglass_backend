@@ -44,7 +44,6 @@ class Color(Base):
         "ColorVisualType",
         back_populates="color",
         cascade="all, delete-orphan",
-        order_by="ColorVisualType.sort_order",
     )
 
     @property

@@ -60,3 +60,8 @@ class Category(Base, TimestampMixin, SoftDeleteMixin):
         back_populates="category",
         cascade="all, delete-orphan",
     )
+    gallery_rule_conditions = relationship(
+        "GalleryRuleCondition",
+        back_populates="category",
+        cascade="all, delete-orphan",
+    )
