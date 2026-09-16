@@ -1,6 +1,6 @@
-import uuid
 import enum
-from datetime import datetime
+import uuid
+from typing import TYPE_CHECKING
 
 from sqlalchemy import String, Boolean, ForeignKey, Enum, text
 from sqlalchemy.dialects.postgresql import UUID
@@ -9,12 +9,12 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base
 from app.models.mixins import TimestampMixin
 
-
-from typing import TYPE_CHECKING
-
 if TYPE_CHECKING:
-    from app.models.catalog import Unit
-    from app.models.attributes import AttributeOption, CategoryAttribute, VariantAttributeValue
+    from app.models.catalog.unit import Unit
+    from app.models.attributes.attribute_option import AttributeOption
+    from app.models.attributes.category_attribute import CategoryAttribute
+    from app.models.attributes.variant_attribute_value import VariantAttributeValue
+
 
 class AttributeDataType(str, enum.Enum):
     STRING = "STRING"
@@ -35,9 +35,7 @@ class Attribute(Base, TimestampMixin):
     )
     code: Mapped[str] = mapped_column(String(100), unique=True)
     name: Mapped[str] = mapped_column(String(255))
-    data_type: Mapped[AttributeDataType] = mapped_column(
-        Enum(AttributeDataType), nullable=False
-    )
+    data_type: Mapped[AttributeDataType] = mapped_column(Enum(AttributeDataType))
     unit_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("units.id", ondelete="RESTRICT"),
@@ -53,18 +51,18 @@ class Attribute(Base, TimestampMixin):
         server_default=text("false"),
     )
 
-    # Связи
-    unit: Mapped[Unit | None] = relationship(back_populates="attributes")
+    # Связи — В КАВЫЧКАХ, потому что импорт под TYPE_CHECKING
+    unit: Mapped["Unit | None"] = relationship(back_populates="attributes")
 
-    options: Mapped[list[AttributeOption]] = relationship(
+    options: Mapped[list["AttributeOption"]] = relationship(
         back_populates="attribute",
         cascade="all, delete-orphan",
     )
-    category_attributes: Mapped[list[CategoryAttribute]] = relationship(
+    category_attributes: Mapped[list["CategoryAttribute"]] = relationship(
         back_populates="attribute",
         cascade="all, delete-orphan",
     )
-    variant_values: Mapped[list[VariantAttributeValue]] = relationship(
+    variant_values: Mapped[list["VariantAttributeValue"]] = relationship(
         back_populates="attribute",
         cascade="all, delete-orphan",
     )
