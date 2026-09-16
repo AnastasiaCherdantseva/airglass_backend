@@ -4,33 +4,6 @@
 """
 
 # ============================================
-# BASE
-# ============================================
-from app.models.base import Base
-from app.models.mixins import TimestampMixin, SoftDeleteMixin
-
-# ============================================
-# CATALOG
-# ============================================
-from app.models.catalog import (
-    Category,
-    Product,
-    ProductStatus,
-    ProductVariant,
-    ProductVariantStatus,
-    Color,
-    Material,
-    Unit,
-    ColorGroup,
-    CategoryColorGroup,
-    MaterialGroup,
-    CategoryMaterialGroup,
-    VisualType,
-    ColorVisualType
-
-)
-
-# ============================================
 # ATTRIBUTES
 # ============================================
 from app.models.attributes import (
@@ -42,76 +15,59 @@ from app.models.attributes import (
 )
 
 # ============================================
-# SUPPLIERS
+# BASE
 # ============================================
-from app.models.suppliers import (
-    Supplier,
-    SupplierVariant,
-    SupplierVariantPrice,
-)
+from app.models.base import Base
 
 # ============================================
-# USAGE
+# CATALOG
 # ============================================
-from app.models.usage import (
-    UsageRole,
-    ProductUsageRole,
-    VariantUsageRole,
-    CategoryUsageRole,
-)
-
-# ============================================
-# MEDIA
-# ============================================
-from app.models.media import (
-    MediaFile,
-    MediaType,
-    ProductMedia,
-    ProductMediaType,
-    CategoryMediaRule,
-    UserMedia
-)
-
-# ============================================
-# TEMPLATES
-# ============================================
-from app.models.templates import (
-    Template,
-    TemplateType,
-    TemplateItem,
-    TemplateMediaRule,
-    GalleryRule,
-    GalleryRuleCondition,
-    TemplateGallery,
-    BindingType
-)
-
-# ============================================
-# SYSTEM (Users, Roles, Permissions)
-# ============================================
-from app.models.system import (
-    User,
-    Role,
-    Permission,
-    PermissionResource,
-    PermissionAction,
-    PermissionScope,
-    PermissionCondition,
-    PermissionConditionType,
-    RolePermission,
-    UserRole,
-    UserPermission,
-    AuditLog,
+from app.models.catalog import (
+    Category,
+    CategoryColorGroup,
+    CategoryMaterialGroup,
+    Color,
+    ColorGroup,
+    ColorVisualType,
+    Material,
+    MaterialGroup,
+    Product,
+    ProductStatus,
+    ProductVariant,
+    ProductVariantStatus,
+    Unit,
+    VisualType,
 )
 
 # ============================================
 # CUSTOMERS
 # ============================================
 from app.models.customers import (
+    AddressType,
     Customer,
     CustomerAddress,
-    AddressType,
 )
+
+# ============================================
+# DOCUMENTS
+# ============================================
+from app.models.documents import (
+    DocumentType,
+    GeneratedDocument,
+)
+
+# ============================================
+# MEDIA
+# ============================================
+from app.models.media import (
+    CategoryMediaRule,
+    MediaFile,
+    MediaType,
+    ProductMedia,
+    ProductMediaType,
+    UserMedia,
+)
+from app.models.mixins import SoftDeleteMixin, TimestampMixin
 
 # ============================================
 # PROJECTS
@@ -126,22 +82,65 @@ from app.models.projects import (
 # ============================================
 from app.models.quotes import (
     Quote,
-    QuoteStatus,
-    QuoteVersion,
+    QuoteItem,
     QuoteItemGroup,
     QuoteItemGroupType,
-    QuoteItem,
     QuoteItemSourceType,
+    QuoteStatus,
+    QuoteVersion,
 )
 
 # ============================================
-# DOCUMENTS
+# SUPPLIERS
 # ============================================
-from app.models.documents import (
-    GeneratedDocument,
-    DocumentType,
+from app.models.suppliers import (
+    Supplier,
+    SupplierVariant,
+    SupplierVariantPrice,
 )
 
+# ============================================
+# SYSTEM (Users, Roles, Permissions)
+# ============================================
+from app.models.system import (
+    AuditLog,
+    Permission,
+    PermissionAction,
+    PermissionCondition,
+    PermissionConditionType,
+    PermissionResource,
+    PermissionScope,
+    Role,
+    RolePermission,
+    Session,
+    User,
+    UserPermission,
+    UserRole,
+)
+
+# ============================================
+# TEMPLATES
+# ============================================
+from app.models.templates import (
+    BindingType,
+    GalleryRule,
+    GalleryRuleCondition,
+    Template,
+    TemplateGallery,
+    TemplateItem,
+    TemplateMediaRule,
+    TemplateType,
+)
+
+# ============================================
+# USAGE
+# ============================================
+from app.models.usage import (
+    CategoryUsageRole,
+    ProductUsageRole,
+    UsageRole,
+    VariantUsageRole,
+)
 
 # ============================================
 # ЭКСПОРТ ВСЕХ МОДЕЛЕЙ
@@ -151,7 +150,6 @@ __all__ = [
     "Base",
     "TimestampMixin",
     "SoftDeleteMixin",
-
     # Catalog
     "Category",
     "Product",
@@ -167,25 +165,21 @@ __all__ = [
     "CategoryMaterialGroup",
     "ColorVisualType",
     "VisualType",
-
     # Attributes
     "Attribute",
     "AttributeDataType",
     "AttributeOption",
     "CategoryAttribute",
     "VariantAttributeValue",
-
     # Suppliers
     "Supplier",
     "SupplierVariant",
     "SupplierVariantPrice",
-
     # Usage
     "UsageRole",
     "ProductUsageRole",
     "VariantUsageRole",
     "CategoryUsageRole",
-
     # Media
     "MediaFile",
     "MediaType",
@@ -193,7 +187,6 @@ __all__ = [
     "ProductMediaType",
     "CategoryMediaRule",
     "UserMedia",
-
     # Templates
     "Template",
     "TemplateType",
@@ -203,7 +196,6 @@ __all__ = [
     "GalleryRuleCondition",
     "TemplateGallery",
     "BindingType",
-
     # System
     "User",
     "Role",
@@ -217,16 +209,14 @@ __all__ = [
     "UserRole",
     "UserPermission",
     "AuditLog",
-
+    "Session",
     # Customers
     "Customer",
     "CustomerAddress",
     "AddressType",
-
     # Projects
     "Project",
     "ProjectStatus",
-
     # Quotes
     "Quote",
     "QuoteStatus",
@@ -235,7 +225,6 @@ __all__ = [
     "QuoteItemGroupType",
     "QuoteItem",
     "QuoteItemSourceType",
-
     # Documents
     "GeneratedDocument",
     "DocumentType",
