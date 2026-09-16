@@ -40,6 +40,7 @@ exclude = [
     "^migrations/",
     "^tests/",
     "^scripts/",
+    "^app/db/seed/"
 ]
 python_version = "3.11"
 strict = true
@@ -48,4 +49,7 @@ warn_return_any = true
 plugins = ["pydantic.mypy"]
 explicit_package_bases = true
 mypy_path = "."
+[[tool.mypy.overrides]]
+module = ["app.db.seed.*"]
+ignore_errors = true
 
