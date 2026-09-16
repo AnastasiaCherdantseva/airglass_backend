@@ -1,13 +1,21 @@
+"""
+Unit of Work — управление транзакцией.
+"""
+
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
-from sqlalchemy.ext.asyncio import (
-    AsyncSession,
-    AsyncSessionTransaction,
-)
+from sqlalchemy.ext.asyncio import AsyncSession, AsyncSessionTransaction
 
 
 class UnitOfWork:
-    def __init__(self, session: AsyncSession):
+    """
+    Управляет транзакцией на HTTP-запрос.
+
+    Не знает про репозитории и use cases — только про сессию.
+    """
+
+    def __init__(self, session: AsyncSession) -> None:
         self.session = session
         self._transaction: AsyncSessionTransaction | None = None
 
@@ -15,7 +23,6 @@ class UnitOfWork:
         """Начать основную транзакцию."""
         if self._transaction is not None:
             raise RuntimeError("Transaction is already active")
-
         self._transaction = await self.session.begin()
 
     async def flush(self) -> None:
@@ -23,7 +30,7 @@ class UnitOfWork:
         await self.session.flush()
 
     @asynccontextmanager
-    async def nested(self):
+    async def nested(self) -> AsyncGenerator[None, None]:
         """Создать SAVEPOINT внутри основной транзакции."""
         if self._transaction is None:
             raise RuntimeError(
@@ -31,7 +38,6 @@ class UnitOfWork:
             )
 
         transaction = await self.session.begin_nested()
-
         try:
             yield
         except Exception:

@@ -50,6 +50,6 @@ plugins = ["pydantic.mypy"]
 explicit_package_bases = true
 mypy_path = "."
 [[tool.mypy.overrides]]
-module = ["app.db.seed.*"]
+module = ["app.db.seed.*", "alembic.*",]
 ignore_errors = true
 
