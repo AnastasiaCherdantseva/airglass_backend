@@ -53,3 +53,29 @@ mypy_path = "."
 module = ["app.db.seed.*", "alembic.*",]
 ignore_errors = true
 
+[tool.ruff]
+line-length = 100
+
+# Целевая версия Python
+target-version = "py311"
+
+# Какие папки игнорировать (можно исключить миграции, как мы делали для mypy)
+extend-exclude = ["migrations", "alembic"]
+
+[tool.ruff.lint]
+# Какие правила проверять.
+# E, W — PEP 8 (стиль)
+# F — ошибки (неиспользуемые импорты и т.д.)
+# I — сортировка импортов (isort)
+# UP — обновление до современного синтаксиса Python
+# B — поиск распространённых багов (flake8-bugbear)
+select = ["E", "W", "F", "I", "UP", "B"]
+
+# Какие правила игнорировать
+ignore = [
+    "E501", # не ругаться на длину строки (пусть этим занимается formatter)
+]
+
+[tool.ruff.format]
+# Стиль кавычек: "double" (двойные) или "single" (одинарные). По умолчанию double.
+quote-style = "double"
