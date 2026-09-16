@@ -34,10 +34,12 @@ env/
 *.pyc
 
 # IDE
-.vscode/
+.vscode/*
 .idea/
 *.swp
 *.swo
+!.vscode/settings.json
+!.vscode/extensions.json
 
 # Logs
 *.log
@@ -46,3 +48,13 @@ output.log
 Dockerfile
 Dockerfile.prod
 
+# Mypy
+.mypy_cache/
+dmypy.json
+
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
