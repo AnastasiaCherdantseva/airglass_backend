@@ -1,12 +1,11 @@
 from app.models.system.user import User
 from app.models.system.role import Role
+from app.models.system.permission_condition import PermissionCondition,PermissionConditionType
 from app.models.system.permission import (
     Permission,
     PermissionResource,
     PermissionAction,
     PermissionScope,
-    PermissionCondition,
-    PermissionConditionType,
 )
 from app.models.system.role_permission import RolePermission
 from app.models.system.user_role import UserRole

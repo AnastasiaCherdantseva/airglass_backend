@@ -1,28 +1,34 @@
-import uuid
 import enum
+import uuid
 from datetime import datetime, timezone
+from decimal import Decimal
+from typing import TYPE_CHECKING
+
 from sqlalchemy import (
-    Column, String, Text, Numeric, Integer, ForeignKey, Enum, Index, DateTime, text
+    String, Text, Numeric, Integer, ForeignKey, Enum, Index, DateTime, text,
 )
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
 
+if TYPE_CHECKING:
+    from app.models import (QuoteVersion, QuoteItemGroup, Product,
+                                ProductVariant,  SupplierVariant  , Template,
+                                       TemplateItem   )
 
 class QuoteItemSourceType(str, enum.Enum):
     """Откуда пришла позиция"""
-    PRODUCT = "PRODUCT"      # из каталога
-    TEMPLATE = "TEMPLATE"    # из шаблона
-    MANUAL = "MANUAL"        # добавлена вручную
+    PRODUCT = "PRODUCT"
+    TEMPLATE = "TEMPLATE"
+    MANUAL = "MANUAL"
 
 
 class QuoteItem(Base):
     """
     Позиция коммерческого предложения.
-    
+
     Хранит snapshot данных на момент добавления.
-    Не меняется, даже если товар/цена в каталоге изменились.
     """
     __tablename__ = "quote_items"
     __table_args__ = (
@@ -32,115 +38,142 @@ class QuoteItem(Base):
         Index("ix_quote_item_product_id", "product_id"),
     )
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4,server_default=text("gen_random_uuid()"))
-    quote_version_id = Column(
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+        server_default=text("gen_random_uuid()"),
+    )
+    quote_version_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("quote_versions.id", ondelete="CASCADE"),
-        nullable=False,
     )
-    group_id = Column(
+    group_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("quote_item_groups.id", ondelete="CASCADE"),
-        nullable=True,
     )
 
-    source_type = Column(
+    source_type: Mapped[QuoteItemSourceType] = mapped_column(
         Enum(QuoteItemSourceType),
         default=QuoteItemSourceType.PRODUCT,
-        nullable=False,
-        server_default=text("'PRODUCT'")
+        server_default=text("'PRODUCT'"),
     )
 
     # ========================================
-    # ССЫЛКИ НА ИСТОЧНИК (RESTRICT — не удаляются!)
+    # ССЫЛКИ НА ИСТОЧНИК
     # ========================================
-    product_id = Column(
+    product_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("products.id", ondelete="RESTRICT"),
-        nullable=True,
     )
-    variant_id = Column(
+    variant_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("product_variants.id", ondelete="RESTRICT"),
-        nullable=True,
     )
-    supplier_variant_id = Column(
+    supplier_variant_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("supplier_variants.id", ondelete="RESTRICT"),
-        nullable=True,
     )
-    template_id = Column(
+    template_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("templates.id", ondelete="RESTRICT"),
-        nullable=True,
     )
-    template_item_id = Column(
+    template_item_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("template_items.id", ondelete="RESTRICT"),
-        nullable=True,
     )
 
     # ========================================
-    # SNAPSHOT (не меняются после сохранения)
+    # SNAPSHOT
     # ========================================
-    name_snapshot = Column(Text, nullable=False)
-    supplier_name_snapshot = Column(Text, nullable=True)
-    supplier_sku_snapshot = Column(Text, nullable=True)
-    color_snapshot = Column(Text, nullable=True)
-    material_snapshot = Column(Text, nullable=True)
+    name_snapshot: Mapped[str] = mapped_column(Text)
+    supplier_name_snapshot: Mapped[str | None] = mapped_column(Text)
+    supplier_sku_snapshot: Mapped[str | None] = mapped_column(Text)
+    color_snapshot: Mapped[str | None] = mapped_column(Text)
+    material_snapshot: Mapped[str | None] = mapped_column(Text)
 
     # ========================================
     # ЦЕНЫ И КОЛИЧЕСТВО
     # ========================================
-    quantity = Column(Numeric(14, 4), nullable=False, default=1, server_default=text("1"))
-    purchase_price_snapshot = Column(Numeric(14, 2), nullable=False, default=0, server_default=text("0"))
-    base_sale_price = Column(Numeric(14, 2), nullable=False, default=0, server_default=text("0"))
-    manual_price = Column(Numeric(14, 2), nullable=True)
-    discount_percent = Column(Numeric(5, 2), default=0, nullable=False, server_default=text("0"))
-    markup_percent = Column(Numeric(5, 2), default=0, nullable=False, server_default=text("0"))
-    final_unit_price = Column(Numeric(14, 2), nullable=False, default=0, server_default=text("0"))
-    final_total = Column(Numeric(14, 2), nullable=False, default=0, server_default=text("0"))
+    quantity: Mapped[Decimal] = mapped_column(
+        Numeric(14, 4),
+        default=1,
+        server_default=text("1"),
+    )
+    purchase_price_snapshot: Mapped[Decimal] = mapped_column(
+        Numeric(14, 2),
+        default=0,
+        server_default=text("0"),
+    )
+    base_sale_price: Mapped[Decimal] = mapped_column(
+        Numeric(14, 2),
+        default=0,
+        server_default=text("0"),
+    )
+    manual_price: Mapped[Decimal | None] = mapped_column(Numeric(14, 2))
+    discount_percent: Mapped[Decimal] = mapped_column(
+        Numeric(5, 2),
+        default=0,
+        server_default=text("0"),
+    )
+    markup_percent: Mapped[Decimal] = mapped_column(
+        Numeric(5, 2),
+        default=0,
+        server_default=text("0"),
+    )
+    final_unit_price: Mapped[Decimal] = mapped_column(
+        Numeric(14, 2),
+        default=0,
+        server_default=text("0"),
+    )
+    final_total: Mapped[Decimal] = mapped_column(
+        Numeric(14, 2),
+        default=0,
+        server_default=text("0"),
+    )
 
-    sort_order = Column(
-    Integer,
-    default=0,
-    nullable=False,
-    server_default=text("0"),
-)
-    comment = Column(Text, nullable=True)
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False,server_default=text("now()"))
+    sort_order: Mapped[int] = mapped_column(
+        Integer,
+        default=0,
+        server_default=text("0"),
+    )
+    comment: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        server_default=text("now()"),
+    )
 
     # ========================================
     # СВЯЗИ
     # ========================================
-    quote_version = relationship("QuoteVersion", back_populates="items")
-    group = relationship("QuoteItemGroup", back_populates="items")
-    product = relationship("Product")
-    variant = relationship("ProductVariant", back_populates="quote_items")
-    supplier_offer = relationship("SupplierVariant", back_populates="quote_items")
-    template = relationship("Template", back_populates="quote_items")
-    template_item = relationship("TemplateItem", back_populates="quote_items")
+    quote_version: Mapped["QuoteVersion"] = relationship(back_populates="items")
+    group: Mapped["QuoteItemGroup | None"] = relationship(back_populates="items")
+    product: Mapped["Product | None"] = relationship()
+    variant: Mapped["ProductVariant | None"] = relationship(back_populates="quote_items")
+    supplier_offer: Mapped["SupplierVariant | None"] = relationship(back_populates="quote_items")
+    template: Mapped["Template | None"] = relationship(back_populates="quote_items")
+    template_item: Mapped["TemplateItem | None"] = relationship(back_populates="quote_items")
 
     # ========================================
     # СВОЙСТВА
     # ========================================
 
     @property
-    def effective_price(self) -> float:
+    def effective_price(self) -> Decimal:
         """
         Итоговая цена за единицу.
         Приоритет: manual_price > base_sale_price
         """
         if self.manual_price is not None:
-            return float(self.manual_price)
-        return float(self.base_sale_price)
+            return self.manual_price
+        return self.base_sale_price
 
     @property
     def is_manual_price(self) -> bool:
-        """Была ли цена изменена вручную"""
         return self.manual_price is not None
 
     @property
-    def margin(self) -> float:
+    def margin(self) -> Decimal:
         """Маржа (прибыль)"""
-        return float(self.final_unit_price) - float(self.purchase_price_snapshot)
+        return self.final_unit_price - self.purchase_price_snapshot

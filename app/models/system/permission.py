@@ -1,11 +1,20 @@
-import uuid
 import enum
-from sqlalchemy import Column, String, Text, Enum, Boolean, Index,ForeignKey, text
+import uuid
+from typing import TYPE_CHECKING
+
+from sqlalchemy import String, Text, Enum, Boolean, Index, text
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
 from app.models.mixins import TimestampMixin
+
+if TYPE_CHECKING:
+    from app.models import (
+        RolePermission,
+        UserPermission,
+        PermissionCondition,
+    )
 
 
 class PermissionResource(str, enum.Enum):
@@ -37,27 +46,21 @@ class PermissionAction(str, enum.Enum):
     IMPORT = "import"
     APPROVE = "approve"
     ASSIGN = "assign"
-    MANAGE = "manage"  # все действия
+    MANAGE = "manage"
 
 
 class PermissionScope(str, enum.Enum):
     """Область действия права"""
-    ALL = "all"              # все объекты
-    OWN = "own"              # только свои
-    DEPARTMENT = "department"  # только своего отдела
-    ASSIGNED = "assigned"    # только назначенные
-    SPECIFIC = "specific"    # только конкретные (через отдельную таблицу)
+    ALL = "all"
+    OWN = "own"
+    DEPARTMENT = "department"
+    ASSIGNED = "assigned"
+    SPECIFIC = "specific"
 
 
 class Permission(Base, TimestampMixin):
     """
     Атомарное право доступа.
-    
-    Примеры:
-    - users.create.all       — создавать любых пользователей
-    - users.delete.own       — удалять только своих пользователей
-    - products.update.all    — редактировать любые товары
-    - templates.delete.own   — удалять только свои шаблоны
     """
     __tablename__ = "permissions"
     __table_args__ = (
@@ -65,41 +68,45 @@ class Permission(Base, TimestampMixin):
         Index("ix_permission_code", "code"),
     )
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4,server_default=text("gen_random_uuid()"))
-    code = Column(String(150), unique=True, nullable=False)  # users.create.all
-    name = Column(String(255), nullable=False)
-    description = Column(Text, nullable=True)
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+        server_default=text("gen_random_uuid()"),
+    )
+    code: Mapped[str] = mapped_column(String(150), unique=True)
+    name: Mapped[str] = mapped_column(String(255))
+    description: Mapped[str | None] = mapped_column(Text)
 
-    resource = Column(Enum(PermissionResource), nullable=False)
-    action = Column(Enum(PermissionAction), nullable=False)
-    scope = Column(Enum(PermissionScope), nullable=False, default=PermissionScope.ALL, server_default=text("'ALL'"))
+    resource: Mapped[PermissionResource] = mapped_column(Enum(PermissionResource))
+    action: Mapped[PermissionAction] = mapped_column(Enum(PermissionAction))
+    scope: Mapped[PermissionScope] = mapped_column(
+        Enum(PermissionScope),
+        default=PermissionScope.ALL,
+        server_default=text("'ALL'"),
+    )
 
-    is_active = Column(
-    Boolean,
-    default=True,
-    nullable=False,
-    server_default=text("true"),
-)
-    is_system = Column(
-    Boolean,
-    default=False,
-    nullable=False,
-    server_default=text("false"),
-)  # системное право (нельзя удалить)
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        default=True,
+        server_default=text("true"),
+    )
+    is_system: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+        server_default=text("false"),
+    )
 
     # Связи
-    role_permissions = relationship(
-        "RolePermission",
+    role_permissions: Mapped[list["RolePermission"]] = relationship(
         back_populates="permission",
         cascade="all, delete-orphan",
     )
-    user_permissions = relationship(
-        "UserPermission",
+    user_permissions: Mapped[list["UserPermission"]] = relationship(
         back_populates="permission",
         cascade="all, delete-orphan",
     )
-    conditions = relationship(
-        "PermissionCondition",
+    conditions: Mapped[list["PermissionCondition"]] = relationship(
         back_populates="permission",
         cascade="all, delete-orphan",
     )
@@ -112,36 +119,3 @@ class Permission(Base, TimestampMixin):
     ) -> str:
         """Генерирует код права: users.create.all"""
         return f"{resource.value}.{action.value}.{scope.value}"
-
-
-class PermissionConditionType(str, enum.Enum):
-    """Тип условия для права"""
-    ROLE = "role"                    # только пользователи с ролью X
-    CATEGORY = "category"            # только товары из категории X
-    CREATOR = "creator"              # только созданные текущим пользователем
-    CUSTOM = "custom"                # кастомное условие
-
-
-class PermissionCondition(Base):
-    """
-    Условие для права — уточняет, к каким объектам применяется право.
-    
-    Примеры:
-    - users.delete.role_manager — удалять только пользователей с ролью "менеджер"
-    - products.update.category_glass — редактировать только товары из категории "Стекло"
-    - templates.delete.own — удалять только свои шаблоны
-    """
-    __tablename__ = "permission_conditions"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4,server_default=text("gen_random_uuid()"))
-    permission_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("permissions.id", ondelete="CASCADE"),
-        nullable=False,
-    )
-    type = Column(Enum(PermissionConditionType), nullable=False)
-    value = Column(String(255), nullable=False)  # ID роли, ID категории и т.д.
-    description = Column(Text, nullable=True)
-
-    # Связи
-    permission = relationship("Permission", back_populates="conditions")

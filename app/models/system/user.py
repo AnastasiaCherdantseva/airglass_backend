@@ -1,46 +1,64 @@
 import uuid
-from sqlalchemy import Column, String, Boolean, text
+from typing import TYPE_CHECKING, Any
+
+from sqlalchemy import String, Boolean, text
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
 from app.models.mixins import TimestampMixin, SoftDeleteMixin
+
+if TYPE_CHECKING:
+    from app.models import (
+        UserRole,
+        UserPermission,
+        UserMedia,
+        AuditLog,
+        Template,
+        MediaFile,
+        Permission,
+    )
 
 
 class User(Base, TimestampMixin, SoftDeleteMixin):
     __tablename__ = "users"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4,server_default=text("gen_random_uuid()"))
-    name = Column(String(255), nullable=False)
-    email = Column(String(255), unique=True, nullable=False, index=True)
-    password_hash = Column(String(255), nullable=False)
-    is_active = Column(
-    Boolean,
-    default=True,
-    nullable=False,
-    server_default=text("true"),
-)
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+        server_default=text("gen_random_uuid()"),
+    )
+    name: Mapped[str] = mapped_column(String(255))
+    email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
+    password_hash: Mapped[str] = mapped_column(String(255))
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        default=True,
+        server_default=text("true"),
+    )
 
     # Связи
-    user_roles = relationship(
-        "UserRole",
+    user_roles: Mapped[list["UserRole"]] = relationship(
         back_populates="user",
         cascade="all, delete-orphan",
     )
-    user_permissions = relationship(
-        "UserPermission",
+    user_permissions: Mapped[list["UserPermission"]] = relationship(
         back_populates="user",
         cascade="all, delete-orphan",
     )
-    user_media = relationship(
-        "UserMedia",
+    user_media: Mapped[list["UserMedia"]] = relationship(
         back_populates="user",
         cascade="all, delete-orphan",
     )
 
-    audit_logs = relationship("AuditLog", back_populates="user")
-    created_templates = relationship("Template", foreign_keys="Template.created_by")
-    uploaded_media = relationship("MediaFile", foreign_keys="MediaFile.created_by")
+    audit_logs: Mapped[list["AuditLog"]] = relationship(back_populates="user")
+    created_templates: Mapped[list["Template"]] = relationship(
+        foreign_keys="Template.created_by",
+    )
+    uploaded_media: Mapped[list["MediaFile"]] = relationship(
+        foreign_keys="MediaFile.created_by",
+    )
 
     # ========================================
     # МЕТОДЫ ПРОВЕРКИ ПРАВ
@@ -51,19 +69,10 @@ class User(Base, TimestampMixin, SoftDeleteMixin):
         resource: str,
         action: str,
         scope: str = "all",
-        target=None,
+        target: Any = None,
     ) -> bool:
         """
         Проверяет, есть ли у пользователя право.
-        
-        Args:
-            resource: 'users', 'products', 'templates'...
-            action: 'create', 'read', 'update', 'delete'...
-            scope: 'all', 'own'...
-            target: объект, над которым выполняется действие (для проверки условий)
-        
-        Returns:
-            True, если право есть.
         """
         # 1. Права через роли
         for user_role in self.user_roles:
@@ -73,7 +82,7 @@ class User(Base, TimestampMixin, SoftDeleteMixin):
                     if self._check_conditions(permission, target):
                         return True
 
-        # 2. Индивидуальные права пользователя (приоритет выше)
+        # 2. Индивидуальные права пользователя
         for user_permission in self.user_permissions:
             permission = user_permission.permission
             if self._matches(permission, resource, action, scope):
@@ -84,13 +93,12 @@ class User(Base, TimestampMixin, SoftDeleteMixin):
 
     def _matches(
         self,
-        permission,
+        permission: "Permission",
         resource: str,
         action: str,
         scope: str,
     ) -> bool:
         """Проверяет, соответствует ли право запросу."""
-        # Админ может всё
         if permission.action.value == "manage":
             return permission.resource.value == resource
 
@@ -100,27 +108,24 @@ class User(Base, TimestampMixin, SoftDeleteMixin):
             and permission.scope.value in (scope, "all")
         )
 
-    def _check_conditions(self, permission, target) -> bool:
-        """Проверяет условия права (например, только для роли X)."""
+    def _check_conditions(self, permission: "Permission", target: Any) -> bool:
+        """Проверяет условия права."""
         if not permission.conditions:
             return True
 
         for condition in permission.conditions:
             if condition.type == "role":
-                # Только для пользователей с ролью X
                 if not hasattr(target, "user_roles"):
                     return False
                 target_role_ids = [ur.role_id for ur in target.user_roles]
                 if condition.value not in [str(r) for r in target_role_ids]:
                     return False
             elif condition.type == "category":
-                # Только для товаров из категории X
                 if not hasattr(target, "category_id"):
                     return False
                 if str(target.category_id) != condition.value:
                     return False
             elif condition.type == "creator":
-                # Только созданные текущим пользователем
                 if not hasattr(target, "created_by"):
                     return False
                 if target.created_by != self.id:
@@ -137,17 +142,17 @@ class User(Base, TimestampMixin, SoftDeleteMixin):
         return any(ur.role.code in role_codes for ur in self.user_roles)
 
     @property
-    def logo(self):
+    def logo(self) -> Any:
         """Лого компании (primary)."""
         for media in self.user_media:
-            if media.media_type.code == "COMPANY_LOGO" and media.is_primary:
+            if media.media_type.code == "COMPANY_LOGO":
                 return media.media_file
         return None
 
     @property
-    def avatar(self):
+    def avatar(self) -> Any:
         """Аватарка (primary)."""
         for media in self.user_media:
-            if media.media_type.code == "USER_AVATAR" and media.is_primary:
+            if media.media_type.code == "USER_AVATAR":
                 return media.media_file
         return None
