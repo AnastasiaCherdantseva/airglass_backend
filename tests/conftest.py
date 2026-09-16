@@ -11,9 +11,9 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
-
+from sqlalchemy.pool import NullPool
 from app.models.base import Base
-from app.models import *  # noqa — импорт всех моделей
+from app.models import *  
 
 
 # ============================================
@@ -21,7 +21,7 @@ from app.models import *  # noqa — импорт всех моделей
 # ============================================
 
 TEST_DATABASE_URL = (
-    "postgresql+asyncpg://myuser:postgres@localhost:5433/airglass_test"
+    "postgresql+asyncpg://myuser:postgres@localhost:5432/airglass_test"
 )
 
 
@@ -31,13 +31,13 @@ TEST_DATABASE_URL = (
 # ДВИЖОК
 # ============================================
 
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture(scope="function")
 async def engine():
     """Движок БД для тестов."""
     engine = create_async_engine(
         TEST_DATABASE_URL,
         echo=False,
-        pool_pre_ping=True,
+        poolclass=NullPool,
     )
     yield engine
     await engine.dispose()
