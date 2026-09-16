@@ -1,13 +1,20 @@
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import text  # ← добавили для безопасного выполнения SQL
+
 from backend.app.core.database import get_db, engine
 from backend.app.models.base import Base
+from backend.app.routers.errors import register_exception_handlers
+from backend.app.routers import api_router
 
 # Создаём таблицы (если их нет)
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Airglass Backend")
+app.include_router(api_router, prefix="/api")
+
+register_exception_handlers(app)
+
 
 @app.get("/")
 def root():
