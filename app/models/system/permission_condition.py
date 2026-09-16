@@ -1,10 +1,15 @@
-import uuid
 import enum
-from sqlalchemy import Column, String, Text, Enum, ForeignKey, Index, text
+import uuid
+from typing import TYPE_CHECKING
+
+from sqlalchemy import String, Text, Enum, ForeignKey, Index, text
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
+
+if TYPE_CHECKING:
+    from app.models import Permission
 
 
 class PermissionConditionType(str, enum.Enum):
@@ -20,15 +25,21 @@ class PermissionCondition(Base):
         Index("ix_permission_condition_permission_id", "permission_id"),
     )
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4,server_default=text("gen_random_uuid()"))
-    permission_id = Column(
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+        server_default=text("gen_random_uuid()"),
+    )
+    permission_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("permissions.id", ondelete="CASCADE"),
-        nullable=False,
     )
-    type = Column(Enum(PermissionConditionType), nullable=False)
-    value = Column(String(255), nullable=False)
-    description = Column(Text, nullable=True)
+    type: Mapped[PermissionConditionType] = mapped_column(
+        Enum(PermissionConditionType),
+    )
+    value: Mapped[str] = mapped_column(String(255))
+    description: Mapped[str | None] = mapped_column(Text)
 
-    # ✅ СВЯЗЬ
-    permission = relationship("Permission", back_populates="conditions")
+    # Связь
+    permission: Mapped["Permission"] = relationship(back_populates="conditions")

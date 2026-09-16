@@ -1,38 +1,36 @@
-import uuid
 import enum
-from sqlalchemy import Column, String, ForeignKey, Enum, Index, text
+import uuid
+from typing import TYPE_CHECKING
+
+from sqlalchemy import String, ForeignKey, Enum, Index, text
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
 from app.models.mixins import TimestampMixin, SoftDeleteMixin
 
+if TYPE_CHECKING:
+    from app.models import (
+        Project,
+        QuoteVersion,
+        GeneratedDocument,
+    )
+
 
 class QuoteStatus(str, enum.Enum):
     """Статусы коммерческого предложения"""
-    DRAFT = "DRAFT"          # черновик
-    SENT = "SENT"            # отправлено клиенту
-    APPROVED = "APPROVED"    # клиент согласился
-    REJECTED = "REJECTED"    # клиент отказался
-    ARCHIVED = "ARCHIVED"    # в архиве
+    DRAFT = "DRAFT"
+    SENT = "SENT"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+    ARCHIVED = "ARCHIVED"
 
 
 class Quote(Base, TimestampMixin, SoftDeleteMixin):
     """
     Коммерческое предложение.
-    
+
     Это контейнер для версий КП.
-    Один проект может иметь несколько КП.
-    Одно КП может иметь несколько версий.
-    
-    Пример:
-        Project "Душевая в ЖК Северный"
-            ├── Quote №1 "Базовый вариант"
-            │   ├── QuoteVersion v1
-            │   ├── QuoteVersion v2
-            │   └── QuoteVersion v3
-            └── Quote №2 "Премиум вариант"
-                └── QuoteVersion v1
     """
     __tablename__ = "quotes"
     __table_args__ = (
@@ -40,35 +38,35 @@ class Quote(Base, TimestampMixin, SoftDeleteMixin):
         Index("ix_quote_status", "status"),
     )
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4,server_default=text("gen_random_uuid()"))
-    project_id = Column(
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+        server_default=text("gen_random_uuid()"),
+    )
+    project_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("projects.id", ondelete="CASCADE"),
-        nullable=False,
     )
-    number = Column(String(50), nullable=False)  # "КП-0058"
-    status = Column(
+    number: Mapped[str] = mapped_column(String(50))
+    status: Mapped[QuoteStatus] = mapped_column(
         Enum(QuoteStatus),
         default=QuoteStatus.DRAFT,
-        nullable=False,
-        server_default=text("'DRAFT'")
+        server_default=text("'DRAFT'"),
     )
-    created_by = Column(
+    created_by: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="SET NULL"),
-        nullable=True,
     )
 
     # Связи
-    project = relationship("Project", back_populates="quotes")
-    versions = relationship(
-        "QuoteVersion",
+    project: Mapped["Project"] = relationship(back_populates="quotes")
+    versions: Mapped[list["QuoteVersion"]] = relationship(
         back_populates="quote",
         cascade="all, delete-orphan",
         order_by="QuoteVersion.version_number",
     )
-    generated_documents = relationship(
-        "GeneratedDocument",
+    generated_documents: Mapped[list["GeneratedDocument"]] = relationship(
         back_populates="quote",
     )
 
@@ -77,14 +75,14 @@ class Quote(Base, TimestampMixin, SoftDeleteMixin):
     # ========================================
 
     @property
-    def latest_version(self):
+    def latest_version(self) -> "QuoteVersion | None":
         """Последняя версия КП"""
         if not self.versions:
             return None
         return max(self.versions, key=lambda v: v.version_number)
 
     @property
-    def current_version(self):
+    def current_version(self) -> "QuoteVersion | None":
         """Текущая (последняя) версия"""
         return self.latest_version
 

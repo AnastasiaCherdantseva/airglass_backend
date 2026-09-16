@@ -1,37 +1,36 @@
 from datetime import datetime, timezone
-from sqlalchemy import Column, DateTime, Boolean, text
-from sqlalchemy.orm import declared_attr
+
+from sqlalchemy import DateTime, Boolean, text
+from sqlalchemy.orm import Mapped, mapped_column, declared_attr
 
 
 class TimestampMixin:
-    """Миксин для created_at / updated_at"""
+    """Миксин для created_at / updated_at."""
 
     @declared_attr
-    def created_at(cls):
-        return Column(
+    def created_at(cls) -> Mapped[datetime]:
+        return mapped_column(
             DateTime(timezone=True),
             default=lambda: datetime.now(timezone.utc),
-            nullable=False,
             server_default=text("now()"),
         )
 
     @declared_attr
-    def updated_at(cls):
-        return Column(
+    def updated_at(cls) -> Mapped[datetime]:
+        return mapped_column(
             DateTime(timezone=True),
             default=lambda: datetime.now(timezone.utc),
             onupdate=lambda: datetime.now(timezone.utc),
-            nullable=False,
-            server_default=text("now()")
+            server_default=text("now()"),
         )
 
 
 class SoftDeleteMixin:
-    """Миксин для мягкого удаления"""
+    """Миксин для мягкого удаления."""
 
     @declared_attr
-    def deleted_at(cls):
-        return Column(DateTime(timezone=True), nullable=True)
+    def deleted_at(cls) -> Mapped[datetime | None]:
+        return mapped_column(DateTime(timezone=True))
 
     @property
     def is_deleted(self) -> bool:

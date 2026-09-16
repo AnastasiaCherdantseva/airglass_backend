@@ -1,25 +1,28 @@
-import uuid
 import enum
+import uuid
 from datetime import datetime, timezone
+from typing import TYPE_CHECKING
 
 from sqlalchemy import (
-    Column,
     ForeignKey,
     Enum,
     DateTime,
-    Index, 
-    text
-    
+    Index,
+    text,
+    Column
 )
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
+
+if TYPE_CHECKING:
+    from app.models import Project, Quote,QuoteVersion, MediaFile
 
 
 class DocumentType(str, enum.Enum):
     """Тип сгенерированного документа"""
-    COMMERCIAL_PROPOSAL = "COMMERCIAL_PROPOSAL"  # Коммерческое предложение (PDF)
+    COMMERCIAL_PROPOSAL = "COMMERCIAL_PROPOSAL"
 
 
 class GeneratedDocument(Base):
@@ -28,12 +31,6 @@ class GeneratedDocument(Base):
 
     Хранит ссылку на файл в объектном хранилище (S3/MinIO).
     Никогда не удаляется физически — это исторический документ.
-
-    Пример:
-        Project №154
-            └── Quote №58
-                └── QuoteVersion v2
-                    └── GeneratedDocument (PDF от 15.09.2026)
     """
     __tablename__ = "generated_documents"
     __table_args__ = (
@@ -44,83 +41,81 @@ class GeneratedDocument(Base):
         Index("ix_generated_document_generated_at", "generated_at"),
     )
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4,server_default=text("gen_random_uuid()"))
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+        server_default=text("gen_random_uuid()"),
+    )
 
     # ========================================
     # ССЫЛКИ (RESTRICT — защита истории)
     # ========================================
-    project_id = Column(
+    project_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("projects.id", ondelete="RESTRICT"),
-        nullable=False,
     )
-    quote_id = Column(
+    quote_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("quotes.id", ondelete="RESTRICT"),
-        nullable=False,
     )
-    quote_version_id = Column(
+    quote_version_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("quote_versions.id", ondelete="RESTRICT"),
-        nullable=False,
     )
 
     # ========================================
     # ТИП ДОКУМЕНТА
     # ========================================
-    type = Column(
+    type: Mapped[DocumentType] = mapped_column(
         Enum(DocumentType),
         default=DocumentType.COMMERCIAL_PROPOSAL,
-        nullable=False,
-        server_default=text("'COMMERCIAL_PROPOSAL'")
+        server_default=text("'COMMERCIAL_PROPOSAL'"),
     )
 
     # ========================================
     # ФАЙЛ
     # ========================================
-    media_file_id = Column(
+    media_file_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("media_files.id", ondelete="RESTRICT"),
-        nullable=False,
     )
 
     # ========================================
     # МЕТАДАННЫЕ
     # ========================================
-    generated_by = Column(
+    generated_by: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="SET NULL"),
-        nullable=True,
     )
-    generated_at = Column(
+    generated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
-        nullable=False,
-        server_default=text("now()")
+        server_default=text("now()"),
     )
 
     # ========================================
     # СВЯЗИ
     # ========================================
-    project = relationship("Project", back_populates="generated_documents")
-    quote = relationship("Quote", back_populates="generated_documents")
-    quote_version = relationship("QuoteVersion", back_populates="generated_documents")
-    media_file = relationship("MediaFile", back_populates="generated_documents")
+    project: Mapped["Project"] = relationship(back_populates="generated_documents")
+    quote: Mapped["Quote"] = relationship(back_populates="generated_documents")
+    quote_version: Mapped["QuoteVersion"] = relationship(back_populates="generated_documents")
+    media_file: Mapped["MediaFile"] = relationship(back_populates="generated_documents")
 
     # ========================================
     # СВОЙСТВА
     # ========================================
     @property
-    def filename(self) -> str:
+    def filename(self) -> Column[str] | str:
         """Имя файла (из media_files)"""
         return self.media_file.original_filename if self.media_file else ""
 
     @property
-    def file_size(self) -> int:
+    def file_size(self) -> Column[int] |int:
         """Размер файла в байтах"""
         return self.media_file.file_size if self.media_file else 0
 
     @property
-    def storage_key(self) -> str:
+    def storage_key(self) -> Column[str] |str:
         """Ключ в объектном хранилище"""
         return self.media_file.storage_key if self.media_file else ""

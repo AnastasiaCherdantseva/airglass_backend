@@ -4,7 +4,7 @@ from sqlalchemy import (
     Column, String, Boolean, ForeignKey, UniqueConstraint, Enum, Index, text
 )
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, Mapped, mapped_column, relationship
 
 from app.models.base import Base
 from app.models.mixins import TimestampMixin, SoftDeleteMixin
@@ -31,31 +31,36 @@ class ProductVariant(Base, TimestampMixin, SoftDeleteMixin):
         Index("ix_variant_status", "status"),
     )
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4,server_default=text("gen_random_uuid()"))
-    product_id = Column(
+    id: Mapped[uuid.UUID] = mapped_column(
+            UUID(as_uuid=True),
+            primary_key=True,
+            default=uuid.uuid4,
+            server_default=text("gen_random_uuid()"),
+        )
+    product_id : Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("products.id", ondelete="RESTRICT"),
         nullable=False,
     )
-    color_id = Column(
+    color_id : Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("colors.id", ondelete="RESTRICT"),
         nullable=True,
     )
-    material_id = Column(
+    material_id : Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("materials.id", ondelete="RESTRICT"),
         nullable=True,
     )
-    internal_sku = Column(String(100), unique=True, nullable=True)
-    name_override = Column(String(255), nullable=True)
+    internal_sku : Mapped[str] = mapped_column(String(100), unique=True, nullable=True)
+    name_override : Mapped[str] = mapped_column(String(255), nullable=True)
     is_active = Column(
     Boolean,
     default=True,
     nullable=False,
     server_default=text("true"),
 )
-    status = Column(
+    status : Mapped[ProductVariantStatus] = mapped_column(
         Enum(ProductVariantStatus),
         default=ProductVariantStatus.ACTIVE,
         nullable=False,
@@ -97,7 +102,7 @@ class ProductVariant(Base, TimestampMixin, SoftDeleteMixin):
         return not self.template_items and not self.quote_items
 
     @property
-    def is_available_for_new_quotes(self) -> bool:
+    def is_available_for_new_quotes(self) -> Column[bool] | bool:
         """
         Можно ли использовать вариант в новых КП/шаблонах.
         """
