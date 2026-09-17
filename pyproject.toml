@@ -19,6 +19,7 @@ dependencies = [
     "pydantic-settings",
     "alembic",
     "pwdlib[bcrypt]>=0.2.0",
+    "apscheduler>=3.10",
 ]
 
 [project.optional-dependencies]
@@ -50,8 +51,17 @@ plugins = ["pydantic.mypy"]
 explicit_package_bases = true
 mypy_path = "."
 [[tool.mypy.overrides]]
-module = ["app.db.seed.*", "alembic.*",]
+module = [
+    "app.db.seed.*",
+    "alembic.*",
+]
 ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = [
+    "apscheduler.*",
+]
+ignore_missing_imports = true
 
 [tool.ruff]
 line-length = 100
@@ -74,6 +84,7 @@ select = ["E", "W", "F", "I", "UP", "B"]
 # Какие правила игнорировать
 ignore = [
     "E501", # не ругаться на длину строки (пусть этим занимается formatter)
+    "B008",  # FastAPI uses Depends() in defaults intentionally
 ]
 
 [tool.ruff.format]

@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     DB_HOST: str = "localhost"
     DB_PORT: int = 5432
 
+    # флаг автоматического удаления сессий
+    RUN_CRON: bool = False
+
     @property
     def DATABASE_URL(self) -> str:
         return (
