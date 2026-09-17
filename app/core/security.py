@@ -4,6 +4,7 @@ Password hashing and session token utilities.
 
 import hashlib
 import secrets
+from datetime import timedelta
 
 from pwdlib import PasswordHash
 from pwdlib.hashers.bcrypt import BcryptHasher
@@ -11,6 +12,7 @@ from pwdlib.hashers.bcrypt import BcryptHasher
 # ✅ Явно указываем bcrypt
 password_hash = PasswordHash((BcryptHasher(),))
 SESSION_TOKEN_BYTES = 32  # 256 bits of entropy
+SESSION_TTL = timedelta(days=7)
 
 
 def hash_password(password: str) -> str:
