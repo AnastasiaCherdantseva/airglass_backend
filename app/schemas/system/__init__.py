@@ -1,15 +1,10 @@
+from app.schemas.system.auth import AuthBase
+from app.schemas.system.role import RoleBase, RoleCreate, RoleResponse, RoleShort, RoleUpdate
 from app.schemas.system.user import (
     UserBase,
     UserCreate,
-    UserUpdate,
     UserResponse,
-)
-from app.schemas.system.role import (
-    RoleBase,
-    RoleCreate,
-    RoleUpdate,
-    RoleResponse,
-    RoleShort
+    UserUpdate,
 )
 
 __all__ = [
@@ -18,15 +13,12 @@ __all__ = [
     "UserCreate",
     "UserUpdate",
     "UserResponse",
-
     # ROLE
-
     "RoleBase",
     "RoleCreate",
     "RoleUpdate",
     "RoleResponse",
     "RoleShort",
-
-
-
+    # AUTH
+    "AuthBase",
 ]
