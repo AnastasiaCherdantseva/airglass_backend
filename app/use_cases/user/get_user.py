@@ -6,7 +6,7 @@ from uuid import UUID
 
 from app.core.exceptions import NotFoundError
 from app.models import User
-from app.repositories.protocols.user import UserReadRepositoryProtocol
+from app.repositories.protocols.system.user import UserReadRepositoryProtocol
 
 
 async def get_user(

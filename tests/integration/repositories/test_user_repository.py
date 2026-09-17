@@ -6,12 +6,10 @@
 
 from uuid import uuid4
 
+from backend.app.repositories.system.user import UserRepository
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from typing import List
-
 from app.models import User
-from app.repositories.user import UserRepository
 
 
 async def test_get_by_email_success(db_session: AsyncSession, user: User) -> None:
@@ -35,7 +33,7 @@ async def test_get_by_email_not_found(db_session: AsyncSession) -> None:
     get_by_email возвращает None, если пользователя с таким email нет.
 
     Фикстуры:
-        db_session — сессия БД 
+        db_session — сессия БД
     """
     repo = UserRepository(db_session)
 
@@ -68,7 +66,7 @@ async def test_get_by_id_not_found(db_session: AsyncSession) -> None:
 
 
 async def test_get_by_email_does_not_confuse_users(
-    db_session: AsyncSession, users: List[User]
+    db_session: AsyncSession, users: list[User]
 ) -> None:
     """get_by_email возвращает правильного пользователя."""
 

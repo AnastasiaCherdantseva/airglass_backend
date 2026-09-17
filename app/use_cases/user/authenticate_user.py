@@ -7,7 +7,7 @@ import logging
 from app.core.exceptions import PermissionDeniedError
 from app.core.security import is_verified_password
 from app.models.system.user import User
-from app.repositories.protocols.user import UserReadRepositoryProtocol
+from app.repositories.protocols.system.user import UserReadRepositoryProtocol
 
 logger = logging.getLogger(__name__)
 
