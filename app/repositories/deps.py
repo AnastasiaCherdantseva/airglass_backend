@@ -4,12 +4,10 @@ FastAPI-зависимости.
 
 from collections.abc import AsyncGenerator
 
-from fastapi import Depends
-
 from app.core.database import AsyncSessionLocal
 from app.core.uow import UnitOfWork
+
 # from app.repositories.role import RoleRepository
-from app.repositories.base import BaseRepository
 
 
 async def get_uow() -> AsyncGenerator[UnitOfWork, None]:

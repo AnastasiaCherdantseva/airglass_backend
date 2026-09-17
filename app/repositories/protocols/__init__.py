@@ -1,16 +1,12 @@
-# app/repositories/protocols/__init__.py
-"""
-Protocol-контракты для репозиториев.
-"""
-
 from app.repositories.protocols.base import (
     ReadRepositoryProtocol,
     WriteRepositoryProtocol,
 )
-from app.repositories.protocols.user import (
+from app.repositories.protocols.system.user import (
     UserReadRepositoryProtocol,
     UserWriteRepositoryProtocol,
 )
+
 # from app.repositories.protocols.role import (
 #     RoleReadRepositoryProtocol,
 #     RoleWriteRepositoryProtocol,

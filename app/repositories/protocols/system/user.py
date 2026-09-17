@@ -1,5 +1,5 @@
 """
-Protocol-контракты для репозитория пользователей.
+Protocols for the users repos.
 """
 
 from typing import Protocol
@@ -12,12 +12,12 @@ from app.repositories.protocols.base import (
 
 
 class UserReadRepositoryProtocol(ReadRepositoryProtocol[User], Protocol):
-    """Чтение пользователей."""
+    """Read users."""
 
     async def get_by_email(self, email: str) -> User | None: ...
 
 
 class UserWriteRepositoryProtocol(WriteRepositoryProtocol[User], Protocol):
-    """Запись пользователей."""
+    """Write users."""
 
-    pass   # всё нужное — в базовом WriteRepositoryProtocol
+    pass  # всё нужное — в базовом WriteRepositoryProtocol
