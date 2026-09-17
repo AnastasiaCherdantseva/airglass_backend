@@ -9,6 +9,7 @@
 """
 
 from collections.abc import AsyncGenerator
+from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest_asyncio
@@ -22,11 +23,11 @@ from sqlalchemy.ext.asyncio import (
 from sqlalchemy.pool import NullPool
 
 from app.core.database import get_db
-from app.core.security import hash_password
+from app.core.security import SESSION_TTL, generate_session_token, hash_password, hash_session_token
 from app.main import app
 from app.models import *  # noqa: F401,F403 — регистрирует модели в Base.metadata
 from app.models.base import Base
-from app.models.system import User
+from app.models.system import Session, User
 
 TEST_DATABASE_URL = "postgresql+asyncpg://myuser:postgres@localhost:5432/airglass_test"
 
@@ -202,6 +203,31 @@ async def users_in_memory() -> list[User]:
         )
         for i in range(5)
     ]
+
+
+# ============================================
+# SESSIONS FOR FAKE USERS
+# ============================================
+
+
+@pytest_asyncio.fixture
+async def session(db_session: AsyncSession, user: User) -> dict[str, Session | str]:
+    """Ready-to-use session for active user in the database."""
+    token = generate_session_token()
+    token_hash = hash_session_token(token)
+
+    now = datetime.now(UTC)
+
+    session = Session(
+        id=uuid4(),
+        user_id=user.id,
+        token_hash=token_hash,
+        expires_at=now + SESSION_TTL,
+        last_used_at=now,
+    )
+    db_session.add(session)
+    await db_session.flush()
+    return {"data": session, "token": token}
 
 
 # ============================================

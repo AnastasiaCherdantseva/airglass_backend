@@ -21,7 +21,7 @@ class SessionRepository(BaseIdRepository[Session]):
         )
         return result.scalar_one_or_none()
 
-    async def get_by_user_id(self, user_id: UUID) -> Session | None:
-        """Find session by user_id."""
+    async def get_by_user_id(self, user_id: UUID) -> list[Session]:
+        """Find all sessions of the given user."""
         result = await self.db.execute(select(Session).where(Session.user_id == user_id))
-        return result.scalar_one_or_none()
+        return list(result.scalars().all())

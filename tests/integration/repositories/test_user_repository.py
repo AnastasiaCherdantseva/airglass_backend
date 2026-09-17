@@ -6,10 +6,10 @@
 
 from uuid import uuid4
 
-from backend.app.repositories.system.user import UserRepository
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import User
+from app.repositories.system.user import UserRepository
 
 
 async def test_get_by_email_success(db_session: AsyncSession, user: User) -> None:
