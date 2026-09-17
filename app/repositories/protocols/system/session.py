@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Protocol
 from uuid import UUID
 
@@ -12,6 +13,7 @@ class SessionReadRepositoryProtocol(ReadRepositoryProtocol[Session], Protocol):
     """Read Sessions."""
 
     async def get_by_token(self, token: str) -> Session | None: ...
+    async def get_by_user_id(self, user_id: UUID) -> list[Session]: ...
 
 
 class SessionWriteRepositoryProtocol(WriteRepositoryProtocol[Session], Protocol):
@@ -20,6 +22,8 @@ class SessionWriteRepositoryProtocol(WriteRepositoryProtocol[Session], Protocol)
     async def create(
         self, *, user_id: UUID, user_agent: str | None, ip_address: str | None
     ) -> str | None: ...
+
+    async def delete_expired(self, time: datetime) -> int: ...
 
 
 class SessionRepositoryProtocol(

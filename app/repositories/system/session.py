@@ -2,9 +2,10 @@
 Session repo.
 """
 
+from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 
 from app.core.security import hash_session_token
 from app.models import Session
@@ -25,3 +26,9 @@ class SessionRepository(BaseIdRepository[Session]):
         """Find all sessions of the given user."""
         result = await self.db.execute(select(Session).where(Session.user_id == user_id))
         return list(result.scalars().all())
+
+    async def delete_expired(self, time: datetime) -> int:
+        """Delete sessions where expired less then current time."""
+        stmt = delete(Session).where(Session.expires_at < time)
+        result = await self.db.execute(stmt)
+        return result.rowcount
