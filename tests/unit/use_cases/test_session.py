@@ -14,12 +14,13 @@ from tests.unit.fakes.user_repository import FakeUserRepository
 
 
 async def test_create_session_for_active_user(user_in_memory: User) -> None:
-    """create_session return token session."""
+    """create_session returns a token for an active user."""
     fake_session_repo = FakeSessionRepository()
     fake_user_repo = FakeUserRepository([user_in_memory])
-    user_id = next(iter(fake_user_repo.users))
 
-    result = await create_session(user_id, sessions=fake_session_repo, users=fake_user_repo)
+    result = await create_session(
+        user_in_memory.id, sessions=fake_session_repo, users=fake_user_repo
+    )
 
     assert len(fake_session_repo.sessions) == 1
     # BR-AUTH-012: token is a string returned to the client
@@ -29,20 +30,23 @@ async def test_create_session_for_active_user(user_in_memory: User) -> None:
     created = next(iter(fake_session_repo.sessions.values()))
 
     assert created.token_hash == hash_session_token(result)
-    assert created.user_id == user_id
+    # ADR-AUTH-008
+    assert created.token_hash != result
+    assert created.user_id == user_in_memory.id
     assert created.ip_address is None
     assert created.user_agent is None
 
 
 async def test_create_session_for_inactive_user(inactive_user_in_memory: User) -> None:
-    """create_session for inactive user raise PermissionDeniedError"""
+    """create_session raises PermissionDeniedError for an inactive user."""
     fake_session_repo = FakeSessionRepository()
     fake_user_repo = FakeUserRepository([inactive_user_in_memory])
-    user_id = next(iter(fake_user_repo.users))
 
     # BR-AUTH-013: if in user is_active = false, session does not created.
     with pytest.raises(PermissionDeniedError):
-        await create_session(user_id, sessions=fake_session_repo, users=fake_user_repo)
+        await create_session(
+            inactive_user_in_memory.id, sessions=fake_session_repo, users=fake_user_repo
+        )
 
     assert len(fake_session_repo.sessions) == 0
 
@@ -50,12 +54,13 @@ async def test_create_session_for_inactive_user(inactive_user_in_memory: User) -
 async def test_create_another_session_active_user(
     user_in_memory: User, session_in_memory: dict[str, Session | str]
 ) -> None:
-    """create_session for active user already with sessions also return token session."""
+    """create_session adds another session for an active user."""
     fake_session_repo = FakeSessionRepository([session_in_memory["data"]])
     fake_user_repo = FakeUserRepository([user_in_memory])
-    user_id = next(iter(fake_user_repo.users))
 
-    result = await create_session(user_id, sessions=fake_session_repo, users=fake_user_repo)
+    result = await create_session(
+        user_in_memory.id, sessions=fake_session_repo, users=fake_user_repo
+    )
 
     # BR-AUTH-003: user can have several sessions
     assert len(fake_session_repo.sessions) == 2
@@ -68,7 +73,9 @@ async def test_create_another_session_active_user(
     created = sessions[1]
 
     assert created.token_hash == hash_session_token(result)
-    assert created.user_id == user_id
+    # ADR-AUTH-008
+    assert created.token_hash != result
+    assert created.user_id == user_in_memory.id
     assert created.ip_address is None
     assert created.user_agent is None
 
@@ -77,14 +84,15 @@ async def test_create_another_session_inactive_user(
     inactive_user_in_memory: User, session_in_memory: dict[str, Session | str]
 ) -> None:
     """
-    create_session for inactive user already with sessions raise PermissionDeniedError.
+    create_session raises PermissionDeniedError for an inactive user with existing sessions.
     """
     fake_session_repo = FakeSessionRepository([session_in_memory["data"]])
     fake_user_repo = FakeUserRepository([inactive_user_in_memory])
-    user_id = next(iter(fake_user_repo.users))
 
     # BR-AUTH-013: if in user is_active = false, session does not created.
     with pytest.raises(PermissionDeniedError):
-        await create_session(user_id, sessions=fake_session_repo, users=fake_user_repo)
+        await create_session(
+            inactive_user_in_memory.id, sessions=fake_session_repo, users=fake_user_repo
+        )
 
     assert len(fake_session_repo.sessions) == 1
