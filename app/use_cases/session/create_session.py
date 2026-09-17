@@ -18,8 +18,8 @@ logger = logging.getLogger(__name__)
 async def create_session(
     user_id: UUID,
     *,
-    user_agent: str | None,
-    ip_address: str | None,
+    user_agent: str | None = None,
+    ip_address: str | None = None,
     sessions: SessionWriteRepositoryProtocol,
     users: UserReadRepositoryProtocol,
 ) -> str:

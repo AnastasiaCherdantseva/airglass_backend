@@ -230,6 +230,48 @@ async def session(db_session: AsyncSession, user: User) -> dict[str, Session | s
     return {"data": session, "token": token}
 
 
+@pytest_asyncio.fixture
+async def session_in_memory(user_in_memory: User) -> dict[str, Session | str]:
+    """Ready-to-use active session in memory (no DB)."""
+    token = generate_session_token()
+    token_hash = hash_session_token(token)
+
+    now = datetime.now(UTC)
+    session = Session(
+        id=uuid4(),
+        user_id=user_in_memory.id,
+        token_hash=token_hash,
+        expires_at=now + SESSION_TTL,
+        last_used_at=now,
+        created_at=now,
+        user_agent="Test Agent",
+        ip_address="127.0.0.1",
+    )
+    return {"data": session, "token": token}
+
+
+@pytest_asyncio.fixture
+async def inactive_user_session_in_memory(
+    inactive_user_in_memory: User,
+) -> dict[str, Session | str]:
+    """Ready-to-use active session in memory (no DB)."""
+    token = generate_session_token()
+    token_hash = hash_session_token(token)
+
+    now = datetime.now(UTC)
+    session = Session(
+        id=uuid4(),
+        user_id=inactive_user_in_memory.id,
+        token_hash=token_hash,
+        expires_at=now + SESSION_TTL,
+        last_used_at=now,
+        created_at=now,
+        user_agent="Test Agent",
+        ip_address="127.0.0.1",
+    )
+    return {"data": session, "token": token}
+
+
 # ============================================
 # HTTP CLIENT — на каждый тест
 # ============================================
