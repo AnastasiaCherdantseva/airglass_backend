@@ -104,6 +104,7 @@ from app.models.suppliers import (
 # ============================================
 from app.models.system import (
     AuditLog,
+    Organization,
     Permission,
     PermissionAction,
     PermissionCondition,
@@ -114,6 +115,7 @@ from app.models.system import (
     RolePermission,
     Session,
     User,
+    UserOrganization,
     UserPermission,
     UserRole,
 )
@@ -210,6 +212,8 @@ __all__ = [
     "UserPermission",
     "AuditLog",
     "Session",
+    "Organization",
+    "UserOrganization",
     # Customers
     "Customer",
     "CustomerAddress",
