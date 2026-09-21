@@ -1,238 +1,567 @@
 """
-Seed-данные для прав.
+Seed-данные для прав и их вариантов (PermissionCondition).
+
+Права: resource.action (7 действий).
+Варианты: type (all | category | role | creator | subtree) + effect (allow | deny).
+is_system: системное право (нельзя удалить).
 """
 
-PERMISSIONS = [
+from typing import TypedDict
+
+
+class PermissionConditionSeed(TypedDict, total=False):
+    type: str
+    effect: str
+    category_id: str
+    role_id: str
+
+
+class PermissionSeed(TypedDict):
+    code: str
+    name: str
+    resource: str
+    action: str
+    is_system: bool
+    conditions: list[PermissionConditionSeed]
+
+
+PERMISSIONS: list[PermissionSeed] = [
     # ============================================
     # CALCULATOR
     # ============================================
     {
-        "code": "calculator.read.all",
+        "code": "calculator.read",
         "name": "Доступ к калькулятору",
         "resource": "calculator",
         "action": "read",
-        "scope": "all",
+        "is_system": True,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+        ],
     },
-    
     # ============================================
     # USERS
     # ============================================
     {
-        "code": "users.create.all",
+        "code": "users.create",
         "name": "Создание пользователей",
         "resource": "users",
         "action": "create",
-        "scope": "all",
+        "is_system": True,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+            {"type": "subtree", "effect": "allow"},
+        ],
     },
     {
-        "code": "users.read.all",
+        "code": "users.read",
         "name": "Просмотр пользователей",
         "resource": "users",
         "action": "read",
-        "scope": "all",
+        "is_system": True,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+            {"type": "subtree", "effect": "allow"},
+        ],
     },
     {
-        "code": "users.update.all",
+        "code": "users.update",
         "name": "Редактирование пользователей",
         "resource": "users",
         "action": "update",
-        "scope": "all",
+        "is_system": True,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+            {"type": "subtree", "effect": "allow"},
+        ],
     },
     {
-        "code": "users.delete.all",
+        "code": "users.delete",
         "name": "Удаление пользователей",
         "resource": "users",
         "action": "delete",
-        "scope": "all",
+        "is_system": True,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+            {"type": "subtree", "effect": "allow"},
+        ],
     },
-    
     # ============================================
     # ROLES
     # ============================================
     {
-        "code": "roles.manage.all",
-        "name": "Управление ролями",
+        "code": "roles.create",
+        "name": "Создание ролей",
         "resource": "roles",
-        "action": "manage",
-        "scope": "all",
+        "action": "create",
+        "is_system": True,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+            {"type": "subtree", "effect": "allow"},
+        ],
     },
-    
+    {
+        "code": "roles.read",
+        "name": "Просмотр ролей",
+        "resource": "roles",
+        "action": "read",
+        "is_system": True,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+            {"type": "subtree", "effect": "allow"},
+        ],
+    },
+    {
+        "code": "roles.update",
+        "name": "Редактирование ролей",
+        "resource": "roles",
+        "action": "update",
+        "is_system": True,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+            {"type": "subtree", "effect": "allow"},
+        ],
+    },
+    {
+        "code": "roles.delete",
+        "name": "Удаление ролей",
+        "resource": "roles",
+        "action": "delete",
+        "is_system": True,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+            {"type": "subtree", "effect": "allow"},
+        ],
+    },
     # ============================================
     # PRODUCTS
     # ============================================
     {
-        "code": "products.create.all",
+        "code": "products.create",
         "name": "Создание товаров",
         "resource": "products",
         "action": "create",
-        "scope": "all",
+        "is_system": True,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+        ],
     },
     {
-        "code": "products.read.all",
+        "code": "products.read",
         "name": "Просмотр товаров",
         "resource": "products",
         "action": "read",
-        "scope": "all",
+        "is_system": True,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+        ],
     },
     {
-        "code": "products.update.all",
+        "code": "products.update",
         "name": "Редактирование товаров",
         "resource": "products",
         "action": "update",
-        "scope": "all",
+        "is_system": True,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+        ],
     },
     {
-        "code": "products.delete.all",
+        "code": "products.delete",
         "name": "Удаление товаров",
         "resource": "products",
         "action": "delete",
-        "scope": "all",
+        "is_system": True,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+        ],
     },
-    
+    {
+        "code": "products.archive",
+        "name": "Архивация товаров",
+        "resource": "products",
+        "action": "archive",
+        "is_system": False,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+        ],
+    },
+    {
+        "code": "products.export",
+        "name": "Экспорт товаров",
+        "resource": "products",
+        "action": "export",
+        "is_system": False,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+        ],
+    },
+    {
+        "code": "products.import",
+        "name": "Импорт товаров",
+        "resource": "products",
+        "action": "import",
+        "is_system": False,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+        ],
+    },
+    # ============================================
+    # CATEGORIES
+    # ============================================
+    {
+        "code": "categories.create",
+        "name": "Создание категорий",
+        "resource": "categories",
+        "action": "create",
+        "is_system": True,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+        ],
+    },
+    {
+        "code": "categories.read",
+        "name": "Просмотр категорий",
+        "resource": "categories",
+        "action": "read",
+        "is_system": True,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+        ],
+    },
+    {
+        "code": "categories.update",
+        "name": "Редактирование категорий",
+        "resource": "categories",
+        "action": "update",
+        "is_system": True,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+        ],
+    },
+    {
+        "code": "categories.delete",
+        "name": "Удаление категорий",
+        "resource": "categories",
+        "action": "delete",
+        "is_system": True,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+        ],
+    },
     # ============================================
     # TEMPLATES
     # ============================================
     {
-        "code": "templates.create.all",
+        "code": "templates.create",
         "name": "Создание шаблонов",
         "resource": "templates",
         "action": "create",
-        "scope": "all",
+        "is_system": True,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+        ],
     },
     {
-        "code": "templates.read.all",
+        "code": "templates.read",
         "name": "Просмотр шаблонов",
         "resource": "templates",
         "action": "read",
-        "scope": "all",
+        "is_system": True,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+            {"type": "creator", "effect": "allow"},
+        ],
     },
     {
-        "code": "templates.update.all",
+        "code": "templates.update",
         "name": "Редактирование шаблонов",
         "resource": "templates",
         "action": "update",
-        "scope": "all",
+        "is_system": True,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+            {"type": "creator", "effect": "allow"},
+        ],
     },
     {
-        "code": "templates.delete.own",
-        "name": "Удаление своих шаблонов",
+        "code": "templates.delete",
+        "name": "Удаление шаблонов",
         "resource": "templates",
         "action": "delete",
-        "scope": "own",
+        "is_system": True,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+            {"type": "creator", "effect": "allow"},
+        ],
     },
-    
     # ============================================
     # QUOTES
     # ============================================
     {
-        "code": "quotes.create.all",
+        "code": "quotes.create",
         "name": "Создание КП",
         "resource": "quotes",
         "action": "create",
-        "scope": "all",
+        "is_system": True,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+        ],
     },
     {
-        "code": "quotes.read.all",
+        "code": "quotes.read",
         "name": "Просмотр КП",
         "resource": "quotes",
         "action": "read",
-        "scope": "all",
+        "is_system": True,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+            {"type": "creator", "effect": "allow"},
+        ],
     },
     {
-        "code": "quotes.update.own",
-        "name": "Редактирование своих КП",
+        "code": "quotes.update",
+        "name": "Редактирование КП",
         "resource": "quotes",
         "action": "update",
-        "scope": "own",
+        "is_system": True,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+            {"type": "creator", "effect": "allow"},
+        ],
     },
     {
-        "code": "quotes.delete.own",
-        "name": "Удаление своих КП",
+        "code": "quotes.delete",
+        "name": "Удаление КП",
         "resource": "quotes",
         "action": "delete",
-        "scope": "own",
+        "is_system": True,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+            {"type": "creator", "effect": "allow"},
+        ],
     },
     {
-        "code": "quotes.approve.all",
-        "name": "Утверждение КП",
+        "code": "quotes.export",
+        "name": "Экспорт КП",
         "resource": "quotes",
-        "action": "approve",
-        "scope": "all",
+        "action": "export",
+        "is_system": False,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+        ],
     },
-    
     # ============================================
     # PROJECTS
     # ============================================
     {
-        "code": "projects.create.all",
+        "code": "projects.create",
         "name": "Создание проектов",
         "resource": "projects",
         "action": "create",
-        "scope": "all",
+        "is_system": True,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+        ],
     },
     {
-        "code": "projects.read.all",
+        "code": "projects.read",
         "name": "Просмотр проектов",
         "resource": "projects",
         "action": "read",
-        "scope": "all",
+        "is_system": True,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+            {"type": "creator", "effect": "allow"},
+        ],
     },
     {
-        "code": "projects.update.all",
+        "code": "projects.update",
         "name": "Редактирование проектов",
         "resource": "projects",
         "action": "update",
-        "scope": "all",
+        "is_system": True,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+            {"type": "creator", "effect": "allow"},
+        ],
     },
-    
+    {
+        "code": "projects.archive",
+        "name": "Архивация проектов",
+        "resource": "projects",
+        "action": "archive",
+        "is_system": False,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+        ],
+    },
     # ============================================
     # CUSTOMERS
     # ============================================
     {
-        "code": "customers.create.all",
+        "code": "customers.create",
         "name": "Создание заказчиков",
         "resource": "customers",
         "action": "create",
-        "scope": "all",
+        "is_system": True,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+        ],
     },
     {
-        "code": "customers.read.all",
+        "code": "customers.read",
         "name": "Просмотр заказчиков",
         "resource": "customers",
         "action": "read",
-        "scope": "all",
+        "is_system": True,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+            {"type": "subtree", "effect": "allow"},
+        ],
     },
-    
+    {
+        "code": "customers.update",
+        "name": "Редактирование заказчиков",
+        "resource": "customers",
+        "action": "update",
+        "is_system": True,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+            {"type": "subtree", "effect": "allow"},
+        ],
+    },
     # ============================================
     # SUPPLIERS
     # ============================================
     {
-        "code": "suppliers.manage.all",
-        "name": "Управление поставщиками",
+        "code": "suppliers.create",
+        "name": "Создание поставщиков",
         "resource": "suppliers",
-        "action": "manage",
-        "scope": "all",
+        "action": "create",
+        "is_system": True,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+        ],
     },
-    
+    {
+        "code": "suppliers.read",
+        "name": "Просмотр поставщиков",
+        "resource": "suppliers",
+        "action": "read",
+        "is_system": True,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+        ],
+    },
+    {
+        "code": "suppliers.update",
+        "name": "Редактирование поставщиков",
+        "resource": "suppliers",
+        "action": "update",
+        "is_system": True,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+        ],
+    },
+    {
+        "code": "suppliers.delete",
+        "name": "Удаление поставщиков",
+        "resource": "suppliers",
+        "action": "delete",
+        "is_system": True,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+        ],
+    },
+    # ============================================
+    # MEDIA
+    # ============================================
+    {
+        "code": "media.create",
+        "name": "Загрузка медиа",
+        "resource": "media",
+        "action": "create",
+        "is_system": True,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+        ],
+    },
+    {
+        "code": "media.read",
+        "name": "Просмотр медиа",
+        "resource": "media",
+        "action": "read",
+        "is_system": True,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+        ],
+    },
+    {
+        "code": "media.delete",
+        "name": "Удаление медиа",
+        "resource": "media",
+        "action": "delete",
+        "is_system": True,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+            {"type": "creator", "effect": "allow"},
+        ],
+    },
     # ============================================
     # SETTINGS
     # ============================================
+    # {
+    #     "code": "settings.create",
+    #     "name": "Создание настроек",
+    #     "resource": "settings",
+    #     "action": "create",
+    #     "is_system": True,
+    #     "conditions": [
+    #         {"type": "all", "effect": "allow"},
+    #     ],
+    # },
     {
-        "code": "settings.manage.all",
-        "name": "Управление настройками",
+        "code": "settings.read",
+        "name": "Просмотр настроек",
         "resource": "settings",
-        "action": "manage",
-        "scope": "all",
+        "action": "read",
+        "is_system": True,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+        ],
     },
-    
+    {
+        "code": "settings.update",
+        "name": "Редактирование настроек",
+        "resource": "settings",
+        "action": "update",
+        "is_system": True,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+        ],
+    },
+    # {
+    #     "code": "settings.delete",
+    #     "name": "Удаление настроек",
+    #     "resource": "settings",
+    #     "action": "delete",
+    #     "is_system": True,
+    #     "conditions": [
+    #         {"type": "all", "effect": "allow"},
+    #     ],
+    # },
     # ============================================
     # AUDIT LOG
     # ============================================
     {
-        "code": "audit_log.read.all",
+        "code": "audit_log.read",
         "name": "Просмотр логов",
         "resource": "audit_log",
         "action": "read",
-        "scope": "all",
+        "is_system": True,
+        "conditions": [
+            {"type": "all", "effect": "allow"},
+        ],
     },
 ]

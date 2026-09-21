@@ -1,58 +1,68 @@
 """
 Загрузка seed-данных.
 """
-from app.core.security import hash_password
+
+import logging
+from datetime import UTC, datetime
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.system import (
-    Role,
-    Permission,
-    PermissionResource,
-    PermissionAction,
-    PermissionScope, User, UserRole, RolePermission
+from app.core.security import hash_password
+from app.db.seed.attribute_options import ATTRIBUTE_OPTIONS
+from app.db.seed.attributes import ATTRIBUTES
+from app.db.seed.binding_types import BINDING_TYPES
+from app.db.seed.categories import CATEGORIES
+from app.db.seed.color_groups import COLOR_GROUPS
+from app.db.seed.color_visual_types import COLOR_VISUAL_TYPES
+from app.db.seed.colors import ALL_COLORS
+from app.db.seed.gallery_rules import GALLERY_RULES
+from app.db.seed.material_groups import MATERIAL_GROUPS
+from app.db.seed.materials import MATERIALS
+from app.db.seed.media_types import MEDIA_TYPES
+from app.db.seed.permissions import PERMISSIONS
+from app.db.seed.project_statuses import PROJECT_STATUSES
+from app.db.seed.roles import ROLES
+from app.db.seed.units import UNITS
+from app.db.seed.usage_roles import USAGE_ROLES
+from app.db.seed.users import SEED_ADMIN
+from app.db.seed.visual_types import VISUAL_TYPES
+from app.models.attributes import Attribute, AttributeDataType, AttributeOption
+from app.models.catalog import (
+    Category,
+    Color,
+    ColorGroup,
+    ColorVisualType,
+    Material,
+    MaterialGroup,
+    Unit,
+    VisualType,
 )
 from app.models.media import MediaType
 from app.models.projects import ProjectStatus
-from app.models.catalog import (
-    Unit,
-    Color,
-    Material,
-    Category,
-    VisualType,
-    ColorGroup,
-    ColorVisualType,
-    MaterialGroup,
+from app.models.system import (
+    Permission,
+    PermissionAction,
+    PermissionResource,
+    Role,
+    RolePermission,
+    User,
+    UserRole,
 )
-from app.models.templates import GalleryRuleCondition, GalleryRule, BindingType
-from app.models.attributes import Attribute, AttributeDataType, AttributeOption
+from app.models.system.permission_condition import (
+    ConditionType,
+    PermissionCondition,
+    PermissionEffect,
+)
+from app.models.templates import BindingType, GalleryRule, GalleryRuleCondition
 from app.models.usage import UsageRole
 
-from app.db.seed.roles import ROLES
-from app.db.seed.categories import CATEGORIES
-from app.db.seed.visual_types import VISUAL_TYPES
-from app.db.seed.permissions import PERMISSIONS
-from app.db.seed.media_types import MEDIA_TYPES
-from app.db.seed.project_statuses import PROJECT_STATUSES
-from app.db.seed.units import UNITS
-from app.db.seed.materials import MATERIALS
-from app.db.seed.gallery_rules import GALLERY_RULES
-from app.db.seed.color_groups import COLOR_GROUPS
-from app.db.seed.material_groups import MATERIAL_GROUPS
-from app.db.seed.colors import ALL_COLORS
-from app.db.seed.color_visual_types import COLOR_VISUAL_TYPES
-from app.db.seed.binding_types import BINDING_TYPES
-from app.db.seed.attributes import ATTRIBUTES
-from app.db.seed.attribute_options import ATTRIBUTE_OPTIONS
-from app.db.seed.users import SEED_ADMIN
-from app.db.seed.role_permissions import ROLE_PERMISSIONS
-from app.db.seed.usage_roles import USAGE_ROLES
-
+logger = logging.getLogger(__name__)
 
 # ============================================================
 # ТОЧКА ВХОДА
 # ============================================================
+
 
 async def seed_all(db: AsyncSession) -> None:
     """Загрузить все seed-данные."""
@@ -87,9 +97,7 @@ async def seed_all(db: AsyncSession) -> None:
     # 6. Категории и правила галереи (зависят от категорий)
     categories = await _seed_categories(db)
     await _seed_gallery_rules(db, categories)
-    await _seed_admin_user(db, roles)
-
-
+    await _seed_admin_user(db, roles["SYSTEM_ADMIN"])
 
     await db.commit()
     print("✅ Seed-данные загружены!")
@@ -98,6 +106,7 @@ async def seed_all(db: AsyncSession) -> None:
 # ============================================================
 # СПРАВОЧНИКИ
 # ============================================================
+
 
 async def _seed_units(db: AsyncSession) -> dict[str, Unit]:
     """Загрузить единицы измерения. Возвращает {code: Unit}."""
@@ -282,9 +291,7 @@ async def _seed_color_visual_types(
     visual_types: dict[str, VisualType],
 ) -> None:
     """Загрузить связи цветов с типами визуализации."""
-    result = await db.execute(
-        select(ColorVisualType.color_id, ColorVisualType.visual_type_id)
-    )
+    result = await db.execute(select(ColorVisualType.color_id, ColorVisualType.visual_type_id))
     existing_links = {(row[0], row[1]) for row in result.all()}
 
     added = 0
@@ -362,61 +369,104 @@ async def _seed_categories(db: AsyncSession) -> dict[str, Category]:
 # СИСТЕМА
 # ============================================================
 
-async def _seed_roles(db: AsyncSession) -> dict[str, Role]:
-    """Загрузить роли. Возвращает {code: Role}."""
-    result = await db.execute(select(Role))
-    existing = {r.code: r for r in result.scalars().all()}
 
-    to_create = [r for r in ROLES if r["code"] not in existing]
+async def _seed_roles(session: AsyncSession) -> dict[str, Role]:
+    """
+    Создать системные роли (идемпотентно).
 
-    for item in to_create:
-        obj = Role(
-            code=item["code"],
-            name=item["name"],
-            description=item.get("description"),
-            is_system=item.get("is_system", False),
-            is_active=item.get("is_active", True),
+    Args:
+        session: AsyncSession.
+
+    Returns:
+        Словарь {code: Role} — для использования в других сидерах.
+    """
+    result_map: dict[str, Role] = {}
+
+    for role_seed in ROLES:
+        stmt = select(Role).where(
+            Role.name == role_seed["name"],
+            Role.owner_id.is_(None),  # системная роль
         )
-        db.add(obj)
-        existing[item["code"]] = obj
+        result = await session.execute(stmt)
+        role = result.scalar_one_or_none()
 
-    if to_create:
-        await db.flush()
-        print(f"   • Роли: добавлено {len(to_create)}")
-    else:
-        print("   • Роли: уже загружены")
+        if role is None:
+            role = Role(
+                owner_id=None,  # системная роль
+                name=role_seed["name"],
+                description=role_seed["description"],
+                is_system=role_seed["is_system"],
+                is_active=role_seed["is_active"],
+            )
+            session.add(role)
+            await session.flush()
+            logger.info("Created system role: %s", role_seed["name"])
+        else:
+            logger.info("System role already exists: %s", role_seed["name"])
 
-    return existing
+        result_map[role_seed["code"]] = role
+
+    return result_map
 
 
-async def _seed_permissions(db: AsyncSession) -> dict[str, Permission]:
-    """Загрузить права. Возвращает {code: Permission}."""
-    result = await db.execute(select(Permission))
-    existing = {p.code: p for p in result.scalars().all()}
+async def _seed_permissions(
+    session: AsyncSession,
+) -> dict[str, list[PermissionCondition]]:
+    """
+    Создать права и их варианты (идемпотентно).
 
-    to_create = [p for p in PERMISSIONS if p["code"] not in existing]
+    Returns:
+        {permission_code: [PermissionCondition]}.
+    """
+    result_map: dict[str, list[PermissionCondition]] = {}
 
-    for item in to_create:
-        obj = Permission(
-            code=item["code"],
-            name=item["name"],
-            description=item.get("description"),
-            resource=PermissionResource(item["resource"]),
-            action=PermissionAction(item["action"]),
-            scope=PermissionScope(item["scope"]),
-            is_active=item.get("is_active", True),
-            is_system=item.get("is_system", True),  # права из сида — системные
-        )
-        db.add(obj)
-        existing[item["code"]] = obj
+    for perm_seed in PERMISSIONS:
+        # 1. Permission
+        stmt = select(Permission).where(Permission.code == perm_seed["code"])
+        result = await session.execute(stmt)
+        permission = result.scalar_one_or_none()
 
-    if to_create:
-        await db.flush()
-        print(f"   • Права: добавлено {len(to_create)}")
-    else:
-        print("   • Права: уже загружены")
+        if permission is None:
+            permission = Permission(
+                code=perm_seed["code"],
+                name=perm_seed["name"],
+                resource=PermissionResource(perm_seed["resource"]),
+                action=PermissionAction(perm_seed["action"]),
+                is_system=perm_seed["is_system"],
+            )
+            session.add(permission)
+            await session.flush()
 
-    return existing
+        # 2. Conditions
+        conditions: list[PermissionCondition] = []
+
+        for cond_seed in perm_seed["conditions"]:
+            cond_type = ConditionType(cond_seed["type"])
+            cond_effect = PermissionEffect(cond_seed["effect"])
+
+            stmt = select(PermissionCondition).where(
+                PermissionCondition.permission_id == permission.id,
+                PermissionCondition.type == cond_type,
+                PermissionCondition.effect == cond_effect,
+            )
+            result = await session.execute(stmt)
+            condition = result.scalar_one_or_none()
+
+            if condition is None:
+                condition = PermissionCondition(
+                    permission_id=permission.id,
+                    type=cond_type,
+                    effect=cond_effect,
+                    is_active=True,
+                )
+                session.add(condition)
+                await session.flush()
+
+            conditions.append(condition)
+
+        result_map[perm_seed["code"]] = conditions
+
+    return result_map
 
 
 async def _seed_media_types(db: AsyncSession) -> dict[str, MediaType]:
@@ -472,9 +522,104 @@ async def _seed_project_statuses(db: AsyncSession) -> dict[str, ProjectStatus]:
     return existing
 
 
+async def _seed_admin_user(
+    session: AsyncSession,
+    admin_role: Role,
+) -> None:
+    """
+    Создать администратора и назначить ему роль (идемпотентно).
+
+    Args:
+        session: AsyncSession.
+        admin_role: системная роль администратора.
+
+    Returns:
+        None.
+    """
+    email = SEED_ADMIN["email"]
+
+    # 1. Проверить, есть ли уже такой пользователь
+    stmt = select(User).where(User.email == email)
+    result = await session.execute(stmt)
+    user = result.scalar_one_or_none()
+
+    if user is None:
+        # 2. Создать пользователя
+        user = User(
+            name=SEED_ADMIN["name"],
+            email=email,
+            password_hash=hash_password(SEED_ADMIN["password"]),
+            is_active=SEED_ADMIN["is_active"],
+            email_verified=datetime.now(UTC),  # ← автоматически верифицирован
+        )
+        session.add(user)
+        await session.flush()
+        logger.info("Created admin user: %s", email)
+    else:
+        logger.info("Admin user already exists: %s", email)
+
+    # 3. Проверить связь с ролью
+    stmt = select(UserRole).where(
+        UserRole.user_id == user.id,
+        UserRole.role_id == admin_role.id,
+    )
+    result = await session.execute(stmt)
+    link = result.scalar_one_or_none()
+
+    if link is None:
+        link = UserRole(user_id=user.id, role_id=admin_role.id)
+        session.add(link)
+        logger.info("Assigned role %s to %s", admin_role.name, email)
+    else:
+        logger.info("Role already assigned to %s", email)
+
+
+async def _seed_role_permissions(
+    session: AsyncSession,
+    roles: dict[str, Role],
+    conditions: dict[str, list[PermissionCondition]],
+) -> None:
+    """Создать связи роль ↔ условие (идемпотентно)."""
+    result = await session.execute(select(RolePermission.role_id, RolePermission.condition_id))
+    existing = {(row[0], row[1]) for row in result.all()}
+
+    admin_role = roles.get("SYSTEM_ADMIN")
+    if admin_role is None:
+        print("   ⚠️  Роль SYSTEM_ADMIN не найдена")
+        return
+
+    added = 0
+    for perm_code, perm_conditions in conditions.items():
+        for cond in perm_conditions:
+            if cond.type != ConditionType.ALL:
+                continue
+            if cond.effect != PermissionEffect.ALLOW:
+                continue
+
+            key = (admin_role.id, cond.id)
+            if key in existing:
+                continue
+
+            session.add(
+                RolePermission(
+                    role_id=admin_role.id,
+                    condition_id=cond.id,
+                )
+            )
+            existing.add(key)
+            added += 1
+
+    if added:
+        await session.flush()
+        print(f"   • Связи SYSTEM_ADMIN ↔ условия: добавлено {added}")
+    else:
+        print("   • Связи SYSTEM_ADMIN ↔ условия: уже загружены")
+
+
 # ============================================================
 # ШАБЛОНЫ
 # ============================================================
+
 
 async def _seed_binding_types(db: AsyncSession) -> dict[str, BindingType]:
     """Загрузить типы обвязки. Возвращает {code: BindingType}."""
@@ -553,6 +698,7 @@ async def _seed_gallery_rules(
 # АТРИБУТЫ
 # ============================================================
 
+
 async def _seed_attributes(
     db: AsyncSession,
     units: dict[str, Unit],
@@ -596,9 +742,7 @@ async def _seed_attribute_options(
     attributes: dict[str, Attribute],
 ) -> None:
     """Загрузить значения атрибутов (OPTION)."""
-    result = await db.execute(
-        select(AttributeOption.attribute_id, AttributeOption.code)
-    )
+    result = await db.execute(select(AttributeOption.attribute_id, AttributeOption.code))
     existing = {(row[0], row[1]) for row in result.all()}
 
     added = 0
@@ -630,90 +774,6 @@ async def _seed_attribute_options(
         print(f"   • Значения атрибутов: добавлено {added}")
     else:
         print("   • Значения атрибутов: уже загружены")
-
-async def _seed_admin_user(
-    db: AsyncSession,
-    roles: dict[str, Role],
-) -> User | None:
-    """Создать пользователя-администратора (идемпотентно по email)."""
-    email = SEED_ADMIN["email"]
-
-    result = await db.execute(select(User).where(User.email == email))
-    existing = result.scalar_one_or_none()
-
-    if existing is not None:
-        print("   • Пользователь-администратор: уже существует")
-        return existing
-
-    role = roles.get(SEED_ADMIN["role_code"])
-    if role is None:
-        print(f"   ⚠️  Роль '{SEED_ADMIN['role_code']}' не найдена — пользователь не создан")
-        return None
-
-    user = User(
-        name=SEED_ADMIN["name"],
-        email=email,
-        password_hash=hash_password(SEED_ADMIN["password"]),
-        is_active=SEED_ADMIN.get("is_active", True),
-    )
-    db.add(user)
-    await db.flush()  # чтобы получить user.id
-
-    db.add(UserRole(user_id=user.id, role_id=role.id))
-    await db.flush()
-
-    print(f"   • Пользователь-администратор: создан ({email})")
-    return user
-
-
-async def _seed_role_permissions(
-    db: AsyncSession,
-    roles: dict[str, Role],
-    permissions: dict[str, Permission],
-) -> None:
-    """Загрузить связи ролей с правами (идемпотентно)."""
-    # Существующие связи: {(role_id, permission_id)}
-    result = await db.execute(
-        select(RolePermission.role_id, RolePermission.permission_id)
-    )
-    existing_links = {(row[0], row[1]) for row in result.all()}
-
-    all_permission_ids = [p.id for p in permissions.values()]
-
-    added = 0
-    for role_code, permission_codes in ROLE_PERMISSIONS.items():
-        role = roles.get(role_code)
-        if role is None:
-            print(f"   ⚠️  Роль '{role_code}' не найдена для связей с правами")
-            continue
-
-        # "*" = все права
-        if permission_codes == ["*"]:
-            target_permission_ids = all_permission_ids
-        else:
-            target_permission_ids = []
-            for perm_code in permission_codes:
-                perm = permissions.get(perm_code)
-                if perm is None:
-                    print(f"   ⚠️  Право '{perm_code}' не найдено для роли '{role_code}'")
-                    continue
-                target_permission_ids.append(perm.id)
-
-        for perm_id in target_permission_ids:
-            key = (role.id, perm_id)
-            if key in existing_links:
-                continue
-
-            db.add(RolePermission(role_id=role.id, permission_id=perm_id))
-            existing_links.add(key)
-            added += 1
-
-    if added:
-        await db.flush()
-        print(f"   • Связи роль↔право: добавлено {added}")
-    else:
-        print("   • Связи роль↔право: уже загружены")
-
 
 
 async def _seed_usage_roles(db: AsyncSession) -> dict[str, UsageRole]:

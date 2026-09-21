@@ -16,7 +16,6 @@ import os
 SEED_ADMIN = {
     "name": os.environ.get("SEED_ADMIN_NAME", "Разработчик"),
     "email": os.environ.get("SEED_ADMIN_EMAIL", "dev@example.com"),
-    "password": os.environ.get("SEED_ADMIN_PASSWORD", "admin123"),
-    "role_code": "SYSTEM_ADMIN",
+    "password": os.environ.get("SEED_ADMIN_PASSWORD", "Toptop080186"),
     "is_active": True,
 }

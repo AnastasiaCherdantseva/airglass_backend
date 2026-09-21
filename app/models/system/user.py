@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import Boolean, Index, String, text
+from sqlalchemy import Boolean, DateTime, Index, String, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -17,6 +17,7 @@ if TYPE_CHECKING:
         Permission,
         Role,
         Template,
+        UserDirectPermission,
         UserMedia,
         UserOrganization,
         UserPermission,
@@ -53,8 +54,8 @@ class User(
     email: Mapped[str] = mapped_column(String(255))
     # BR-USERS-003.ADR-USER-003.ADR-USER-004.
     email_verified: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
         nullable=True,
-        default=None,
     )
     # BR-USERS-005. ADR-USER-001.
     password_hash: Mapped[str] = mapped_column(String(255))
@@ -73,6 +74,10 @@ class User(
     )
     # BR-USERS-008.ADR-USER-006.
     user_permissions: Mapped[list["UserPermission"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+    user_direct_permissions: Mapped[list["UserDirectPermission"]] = relationship(
         back_populates="user",
         cascade="all, delete-orphan",
     )

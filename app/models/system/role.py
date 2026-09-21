@@ -1,7 +1,16 @@
 import uuid
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, Column, ForeignKey, String, Text, UniqueConstraint, text
+from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    Column,
+    ForeignKey,
+    Index,
+    String,
+    Text,
+    text,
+)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -17,8 +26,26 @@ if TYPE_CHECKING:
 class Role(Base, TimestampMixin):
     __tablename__ = "roles"
     # BR-ROLE-007
-    __table_args__ = (UniqueConstraint("owner_id", "name", name="uq_role_owner_name"),)
-
+    __table_args__ = (
+        Index(
+            "uq_role_owner_name",
+            "owner_id",
+            "name",
+            unique=True,
+            postgresql_where=text("owner_id IS NOT NULL"),
+        ),
+        Index(
+            "uq_role_system_name",
+            "name",
+            unique=True,
+            postgresql_where=text("owner_id IS NULL"),
+        ),
+        CheckConstraint(
+            "(is_system = true AND owner_id IS NULL) OR "
+            "(is_system = false AND owner_id IS NOT NULL)",
+            name="ck_role_owner_system",
+        ),
+    )
     id = Column(
         UUID(as_uuid=True),
         primary_key=True,
@@ -26,13 +53,12 @@ class Role(Base, TimestampMixin):
         server_default=text("gen_random_uuid()"),
     )
     # ADR-ROLE-003.
-    owner_id: Mapped[uuid.UUID] = mapped_column(
+    owner_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
-        nullable=False,
+        nullable=True,
         index=True,
     )
-    code = Column(String(50), unique=True, nullable=False)
     name = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
     is_system = Column(
@@ -59,7 +85,7 @@ class Role(Base, TimestampMixin):
         back_populates="role",
         cascade="all, delete-orphan",
     )
-    owner: Mapped["User"] = relationship(
+    owner: Mapped["User | None"] = relationship(
         back_populates="roles_owned",
         foreign_keys=[owner_id],
     )
