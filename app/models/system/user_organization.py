@@ -25,11 +25,12 @@ class UserOrganization(Base):
     """Many-to-many link between users and organizations."""
 
     __tablename__ = "user_organizations"
-
+    # BR-ORG-008.
     user_id: Mapped[UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"),
         primary_key=True,
     )
+    # BR-ORG-009.
     organization_id: Mapped[UUID] = mapped_column(
         ForeignKey("organizations.id", ondelete="CASCADE"),
         primary_key=True,

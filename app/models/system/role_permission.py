@@ -1,37 +1,38 @@
+"""
+RolePermission — link between role and permission condition.
+Only effect = ALLOW is allowed (BR-ACCESS-022).
+"""
+
 import uuid
-from datetime import datetime, timezone
-from sqlalchemy import Column, ForeignKey, DateTime, UniqueConstraint, Index, text
+from typing import TYPE_CHECKING
+
+from sqlalchemy import ForeignKey, Index
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
 
+if TYPE_CHECKING:
+    from app.models.system.permission_condition import PermissionCondition
+    from app.models.system.role import Role
+
 
 class RolePermission(Base):
-    """
-    Связь роли с правом.
-    Роль имеет набор прав.
-    """
-    __tablename__ = "role_permissions"
-    __table_args__ = (
-        UniqueConstraint("role_id", "permission_id", name="uq_role_permission"),
-        Index("ix_role_permission_role_id", "role_id"),
-        Index("ix_role_permission_permission_id", "permission_id"),
-    )
+    """Link between role and permission condition. ALLOW only."""
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4,server_default=text("gen_random_uuid()"))
-    role_id = Column(
+    __tablename__ = "role_permissions"
+    __table_args__ = (Index("ix_role_permission_role_id", "role_id"),)
+
+    role_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("roles.id", ondelete="CASCADE"),
-        nullable=False,
+        primary_key=True,
     )
-    permission_id = Column(
+    condition_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("permissions.id", ondelete="CASCADE"),
-        nullable=False,
+        ForeignKey("permission_conditions.id", ondelete="CASCADE"),
+        primary_key=True,
     )
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False, server_default=text("now()"))
 
-    # Связи
-    role = relationship("Role", back_populates="role_permissions")
-    permission = relationship("Permission", back_populates="role_permissions")
+    role: Mapped["Role"] = relationship(back_populates="role_permissions")
+    condition: Mapped["PermissionCondition"] = relationship(back_populates="role_permissions")

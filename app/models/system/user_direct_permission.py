@@ -1,6 +1,6 @@
 """
-UserPermission — materialized result of synchronization.
-References all conditions (ALLOW and DENY).
+UserDirectPermission — manual override (source).
+References conditions with ALLOW or DENY effect.
 """
 
 import uuid
@@ -17,16 +17,11 @@ if TYPE_CHECKING:
     from app.models.system.user import User
 
 
-class UserPermission(Base):
-    """Materialized user permission. Result of synchronization."""
+class UserDirectPermission(Base):
+    """Manual override. References ALLOW or DENY conditions."""
 
-    __tablename__ = "user_permissions"
-    __table_args__ = (
-        # Основной
-        Index("ix_user_permission_user_id", "user_id"),
-        # Для синхронизаций
-        Index("ix_user_permission_condition_id", "condition_id"),
-    )
+    __tablename__ = "user_direct_permissions"
+    __table_args__ = (Index("ix_user_direct_permission_user_id", "user_id"),)
 
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
@@ -39,5 +34,7 @@ class UserPermission(Base):
         primary_key=True,
     )
 
-    user: Mapped["User"] = relationship(back_populates="user_permissions")
-    condition: Mapped["PermissionCondition"] = relationship(back_populates="user_permissions")
+    user: Mapped["User"] = relationship(back_populates="user_direct_permissions")
+    condition: Mapped["PermissionCondition"] = relationship(
+        back_populates="user_direct_permissions"
+    )

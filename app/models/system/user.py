@@ -1,27 +1,45 @@
 import uuid
+from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import String, Boolean, text
+from sqlalchemy import Boolean, Index, String, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
-from app.models.mixins import TimestampMixin, SoftDeleteMixin
+from app.models.mixins import SoftDeleteMixin, TimestampMixin
 
 if TYPE_CHECKING:
     from app.models import (
-        UserRole,
-        UserPermission,
-        UserMedia,
         AuditLog,
-        Template,
         MediaFile,
+        Organization,
         Permission,
+        Role,
+        Template,
+        UserMedia,
+        UserOrganization,
+        UserPermission,
+        UserRole,
     )
 
 
-class User(Base, TimestampMixin, SoftDeleteMixin):
+class User(
+    Base,
+    TimestampMixin,
+    SoftDeleteMixin,  # BR-USERS-011.ADR-USER-005.
+):
     __tablename__ = "users"
+
+    # BR-USERS-002.ADR-USER-002.ADR-USER-005.
+    __table_args__ = (
+        Index(
+            "uq_users_email_lower",
+            text("lower(email)"),
+            unique=True,
+            postgresql_where=text("deleted_at IS NULL"),
+        ),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
@@ -29,9 +47,18 @@ class User(Base, TimestampMixin, SoftDeleteMixin):
         default=uuid.uuid4,
         server_default=text("gen_random_uuid()"),
     )
+    # BR-USERS-001.
     name: Mapped[str] = mapped_column(String(255))
-    email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
+    # BR-USERS-002.
+    email: Mapped[str] = mapped_column(String(255))
+    # BR-USERS-003.ADR-USER-003.ADR-USER-004.
+    email_verified: Mapped[datetime | None] = mapped_column(
+        nullable=True,
+        default=None,
+    )
+    # BR-USERS-005. ADR-USER-001.
     password_hash: Mapped[str] = mapped_column(String(255))
+    # BR-USERS-010.ADR-USER-004.
     is_active: Mapped[bool] = mapped_column(
         Boolean,
         default=True,
@@ -39,10 +66,12 @@ class User(Base, TimestampMixin, SoftDeleteMixin):
     )
 
     # Связи
+    # BR-USERS-006.
     user_roles: Mapped[list["UserRole"]] = relationship(
         back_populates="user",
         cascade="all, delete-orphan",
     )
+    # BR-USERS-008.ADR-USER-006.
     user_permissions: Mapped[list["UserPermission"]] = relationship(
         back_populates="user",
         cascade="all, delete-orphan",
@@ -58,6 +87,18 @@ class User(Base, TimestampMixin, SoftDeleteMixin):
     )
     uploaded_media: Mapped[list["MediaFile"]] = relationship(
         foreign_keys="MediaFile.created_by",
+    )
+    # BR-USERS-009.
+    organizations: Mapped[list["Organization"]] = relationship(
+        foreign_keys="Organization.owner_id",
+    )
+    organization_links: Mapped[list["UserOrganization"]] = relationship(
+        foreign_keys="UserOrganization.user_id",
+    )
+    roles_owned: Mapped[list["Role"]] = relationship(
+        back_populates="owner",
+        foreign_keys="Role.owner_id",
+        cascade="all, delete-orphan",
     )
 
     # ========================================
