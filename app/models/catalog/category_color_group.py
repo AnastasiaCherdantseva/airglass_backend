@@ -1,5 +1,6 @@
 import uuid
-from sqlalchemy import Column, ForeignKey, UniqueConstraint, Index, text
+
+from sqlalchemy import Column, ForeignKey, Index, UniqueConstraint, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -15,6 +16,7 @@ class CategoryColorGroup(Base):
     - Стекло         → RAL
     - Раздвижные     → FURNITURE, STAINLESS
     """
+
     __tablename__ = "category_color_groups"
     __table_args__ = (
         UniqueConstraint(
@@ -26,7 +28,12 @@ class CategoryColorGroup(Base):
         Index("ix_category_color_group_group_id", "color_group_id"),
     )
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4,server_default=text("gen_random_uuid()"))
+    id = Column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+        server_default=text("gen_random_uuid()"),
+    )
     category_id = Column(
         UUID(as_uuid=True),
         ForeignKey("categories.id", ondelete="CASCADE"),

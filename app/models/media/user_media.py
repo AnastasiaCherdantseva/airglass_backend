@@ -1,12 +1,6 @@
 import uuid
-from sqlalchemy import (
-    Column,
-    Integer,
-    ForeignKey,
-    Index,
-    UniqueConstraint, 
-    text
-)
+
+from sqlalchemy import Column, ForeignKey, Index, Integer, UniqueConstraint, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -19,7 +13,7 @@ class UserMedia(Base, TimestampMixin):
     Медиа пользователя.
 
     Одна запись на (user, media_type).
-    
+
     Примеры:
     - USER_AVATAR — аватарка
     - COMPANY_LOGO — лого компании
@@ -27,6 +21,7 @@ class UserMedia(Base, TimestampMixin):
     - INN — ИНН
     - OGRN — ОГРН
     """
+
     __tablename__ = "user_media"
     __table_args__ = (
         UniqueConstraint(
@@ -39,7 +34,12 @@ class UserMedia(Base, TimestampMixin):
         Index("ix_user_media_media_type_id", "media_type_id"),
     )
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4,server_default=text("gen_random_uuid()"))
+    id = Column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+        server_default=text("gen_random_uuid()"),
+    )
 
     user_id = Column(
         UUID(as_uuid=True),
@@ -56,13 +56,13 @@ class UserMedia(Base, TimestampMixin):
         ForeignKey("media_types.id", ondelete="RESTRICT"),
         nullable=False,
     )
-    
+
     sort_order = Column(
-    Integer,
-    default=0,
-    nullable=False,
-    server_default=text("0"),
-)
+        Integer,
+        default=0,
+        nullable=False,
+        server_default=text("0"),
+    )
 
     # ========================================
     # СВЯЗИ

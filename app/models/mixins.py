@@ -1,7 +1,7 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from sqlalchemy import DateTime, Boolean, text
-from sqlalchemy.orm import Mapped, mapped_column, declared_attr
+from sqlalchemy import DateTime, text
+from sqlalchemy.orm import Mapped, declared_attr, mapped_column
 
 
 class TimestampMixin:
@@ -11,7 +11,7 @@ class TimestampMixin:
     def created_at(cls) -> Mapped[datetime]:
         return mapped_column(
             DateTime(timezone=True),
-            default=lambda: datetime.now(timezone.utc),
+            default=lambda: datetime.now(UTC),
             server_default=text("now()"),
         )
 
@@ -19,8 +19,8 @@ class TimestampMixin:
     def updated_at(cls) -> Mapped[datetime]:
         return mapped_column(
             DateTime(timezone=True),
-            default=lambda: datetime.now(timezone.utc),
-            onupdate=lambda: datetime.now(timezone.utc),
+            default=lambda: datetime.now(UTC),
+            onupdate=lambda: datetime.now(UTC),
             server_default=text("now()"),
         )
 
