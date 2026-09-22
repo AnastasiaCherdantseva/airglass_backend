@@ -19,11 +19,14 @@ class SessionReadRepositoryProtocol(ReadRepositoryProtocol[Session], Protocol):
 class SessionWriteRepositoryProtocol(WriteRepositoryProtocol[Session], Protocol):
     """Write Sessions."""
 
-    async def create(
-        self, *, user_id: UUID, user_agent: str | None, ip_address: str | None
-    ) -> str | None: ...
-
+    # Массовое удаление по `expires_at` в сравнении с передаваемой датой.
     async def delete_expired(self, time: datetime) -> int: ...
+
+    # Массовое удаление по user_id
+    async def delete_by_user_id(self, user_id: UUID) -> int: ...
+
+    # Удаление по token
+    async def delete_by_token(self, token: str) -> bool: ...
 
 
 class SessionRepositoryProtocol(

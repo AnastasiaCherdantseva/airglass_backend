@@ -28,7 +28,19 @@ class SessionRepository(BaseIdRepository[Session]):
         return list(result.scalars().all())
 
     async def delete_expired(self, time: datetime) -> int:
-        """Delete sessions where expired less then current time."""
+        """Delete all sessions where expired less then current time."""
         stmt = delete(Session).where(Session.expires_at < time)
         result = await self.db.execute(stmt)
         return result.rowcount
+
+    async def delete_by_user_id(self, user_id: UUID) -> int:
+        """Delete all sessions of the given user."""
+        stmt = delete(Session).where(Session.user_id == user_id)
+        result = await self.db.execute(stmt)
+        return result.rowcount
+
+    async def delete_by_token(self, token: str) -> bool:
+        """Delete session by token."""
+        stmt = delete(Session).where(Session.token_hash == hash_session_token(token))
+        result = await self.db.execute(stmt)
+        return result.rowcount > 0

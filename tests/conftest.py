@@ -231,6 +231,29 @@ async def session(db_session: AsyncSession, user: User) -> dict[str, Session | s
 
 
 @pytest_asyncio.fixture
+async def sessions(db_session: AsyncSession, user: User) -> dict[str, list[Session | str]]:
+    """Ready-to-use session for active user in the database."""
+    tokens = []
+    data = []
+    for i in range(3):
+        now = datetime.now(UTC)
+        token = generate_session_token()
+        token_hash = hash_session_token(token)
+        session = Session(
+            id=uuid4(),
+            user_id=user.id,
+            token_hash=token_hash,
+            expires_at=now + SESSION_TTL,
+            last_used_at=now,
+        )
+        data.append(session)
+        tokens.append(token)
+        db_session.add(session)
+    await db_session.flush()
+    return {"data": data, "tokens": tokens}
+
+
+@pytest_asyncio.fixture
 async def session_in_memory(user_in_memory: User) -> dict[str, Session | str]:
     """Ready-to-use active session in memory (no DB)."""
     token = generate_session_token()
