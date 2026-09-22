@@ -9,7 +9,7 @@ import pytest
 
 from app.core.exceptions import NotFoundError
 from app.models.system import User
-from app.use_cases.user.get_user import get_user
+from app.use_cases.system.get_user import get_user
 from tests.unit.fakes.user_repository import FakeUserRepository
 
 
