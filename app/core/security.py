@@ -13,6 +13,8 @@ from pwdlib.hashers.bcrypt import BcryptHasher
 password_hash = PasswordHash((BcryptHasher(),))
 SESSION_TOKEN_BYTES = 32  # 256 bits of entropy
 SESSION_TTL = timedelta(days=7)
+SESSION_COOKIE_NAME = "session_id"
+SESSION_MAX_AGE = 7 * 24 * 3600
 
 
 def hash_password(password: str) -> str:

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Cookie, Depends, Request, Response, status
 
+from app.core.security import SESSION_COOKIE_NAME, SESSION_MAX_AGE
 from app.repositories.deps import get_session_repo, get_user_repo, get_user_role_repo
 from app.repositories.system.session import SessionRepository
 from app.repositories.system.user import UserRepository
@@ -8,8 +9,6 @@ from app.schemas.system import AuthLoginRequest, UserResponse
 from app.use_cases import authenticate_user, logout_user
 
 router = APIRouter(prefix="/auth", tags=["Аутентификация"])
-SESSION_COOKIE_NAME = "session_id"
-SESSION_MAX_AGE = 7 * 24 * 3600
 
 
 @router.post("/login/email", response_model=UserResponse, status_code=status.HTTP_200_OK)

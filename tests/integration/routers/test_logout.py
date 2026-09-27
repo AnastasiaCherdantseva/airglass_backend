@@ -6,8 +6,8 @@ from httpx import AsyncClient
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.security import SESSION_COOKIE_NAME
 from app.models.system import Session, User
-from app.routers.v1.auth import SESSION_COOKIE_NAME
 from tests.fixtures.users import TEST_PASSWORD
 
 
