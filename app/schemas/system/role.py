@@ -5,7 +5,7 @@ Pydantic-схемы для ролей
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import Field
+from pydantic import ConfigDict, Field
 
 from app.schemas.base import BaseSchema
 
@@ -17,7 +17,6 @@ from app.schemas.base import BaseSchema
 class RoleBase(BaseSchema):
     """Базовые поля роли."""
 
-    code: str = Field(min_length=2, max_length=50)
     name: str = Field(min_length=2, max_length=255)
     description: str | None = Field(None, max_length=1000)
     is_active: bool = True
@@ -37,18 +36,14 @@ class RoleUpdate(BaseSchema):
     is_active: bool | None = None
 
 
-class RoleShort(BaseSchema):
-    """Краткая схема роли — для вложенного использования."""
-
-    id: UUID
-    code: str
-    name: str
-
-
 class RoleResponse(RoleBase):
     """Полный ответ по роли."""
 
+    model_config = ConfigDict(from_attributes=True)
     id: UUID
     is_system: bool
+
+
+class RoleDetailResponse(RoleResponse):
     created_at: datetime
     updated_at: datetime
