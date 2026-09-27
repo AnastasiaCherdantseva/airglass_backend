@@ -1,0 +1,79 @@
+"""
+FastAPI dependencies for authentication.
+"""
+
+from datetime import UTC, datetime, timedelta
+
+from fastapi import Cookie, Depends
+
+from app.core.exceptions import AuthenticationError
+from app.core.security import (
+    SESSION_COOKIE_NAME,
+    SESSION_TTL,
+    hash_session_token,
+)
+from app.dto import UserOutput
+from app.repositories.deps import get_session_repo, get_user_repo
+from app.repositories.system.session import SessionRepository
+from app.repositories.system.user import UserRepository
+
+SESSION_EXTEND_INTERVAL = timedelta(hours=24)
+
+
+async def get_current_user(
+    session_token: str | None = Cookie(default=None, alias=SESSION_COOKIE_NAME),
+    sessions: SessionRepository = Depends(get_session_repo),
+    users: UserRepository = Depends(get_user_repo),
+) -> UserOutput:
+    """
+    Resolve the current user from the session cookie.
+
+    Steps:
+        1. Read the session token from the cookie (BR-AUTH-016).
+        2. Hash it and find the session in the DB (ADR-AUTH-008).
+        3. Check the session is not expired (BR-AUTH-013).
+        4. Extend the session if needed (BR-AUTH-011).
+        5. Load the user and verify access (ADR-USER-004).
+
+    Raises:
+        AuthenticationError: 401 if any check fails.
+    """
+    if session_token is None:
+        raise AuthenticationError("Не аутентифицирован")
+
+    token_hash = hash_session_token(session_token)
+    session = await sessions.get_by_token_hash(token_hash)
+    if session is None:
+        raise AuthenticationError("Не аутентифицирован")
+
+    now = datetime.now(UTC)
+
+    if session.expires_at < now:
+        await sessions.delete_by_token_hash(token_hash)
+        raise AuthenticationError("Сессия истекла")
+
+    # BR-AUTH-011: extend no more than once per 24h
+    should_extend = (
+        session.last_used_at is None or (now - session.last_used_at) >= SESSION_EXTEND_INTERVAL
+    )
+    if should_extend:
+        session.expires_at = now + SESSION_TTL
+        session.last_used_at = now
+        # commit happens in get_uow after the request
+
+    user = await users.get_by_id(session.user_id)
+    if (
+        user is None
+        or not user.is_active
+        or user.email_verified is None
+        or user.deleted_at is not None
+    ):
+        raise AuthenticationError("Не аутентифицирован")
+
+    return UserOutput(
+        id=user.id,
+        email=user.email,
+        is_active=user.is_active,
+        parent_id=user.parent_id,
+        name=user.name,
+    )
