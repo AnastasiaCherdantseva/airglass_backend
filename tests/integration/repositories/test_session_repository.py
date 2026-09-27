@@ -8,9 +8,9 @@ from datetime import UTC, datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import hash_session_token
+from app.dto.system.session import SessionInput
 from app.models import Session
 from app.models.system.user import User
-from app.repositories.protocols.dto.system.session import SessionInput
 from app.repositories.system.session import SessionRepository
 
 

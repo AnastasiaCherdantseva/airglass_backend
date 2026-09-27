@@ -1,16 +1,16 @@
 from typing import Protocol
 from uuid import UUID
 
-from app.models import PermissionCondition
-from app.repositories.protocols import (
-    ReadRepositoryProtocol,
-    WriteRepositoryProtocol,
-)
-from app.repositories.protocols.dto import (
+from app.dto import (
     PermissionConditionAllData,
     PermissionConditionAllOutPut,
     PermissionConditionCategoryOutPut,
     PermissionConditionRoleOutPut,
+)
+from app.models import PermissionCondition
+from app.repositories.protocols import (
+    ReadRepositoryProtocol,
+    WriteRepositoryProtocol,
 )
 
 

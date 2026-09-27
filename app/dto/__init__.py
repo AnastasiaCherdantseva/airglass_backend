@@ -1,10 +1,7 @@
-from app.repositories.protocols.dto.system.organization import (
+from app.dto.system import (
     OrganizationData,
     OrganizationOutPut,
     OrganizationPatch,
-)
-from app.repositories.protocols.dto.system.permission import PermissionData
-from app.repositories.protocols.dto.system.permission_condition import (
     PermissionConditionAllData,
     PermissionConditionAllOutPut,
     PermissionConditionCategoryData,
@@ -13,15 +10,18 @@ from app.repositories.protocols.dto.system.permission_condition import (
     PermissionConditionOutPut,
     PermissionConditionRoleData,
     PermissionConditionRoleOutPut,
-)
-from app.repositories.protocols.dto.system.role import RoleData, RoleOutput, RolePatchData
-from app.repositories.protocols.dto.system.session import SessionData, SessionInput, SessionOutput
-from app.repositories.protocols.dto.system.user import (
+    PermissionData,
+    RoleData,
+    RoleOutput,
+    RolePatchData,
+    SessionData,
+    SessionInput,
+    SessionOutput,
     UserData,
     UserOutput,
     UserPatchInput,
+    UserRoleLink,
 )
-from app.repositories.protocols.dto.system.user_role import UserRoleLink
 
 __all__ = [
     "UserPatchInput",

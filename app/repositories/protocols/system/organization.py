@@ -5,12 +5,12 @@ Protocols for the users repos.
 from typing import Protocol
 from uuid import UUID
 
+from app.dto import OrganizationData, OrganizationOutPut, OrganizationPatch
 from app.models import Organization
 from app.repositories.protocols import (
     ReadRepositoryProtocol,
     WriteRepositoryProtocol,
 )
-from app.repositories.protocols.dto import OrganizationData, OrganizationOutPut, OrganizationPatch
 
 
 class OrganizationReadRepositoryProtocol(ReadRepositoryProtocol[Organization], Protocol):

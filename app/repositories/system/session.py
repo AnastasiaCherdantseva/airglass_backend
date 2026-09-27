@@ -7,9 +7,9 @@ from uuid import UUID
 
 from sqlalchemy import delete, select
 
+from app.dto import SessionInput, SessionOutput
 from app.models import Session
 from app.repositories.base import BaseIdRepository
-from app.repositories.protocols.dto import SessionInput, SessionOutput
 
 
 class SessionRepository(BaseIdRepository[Session]):

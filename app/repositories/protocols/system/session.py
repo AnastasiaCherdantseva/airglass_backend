@@ -2,14 +2,14 @@ from datetime import datetime
 from typing import Protocol
 from uuid import UUID
 
+from app.dto import (
+    SessionInput,
+    SessionOutput,
+)
 from app.models import Session
 from app.repositories.protocols import (
     ReadRepositoryProtocol,
     WriteRepositoryProtocol,
-)
-from app.repositories.protocols.dto import (
-    SessionInput,
-    SessionOutput,
 )
 
 

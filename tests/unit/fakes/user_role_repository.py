@@ -8,12 +8,12 @@ UserRoleWriteRepositoryProtocol.
 
 from uuid import UUID
 
-from app.models import Role, User, UserRole
-from app.repositories.protocols.dto import (
+from app.dto import (
     RoleOutput,
     UserOutput,
     UserRoleLink,
 )
+from app.models import Role, User, UserRole
 
 
 class FakeUserRoleRepository:

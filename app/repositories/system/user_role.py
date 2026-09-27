@@ -7,14 +7,14 @@ from uuid import UUID
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.system.role import Role
-from app.models.system.user import User
-from app.models.system.user_role import UserRole
-from app.repositories.protocols.dto.system import (
+from app.dto.system import (
     RoleOutput,
     UserOutput,
     UserRoleLink,
 )
+from app.models.system.role import Role
+from app.models.system.user import User
+from app.models.system.user_role import UserRole
 from app.repositories.protocols.system.user_role import (
     UserRoleReadRepositoryProtocol,
     UserRoleWriteRepositoryProtocol,

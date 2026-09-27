@@ -7,9 +7,9 @@ from uuid import UUID
 
 from sqlalchemy import func, select
 
+from app.dto.system.user import UserOutput, UserPatchInput
 from app.models import User
 from app.repositories.base import BaseIdRepository
-from app.repositories.protocols.dto.system.user import UserOutput, UserPatchInput
 
 
 class UserRepository(BaseIdRepository[User]):

@@ -14,7 +14,7 @@ from app.core.security import (
     hash_session_token,
     is_verified_password,
 )
-from app.repositories.protocols.dto import RoleOutput, SessionInput
+from app.dto import SessionInput
 from app.repositories.protocols.system.session import SessionRepositoryProtocol
 from app.repositories.protocols.system.user import UserReadRepositoryProtocol
 from app.repositories.protocols.system.user_role import UserRoleReadRepositoryProtocol
@@ -28,7 +28,7 @@ class AuthenticatedUser:
     name: str
     email: str
     session_token: str
-    roles: list[RoleOutput]
+    # roles: list[RoleOutput]
 
 
 async def authenticate_user(
@@ -93,7 +93,11 @@ async def authenticate_user(
     )
     await sessions.create(new_session)
 
-    roles = await user_roles.get_roles_by_user_id(user.id)
+    # roles = await user_roles.get_roles_by_user_id(user.id)
     return AuthenticatedUser(
-        id=user.id, name=user.name, email=user.email, session_token=token, roles=roles
+        id=user.id,
+        name=user.name,
+        email=user.email,
+        session_token=token,
+        # roles=roles
     )

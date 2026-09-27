@@ -5,12 +5,12 @@ Protocols for the users repos.
 from typing import Protocol
 from uuid import UUID
 
+from app.dto import RoleData, RoleOutput, RolePatchData
 from app.models import Role
 from app.repositories.protocols import (
     ReadRepositoryProtocol,
     WriteRepositoryProtocol,
 )
-from app.repositories.protocols.dto import RoleData, RoleOutput, RolePatchData
 
 
 class RoleReadRepositoryProtocol(ReadRepositoryProtocol[Role], Protocol):

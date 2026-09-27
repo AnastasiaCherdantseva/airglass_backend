@@ -9,11 +9,11 @@ SessionWriteRepositoryProtocol — наследование не нужно.
 from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
-from app.models.system import Session
-from app.repositories.protocols.dto.system.session import (
+from app.dto.system.session import (
     SessionInput,
     SessionOutput,
 )
+from app.models.system import Session
 
 
 class FakeSessionRepository:

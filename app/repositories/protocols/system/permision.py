@@ -5,12 +5,12 @@ Protocols for the users repos.
 from typing import Protocol
 from uuid import UUID
 
+from app.dto import PermissionData
 from app.models import Permission
 from app.repositories.protocols import (
     ReadRepositoryProtocol,
     WriteRepositoryProtocol,
 )
-from app.repositories.protocols.dto import PermissionData
 
 
 class PermissionReadRepositoryProtocol(ReadRepositoryProtocol[Permission], Protocol):
