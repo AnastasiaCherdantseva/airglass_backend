@@ -3,16 +3,20 @@ from typing import Protocol
 from uuid import UUID
 
 from app.models import Session
-from app.repositories.protocols.base import (
+from app.repositories.protocols import (
     ReadRepositoryProtocol,
     WriteRepositoryProtocol,
+)
+from app.repositories.protocols.dto import (
+    SessionInput,
+    SessionOutput,
 )
 
 
 class SessionReadRepositoryProtocol(ReadRepositoryProtocol[Session], Protocol):
     """Read Sessions."""
 
-    async def get_by_token(self, token: str) -> Session | None: ...
+    async def get_by_token(self, token_hash: str) -> Session | None: ...
     async def get_by_user_id(self, user_id: UUID) -> list[Session]: ...
 
 
@@ -25,8 +29,11 @@ class SessionWriteRepositoryProtocol(WriteRepositoryProtocol[Session], Protocol)
     # Массовое удаление по user_id
     async def delete_by_user_id(self, user_id: UUID) -> int: ...
 
-    # Удаление по token
-    async def delete_by_token(self, token: str) -> bool: ...
+    # Массовое удаление по user_id
+    async def create(self, data: SessionInput) -> SessionOutput: ...
+
+    # Удаление по token_hash
+    async def delete_by_token(self, token_hash: str) -> bool: ...
 
 
 class SessionRepositoryProtocol(
