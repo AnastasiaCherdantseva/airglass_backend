@@ -3,21 +3,32 @@ UseCase: authenticate a user by email and password.
 """
 
 import logging
+from dataclasses import dataclass
 from datetime import UTC, datetime
+from uuid import UUID
 
-from app.core.exceptions import PermissionDeniedError
+from app.core.exceptions import AuthenticationError
 from app.core.security import (
     SESSION_TTL,
     generate_session_token,
     hash_session_token,
     is_verified_password,
 )
-from app.models.system.session import Session
-from app.models.system.user import User
+from app.repositories.protocols.dto import RoleOutput, SessionInput
 from app.repositories.protocols.system.session import SessionWriteRepositoryProtocol
 from app.repositories.protocols.system.user import UserReadRepositoryProtocol
+from app.repositories.protocols.system.user_role import UserRoleReadRepositoryProtocol
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class AuthenticatedUser:
+    id: UUID
+    name: str
+    email: str
+    session_token: str
+    roles: list[RoleOutput]
 
 
 async def authenticate_user(
@@ -28,7 +39,8 @@ async def authenticate_user(
     ip_address: str | None = None,
     sessions: SessionWriteRepositoryProtocol,
     users: UserReadRepositoryProtocol,
-) -> tuple[str, User]:
+    user_roles: UserRoleReadRepositoryProtocol,
+) -> AuthenticatedUser:
     """
     Authenticate a user by email and password. If successful, create a new session.
 
@@ -41,40 +53,40 @@ async def authenticate_user(
         users: Repository for reading users.
 
     Returns:
-        Raw session token for the cookie.
+        AuthenticatedUser: user data, session token and roles.
 
     Raises:
-        PermissionDeniedError:
+        AuthenticationError:
         If credentials are invalid or user is inactive.
     """
     user = await users.get_by_email(email)
     if user is None:
-        logger.info("Auth failed: user not found ")
-        raise PermissionDeniedError("Ошибка входа")
+        logger.info("Auth failed: user not found")
+        raise AuthenticationError("Ошибка входа")
 
     if not user.is_active:
         logger.info("Auth failed: user inactive (user_id=%s)", user.id)
-        raise PermissionDeniedError("Ошибка входа")
+        raise AuthenticationError("Ошибка входа")
 
     if not is_verified_password(password, user.password_hash):
         logger.info("Auth failed: wrong password (user_id=%s)", user.id)
-        raise PermissionDeniedError("Ошибка входа")
+        raise AuthenticationError("Ошибка входа")
 
     token = generate_session_token()
     token_hash = hash_session_token(token)
 
     now = datetime.now(UTC)
 
-    new_session = Session(
+    new_session = SessionInput(
         user_id=user.id,
         token_hash=token_hash,
         expires_at=now + SESSION_TTL,
-        last_used_at=now,
         user_agent=user_agent,
         ip_address=ip_address,
     )
-    sessions.add(new_session)
-    await sessions.flush()
+    await sessions.create(new_session)
 
-    user_with_toles = 
-    return token, user
+    roles = await user_roles.get_roles_by_user_id(user.id)
+    return AuthenticatedUser(
+        id=user.id, name=user.name, email=user.email, session_token=token, roles=roles
+    )

@@ -1,12 +1,11 @@
 # from typing import Optional
-from datetime import datetime
 from uuid import UUID
 
 from pydantic import Field
 
 # from decimal import Decimal
 from app.schemas.base import BaseSchema, Email
-from app.schemas.system.role import RoleShort
+from app.schemas.system.role import RoleResponse
 
 
 class UserBase(BaseSchema):
@@ -33,7 +32,4 @@ class UserResponse(UserBase):
     """Ответ."""
 
     id: UUID
-    roles: list[RoleShort] = Field(default_factory=list)
-    is_active: bool
-    created_at: datetime
-    updated_at: datetime
+    roles: list[RoleResponse] = Field(default_factory=list)

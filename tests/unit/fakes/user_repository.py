@@ -30,9 +30,10 @@ class FakeUserRepository:
         return self.users.get(user_id)
 
     async def get_by_email(self, email: str) -> User | None:
-        """Найти по email."""
+        """Найти по email. Регистронезависимое сравнение (ADR-USER-002)."""
+        normalized = email.strip().lower()
         return next(
-            (u for u in self.users.values() if u.email == email),
+            (u for u in self.users.values() if u.email.lower() == normalized),
             None,
         )
 

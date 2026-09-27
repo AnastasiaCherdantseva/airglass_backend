@@ -2,7 +2,7 @@
 from typing import ClassVar, Generic, TypeVar
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.base import Base
@@ -36,3 +36,9 @@ class BaseIdRepository(BaseRepository[ModelT]):
             select(self.model).where(self.model.id == entity_id)  # type: ignore[attr-defined]
         )
         return result.scalar_one_or_none()
+
+    async def delete_by_id(self, entity_id: UUID) -> bool:
+        result = await self.db.execute(
+            delete(self.model).where(self.model.id == entity_id)  # type: ignore[attr-defined]
+        )
+        return result.rowcount == 1

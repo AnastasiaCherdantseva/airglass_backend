@@ -1,10 +1,10 @@
-from app.repositories.protocols.base import (
-    ReadRepositoryProtocol,
-    WriteRepositoryProtocol,
-)
-from app.repositories.protocols.dto import (
+from app.repositories.protocols.dto.system.organization import (
+    OrganizationData,
     OrganizationOutPut,
     OrganizationPatch,
+)
+from app.repositories.protocols.dto.system.permission import PermissionData
+from app.repositories.protocols.dto.system.permission_condition import (
     PermissionConditionAllData,
     PermissionConditionAllOutPut,
     PermissionConditionCategoryData,
@@ -13,39 +13,31 @@ from app.repositories.protocols.dto import (
     PermissionConditionOutPut,
     PermissionConditionRoleData,
     PermissionConditionRoleOutPut,
-    PermissionData,
-    RoleData,
-    RoleOutput,
-    RolePatchData,
-    SessionData,
-    SessionInput,
-    SessionOutput,
+)
+from app.repositories.protocols.dto.system.role import RoleData, RoleOutput, RolePatchData
+from app.repositories.protocols.dto.system.session import SessionData, SessionInput, SessionOutput
+from app.repositories.protocols.dto.system.user import (
     UserData,
     UserOutput,
     UserPatchInput,
-    UserRoleLink,
 )
-from app.repositories.protocols.system.user import (
-    UserReadRepositoryProtocol,
-    UserWriteRepositoryProtocol,
-)
-
-# from app.repositories.protocols.role import (
-#     RoleReadRepositoryProtocol,
-#     RoleWriteRepositoryProtocol,
-# )
+from app.repositories.protocols.dto.system.user_role import UserRoleLink
 
 __all__ = [
-    #
-    "UserOutput",
     "UserPatchInput",
     "UserData",
+    "UserOutput",
+    #
     "OrganizationPatch",
     "OrganizationOutPut",
+    "OrganizationData",
+    #
     "RoleData",
     "RoleOutput",
     "RolePatchData",
+    #
     "PermissionData",
+    #
     "PermissionConditionData",
     "PermissionConditionRoleData",
     "PermissionConditionCategoryData",
@@ -54,15 +46,10 @@ __all__ = [
     "PermissionConditionRoleOutPut",
     "PermissionConditionCategoryOutPut",
     "PermissionConditionAllOutPut",
+    #
     "SessionData",
     "SessionInput",
     "SessionOutput",
-    "UserRoleLink",
     #
-    "ReadRepositoryProtocol",
-    "WriteRepositoryProtocol",
-    "UserReadRepositoryProtocol",
-    "UserWriteRepositoryProtocol",
-    # "RoleReadRepositoryProtocol",
-    # "RoleWriteRepositoryProtocol",
+    "UserRoleLink",
 ]

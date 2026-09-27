@@ -1,8 +1,5 @@
-from app.repositories.protocols.base import (
-    ReadRepositoryProtocol,
-    WriteRepositoryProtocol,
-)
-from app.repositories.protocols.dto import (
+from app.repositories.protocols.dto.system import (
+    OrganizationData,
     OrganizationOutPut,
     OrganizationPatch,
     PermissionConditionAllData,
@@ -25,27 +22,22 @@ from app.repositories.protocols.dto import (
     UserPatchInput,
     UserRoleLink,
 )
-from app.repositories.protocols.system.user import (
-    UserReadRepositoryProtocol,
-    UserWriteRepositoryProtocol,
-)
-
-# from app.repositories.protocols.role import (
-#     RoleReadRepositoryProtocol,
-#     RoleWriteRepositoryProtocol,
-# )
 
 __all__ = [
-    #
-    "UserOutput",
     "UserPatchInput",
     "UserData",
+    "UserOutput",
+    #
     "OrganizationPatch",
     "OrganizationOutPut",
+    "OrganizationData",
+    #
     "RoleData",
     "RoleOutput",
     "RolePatchData",
+    #
     "PermissionData",
+    #
     "PermissionConditionData",
     "PermissionConditionRoleData",
     "PermissionConditionCategoryData",
@@ -54,15 +46,10 @@ __all__ = [
     "PermissionConditionRoleOutPut",
     "PermissionConditionCategoryOutPut",
     "PermissionConditionAllOutPut",
+    #
     "SessionData",
     "SessionInput",
     "SessionOutput",
-    "UserRoleLink",
     #
-    "ReadRepositoryProtocol",
-    "WriteRepositoryProtocol",
-    "UserReadRepositoryProtocol",
-    "UserWriteRepositoryProtocol",
-    # "RoleReadRepositoryProtocol",
-    # "RoleWriteRepositoryProtocol",
+    "UserRoleLink",
 ]

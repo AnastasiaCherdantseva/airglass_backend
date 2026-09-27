@@ -6,6 +6,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from app.core.exceptions import (
+    AuthenticationError,
     ConflictError,
     NotFoundError,
     PermissionDeniedError,
@@ -27,6 +28,10 @@ def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(ValidationError)
     async def _validation(_: Request, exc: ValidationError) -> JSONResponse:
         return JSONResponse(status_code=422, content={"detail": str(exc)})
+
+    @app.exception_handler(AuthenticationError)
+    async def _unauthorized(_: Request, exc: AuthenticationError) -> JSONResponse:
+        return JSONResponse(status_code=401, content={"detail": str(exc)})
 
     @app.exception_handler(PermissionDeniedError)
     async def _forbidden(_: Request, exc: PermissionDeniedError) -> JSONResponse:
