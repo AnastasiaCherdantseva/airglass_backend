@@ -27,6 +27,12 @@ class ValidationError(DomainError):
     pass
 
 
+class AuthenticationError(DomainError):
+    """Не аутентифицирован: неверные credentials, юзер не найден, неактивен."""
+
+    pass
+
+
 class PermissionDeniedError(DomainError):
     """Недостаточно прав."""
 
