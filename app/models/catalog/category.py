@@ -1,11 +1,15 @@
 import uuid
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Text, text
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, relationship
 
 from app.models.base import Base
 from app.models.mixins import SoftDeleteMixin, TimestampMixin
+
+if TYPE_CHECKING:
+    from app.models.system.permission_condition import PermissionCondition
 
 
 class Category(Base, TimestampMixin, SoftDeleteMixin):
@@ -68,6 +72,10 @@ class Category(Base, TimestampMixin, SoftDeleteMixin):
     )
     gallery_rule_conditions = relationship(
         "GalleryRuleCondition",
+        back_populates="category",
+        cascade="all, delete-orphan",
+    )
+    conditions: Mapped[list["PermissionCondition"]] = relationship(
         back_populates="category",
         cascade="all, delete-orphan",
     )

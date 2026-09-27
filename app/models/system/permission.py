@@ -64,7 +64,7 @@ class Permission(Base):
     )
     # BR-ACCESS-006
     code: Mapped[str] = mapped_column(
-        String(150), Computed("resource::text || '.' || action::text", persisted=True), unique=True
+        String(150), Computed("permission_code(resource, action)", persisted=True), unique=True
     )
     name: Mapped[str] = mapped_column(String(255))
     description: Mapped[str | None] = mapped_column(Text)

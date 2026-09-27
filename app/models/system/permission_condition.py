@@ -109,11 +109,15 @@ class PermissionCondition(Base):
         Boolean, default=True, server_default=text("true"), nullable=False
     )
 
+    # ///////////////////////////
+
     permission: Mapped["Permission"] = relationship(back_populates="conditions")
     # ADR-ACCESS-011
-    category: Mapped["Category | None"] = relationship()
+    category: Mapped["Category | None"] = relationship(
+        back_populates="conditions",
+    )
     # ADR-ACCESS-011
-    role: Mapped["Role | None"] = relationship()
+    role: Mapped["Role | None"] = relationship(back_populates="conditions")
 
     # BR-ACCESS-029
     role_permissions: Mapped[list["RolePermission"]] = relationship(

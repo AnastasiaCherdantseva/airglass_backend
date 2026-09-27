@@ -18,6 +18,7 @@ from app.models.base import Base
 from app.models.mixins import TimestampMixin
 
 if TYPE_CHECKING:
+    from app.models.system.permission_condition import PermissionCondition
     from app.models.system.role_permission import RolePermission
     from app.models.system.user import User
     from app.models.system.user_role import UserRole
@@ -82,6 +83,10 @@ class Role(Base, TimestampMixin):
     )
     # ADR-ROLE-001
     role_permissions: Mapped[list["RolePermission"]] = relationship(
+        back_populates="role",
+        cascade="all, delete-orphan",
+    )
+    conditions: Mapped[list["PermissionCondition"]] = relationship(
         back_populates="role",
         cascade="all, delete-orphan",
     )
