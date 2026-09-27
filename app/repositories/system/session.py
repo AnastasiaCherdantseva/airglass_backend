@@ -15,7 +15,7 @@ from app.repositories.protocols.dto import SessionInput, SessionOutput
 class SessionRepository(BaseIdRepository[Session]):
     model = Session
 
-    async def get_by_token(self, token_hash: str) -> Session | None:
+    async def get_by_token_hash(self, token_hash: str) -> Session | None:
         """Find session by token."""
         result = await self.db.execute(select(Session).where(Session.token_hash == token_hash))
         return result.scalar_one_or_none()
@@ -39,7 +39,7 @@ class SessionRepository(BaseIdRepository[Session]):
         await self.flush()
         return result.rowcount
 
-    async def delete_by_token(self, token_hash: str) -> bool:
+    async def delete_by_token_hash(self, token_hash: str) -> bool:
         """Delete session by token."""
         stmt = delete(Session).where(Session.token_hash == token_hash)
         result = await self.db.execute(stmt)

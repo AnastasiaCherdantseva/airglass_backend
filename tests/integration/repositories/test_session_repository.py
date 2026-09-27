@@ -16,12 +16,12 @@ from app.repositories.system.session import SessionRepository
 
 async def test_get_by_token(db_session: AsyncSession, session: dict[str, Session | str]) -> None:
     """
-    get_by_token finds an existing session by its raw token.
+    get_by_token_hash finds an existing session by its raw token.
     """
     repo = SessionRepository(db_session)
     token_hash = session["token_hash"]
     session_obj = session["data"]
-    found = await repo.get_by_token(token_hash)
+    found = await repo.get_by_token_hash(token_hash)
 
     # ADR-AUTH-006: session has these fields.
     assert found is not None
@@ -38,7 +38,7 @@ async def test_get_by_token_is_none(db_session: AsyncSession) -> None:
     returns None when token not found
     """
     repo = SessionRepository(db_session)
-    found = await repo.get_by_token("someToken")
+    found = await repo.get_by_token_hash("someToken")
 
     assert found is None
 
@@ -54,7 +54,7 @@ async def test_get_by_user_id(db_session: AsyncSession, sessions: dict[str, Sess
     found = await repo.get_by_user_id(session_obj.user_id)
 
     assert found is not None
-    # BR-AUTH-003: A user can have multiple active sessions.
+    # BR-AUTH-019: A user can have multiple active sessions.
     assert len(found) == len(sessions["data"])
 
     for index, s in enumerate(found):
@@ -103,7 +103,7 @@ async def test_create_session(db_session: AsyncSession, user: User) -> None:
     assert result.ip_address == "127.0.0.1"
 
     # Проверить, что сессия в БД
-    found = await repo.get_by_token(hash_session_token("token123"))
+    found = await repo.get_by_token_hash(hash_session_token("token123"))
     assert found is not None
     assert found.last_used_at is not None
 
@@ -112,25 +112,25 @@ async def test_delete_by_token_found(
     db_session: AsyncSession,
     session: dict,
 ) -> None:
-    """delete_by_token returns True and removes the session."""
+    """delete_by_token_hash returns True and removes the session."""
     repo = SessionRepository(db_session)
     token_hash = session["token_hash"]
 
-    result = await repo.delete_by_token(token_hash)
+    result = await repo.delete_by_token_hash(token_hash)
 
     assert result is True
-    found = await repo.get_by_token(token_hash)
+    found = await repo.get_by_token_hash(token_hash)
     assert found is None
 
 
 async def test_delete_by_token_not_found(
     db_session: AsyncSession,
 ) -> None:
-    """delete_by_token returns False when token not found."""
+    """delete_by_token_hash returns False when token not found."""
     repo = SessionRepository(db_session)
     fake_hash = hash_session_token("nonexistent")
 
-    result = await repo.delete_by_token(fake_hash)
+    result = await repo.delete_by_token_hash(fake_hash)
 
     assert result is False
 
@@ -139,11 +139,11 @@ async def test_delete_by_token_does_not_touch_others(
     db_session: AsyncSession,
     sessions: dict,
 ) -> None:
-    """delete_by_token removes only the target session."""
+    """delete_by_token_hash removes only the target session."""
     repo = SessionRepository(db_session)
     tokens_hashes = sessions["tokens_hashes"]
 
-    result = await repo.delete_by_token(tokens_hashes[0])
+    result = await repo.delete_by_token_hash(tokens_hashes[0])
     assert result is True
 
     # Остальные две сессии на месте
@@ -260,7 +260,7 @@ async def test_delete_expired_boundary_equal(
     count = await repo.delete_expired(threshold)
 
     assert count == 0
-    found = await repo.get_by_token(session["token_hash"])
+    found = await repo.get_by_token_hash(session["token_hash"])
     assert found is not None
 
 

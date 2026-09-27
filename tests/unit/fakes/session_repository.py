@@ -33,7 +33,7 @@ class FakeSessionRepository:
         """Найти по id."""
         return self.sessions.get(session_id)
 
-    async def get_by_token(self, token_hash: str) -> Session | None:
+    async def get_by_token_hash(self, token_hash: str) -> Session | None:
         """Найти по хешу токена."""
         return next(
             (s for s in self.sessions.values() if s.token_hash == token_hash),
@@ -58,7 +58,7 @@ class FakeSessionRepository:
         """Удалить сессию из памяти."""
         self.sessions.pop(session.id, None)
 
-    async def delete_by_token(self, token_hash: str) -> bool:
+    async def delete_by_token_hash(self, token_hash: str) -> bool:
         """Удалить сессию по хешу токена."""
         for sid, s in list(self.sessions.items()):
             if s.token_hash == token_hash:
