@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Cookie, Depends, Request, Response, status
 
 from app.repositories.deps import get_session_repo, get_user_repo, get_user_role_repo
 from app.repositories.system.session import SessionRepository
 from app.repositories.system.user import UserRepository
 from app.repositories.system.user_role import UserRoleRepository
 from app.schemas.system import AuthLoginRequest, UserResponse
-from app.use_cases.system import authenticate_user
+from app.use_cases import authenticate_user, logout_user
 
 router = APIRouter(prefix="/auth", tags=["Аутентификация"])
 SESSION_COOKIE_NAME = "session_id"
@@ -16,15 +16,19 @@ SESSION_MAX_AGE = 7 * 24 * 3600
 async def login_by_email(
     data: AuthLoginRequest,
     response: Response,
+    request: Request,
     users: UserRepository = Depends(get_user_repo),
     sessions: SessionRepository = Depends(get_session_repo),
     user_roles: UserRoleRepository = Depends(get_user_role_repo),
 ) -> UserResponse:
+    # Проверка активной сессии
+    session_token = request.cookies.get(SESSION_COOKIE_NAME)
     auth_data = await authenticate_user(
         data.email,
         data.password,
         user_agent=data.user_agent,
         ip_address=data.ip_address,
+        session_token=session_token,
         sessions=sessions,
         users=users,
         user_roles=user_roles,
@@ -40,4 +44,24 @@ async def login_by_email(
     )
     return UserResponse(
         id=auth_data.id, roles=auth_data.roles, name=auth_data.name, email=auth_data.email
+    )
+
+
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+async def logout(
+    response: Response,
+    session_token: str | None = Cookie(default=None, alias=SESSION_COOKIE_NAME),
+    sessions: SessionRepository = Depends(get_session_repo),
+) -> None:
+    if session_token:
+        await logout_user(
+            session_token,
+            sessions=sessions,
+        )
+    response.delete_cookie(
+        key=SESSION_COOKIE_NAME,
+        path="/",
+        httponly=True,
+        secure=True,
+        samesite="lax",
     )

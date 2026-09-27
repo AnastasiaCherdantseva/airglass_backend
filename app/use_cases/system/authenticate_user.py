@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from uuid import UUID
 
-from app.core.exceptions import AuthenticationError
+from app.core.exceptions import AuthenticationError, ConflictError
 from app.core.security import (
     SESSION_TTL,
     generate_session_token,
@@ -15,7 +15,7 @@ from app.core.security import (
     is_verified_password,
 )
 from app.repositories.protocols.dto import RoleOutput, SessionInput
-from app.repositories.protocols.system.session import SessionWriteRepositoryProtocol
+from app.repositories.protocols.system.session import SessionRepositoryProtocol
 from app.repositories.protocols.system.user import UserReadRepositoryProtocol
 from app.repositories.protocols.system.user_role import UserRoleReadRepositoryProtocol
 
@@ -35,9 +35,10 @@ async def authenticate_user(
     email: str,
     password: str,
     *,
+    session_token: str | None = None,
     user_agent: str | None = None,
     ip_address: str | None = None,
-    sessions: SessionWriteRepositoryProtocol,
+    sessions: SessionRepositoryProtocol,
     users: UserReadRepositoryProtocol,
     user_roles: UserRoleReadRepositoryProtocol,
 ) -> AuthenticatedUser:
@@ -59,6 +60,12 @@ async def authenticate_user(
         AuthenticationError:
         If credentials are invalid or user is inactive.
     """
+    if session_token is not None:
+        token_hash = hash_session_token(session_token)
+        session = await sessions.get_by_token_hash(token_hash)
+        if session is not None and session.expires_at > datetime.now(UTC):
+            raise ConflictError("Вы уже авторизованы")
+
     user = await users.get_by_email(email)
     if user is None:
         logger.info("Auth failed: user not found")
