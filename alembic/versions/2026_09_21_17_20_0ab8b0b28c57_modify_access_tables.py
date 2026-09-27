@@ -148,11 +148,18 @@ def downgrade() -> None:
     op.drop_constraint('fk_permission_conditions_category_id', 'permission_conditions', type_='foreignkey')
     op.drop_constraint('uq_permission_condition', 'permission_conditions', type_='unique')
 
-    op.alter_column('permission_conditions', 'type',
-               existing_type=postgresql.ENUM('ALL', 'CATEGORY', 'ROLE', 'CREATOR', name='conditiontype', create_type=False),
-               type_=postgresql.ENUM('ROLE', 'CATEGORY', 'CREATOR', 'CUSTOM', name='permissionconditiontype', create_type=False),
-               existing_nullable=False,
-               postgresql_using="type::text::permissionconditiontype")
+    # Пересоздать колонку type — обход бага Postgres с ALTER COLUMN TYPE для enum
+    op.execute("""
+        ALTER TABLE permission_conditions
+        ADD COLUMN type_new permissionconditiontype
+    """)
+    op.execute("""
+        UPDATE permission_conditions
+        SET type_new = (type::text)::permissionconditiontype
+    """)
+    op.execute("ALTER TABLE permission_conditions DROP COLUMN type")
+    op.execute("ALTER TABLE permission_conditions RENAME COLUMN type_new TO type")
+    op.execute("ALTER TABLE permission_conditions ALTER COLUMN type SET NOT NULL")
 
     op.drop_column('permission_conditions', 'is_active')
     op.drop_column('permission_conditions', 'role_id')
@@ -166,5 +173,3 @@ def downgrade() -> None:
     # 6. Удалить созданные enum
     op.execute("DROP TYPE IF EXISTS permission_effect")
     op.execute("DROP TYPE IF EXISTS conditiontype")
-    """Downgrade schema."""
-  
