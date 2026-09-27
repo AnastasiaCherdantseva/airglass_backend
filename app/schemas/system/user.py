@@ -33,3 +33,9 @@ class UserResponse(UserBase):
 
     id: UUID
     roles: list[RoleResponse] = Field(default_factory=list)
+
+
+class MeResponse(UserBase):
+    """Ответ."""
+
+    id: UUID

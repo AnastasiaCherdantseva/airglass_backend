@@ -7,6 +7,7 @@ from app.schemas.system.role import (
     RoleUpdate,
 )
 from app.schemas.system.user import (
+    MeResponse,
     UserBase,
     UserCreate,
     UserResponse,
@@ -19,6 +20,7 @@ __all__ = [
     "UserCreate",
     "UserUpdate",
     "UserResponse",
+    "MeResponse",
     # ROLE
     "RoleBase",
     "RoleCreate",
