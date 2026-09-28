@@ -99,6 +99,7 @@
   Связи сохраняются. Authorization пропускает неактивные варианты.
 - **BR-ACCESS-011.** Формат прав: `сущность.операция.условие`.
 
+
 ### Типы условий
 
 - **BR-ACCESS-012.** `type = all` — право действует на весь ресурс.
@@ -164,27 +165,76 @@
 - **BR-ACCESS-035.** Проверка условия `type = role` — программная:
   роль, указанная в условии, участвует в операции
   (например, назначается пользователю при `users.create`).
-
 ### Управление правами
 
 - **BR-ACCESS-036.** Список ресурсов и действий фиксирован в коде.
 - **BR-ACCESS-037.** Ресурсы: users, roles, products, categories,
-  templates, quotes, projects, customers, suppliers, media,
+  templates, projects, customers, suppliers, media,
   calculator, settings, audit_log.
 - **BR-ACCESS-038.** Действия: create, read, update, delete, archive,
   export, import.
 - **BR-ACCESS-039.** Действие `archive` включает восстановление
   из архива.
 
+### Запрещённые комбинации
+
+- **BR-ACCESS-040.** Ряд комбинаций `resource + action` запрещён:
+  они не должны существовать в `permissions` ни при каких
+  условиях. Обеспечивается `CHECK`-констрейнтом
+  `ck_permission_forbidden_combinations` (ADR-ACCESS-016).
+- **BR-ACCESS-041.** Запрещены комбинации:
+  - `users.archive`
+  - `projects.import`, `projects.export`
+  - `customers.archive`
+  - `media.archive`, `media.export`, `media.import`
+  - `calculator.archive`, `calculator.import`
+  - `settings.create`, `settings.delete`, `settings.archive`,
+    `settings.export`, `settings.import`
+  - `audit_log.create`, `audit_log.update`, `audit_log.delete`,
+    `audit_log.archive`, `audit_log.import`
+- **BR-ACCESS-042.** Попытка создать запрещённое право
+  отклоняется на уровне БД (`IntegrityError`).
+
+### Генерация документов
+
+- **BR-ACCESS-043.** Генерация PDF-документа (КП, чек, отчёт)
+  регулируется правом `media.create` с `ConditionType.MEDIA`
+  и указанием `media_type_id`. Пользователь может генерировать
+  только те типы PDF, на которые у него есть condition.
+- **BR-ACCESS-044.** Внешний вид PDF (шаблон оформления) —
+  системная настройка, изменяется через `settings.update`
+  с `ConditionType.ALL`. Пользователи не имеют доступа
+  к изменению оформления.
+- **BR-ACCESS-045.** `media.update` применяется только
+  к редактируемым медиа (например, `avatar`). Для генерируемых
+  медиа (`quotes`, `manufacturer_check`, `report`) `media.update`
+  не выдаётся — они не редактируются.
+
+### Зоны прав
+
+- **BR-ACCESS-046.** Каждое `Permission` принадлежит одной зоне —
+  `zone` (`PUBLIC` или `ADMIN`). Зона — свойство права, не варианта
+  права и не пользователя. Обеспечивается колонкой
+  `permissions.zone` (ADR-ACCESS-017).
+- **BR-ACCESS-047.** Зона `PUBLIC` — право используется
+  на пользовательской стороне приложения. К ресурсам `PUBLIC`
+  относятся: `users`, `roles`, `projects`, `customers`,
+  `calculator`, `media`.
+- **BR-ACCESS-048.** Зона `ADMIN` — право используется только
+  в админ-панели. К ресурсам `ADMIN` относятся: `products`,
+  `categories`, `templates`, `suppliers`, `settings`, `audit_log`.
+- **BR-ACCESS-049.** Вход в админ-панель доступен пользователю,
+  у которого есть хотя бы одно право с `zone = ADMIN`.
+  Отдельного права «доступ в админку» не существует.
+
 ### Удаление
 
-- **BR-ACCESS-040.** Физическое удаление `Permission` каскадно
+- **BR-ACCESS-050.** Физическое удаление `Permission` каскадно
   удаляет все связанные записи.
-- **BR-ACCESS-041.** Системное право (`is_system = true`) удалить
+- **BR-ACCESS-051.** Системное право (`is_system = true`) удалить
   нельзя.
-- **BR-ACCESS-042.** `PermissionCondition` удаляется физически.
+- **BR-ACCESS-052.** `PermissionCondition` удаляется физически.
   Мягкое удаление не применяется — для этого есть `is_active`.
-
 
 
 # Роли

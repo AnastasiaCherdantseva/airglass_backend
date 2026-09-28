@@ -8,7 +8,7 @@ import enum
 import uuid
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, Computed, Enum, Index, String, Text, text
+from sqlalchemy import Boolean, CheckConstraint, Computed, Enum, Index, String, Text, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -18,7 +18,6 @@ if TYPE_CHECKING:
     from app.models.system.permission_condition import PermissionCondition
 
 
-# BR-ACCESS-035. BR-ACCESS-036. ADR-ACCESS-014.
 class PermissionResource(enum.StrEnum):
     """Resources the permission applies to."""
 
@@ -27,7 +26,6 @@ class PermissionResource(enum.StrEnum):
     PRODUCTS = "products"
     CATEGORIES = "categories"
     TEMPLATES = "templates"
-    QUOTES = "quotes"
     PROJECTS = "projects"
     CUSTOMERS = "customers"
     SUPPLIERS = "suppliers"
@@ -37,7 +35,6 @@ class PermissionResource(enum.StrEnum):
     AUDIT_LOG = "audit_log"
 
 
-# BR-ACCESS-035. BR-ACCESS-037. ADR-ACCESS-014.
 class PermissionAction(enum.StrEnum):
     """Actions on a resource."""
 
@@ -50,11 +47,43 @@ class PermissionAction(enum.StrEnum):
     IMPORT = "import"
 
 
+class PermissionZone(enum.StrEnum):
+    """Zone where the permission applies."""
+
+    PUBLIC = "public"
+    ADMIN = "admin"
+
+
 class Permission(Base):
     """Atomic access right. Immutable reference."""
 
     __tablename__ = "permissions"
-    __table_args__ = (Index("ix_permission_resource_action", "resource", "action"),)
+    __table_args__ = (
+        Index("ix_permission_resource_action", "resource", "action"),
+        CheckConstraint(
+            """
+            NOT (
+                (resource = 'USERS'      AND action = 'ARCHIVE') OR
+                (resource = 'PROJECTS'   AND action IN ('IMPORT', 'EXPORT')) OR
+                (resource = 'CUSTOMERS'  AND action = 'ARCHIVE') OR
+                (resource = 'MEDIA'      AND action IN ('ARCHIVE', 'EXPORT', 'IMPORT')) OR
+                (resource = 'CALCULATOR' AND action IN ('ARCHIVE', 'IMPORT')) OR
+                (resource = 'SETTINGS'   AND action IN ('CREATE', 'DELETE', 'ARCHIVE', 'EXPORT', 'IMPORT')) OR
+                (resource = 'AUDIT_LOG'  AND action IN ('CREATE', 'UPDATE', 'DELETE', 'ARCHIVE', 'IMPORT'))
+            )
+            """,
+            name="ck_permission_forbidden_combinations",
+        ),
+        CheckConstraint(
+            """
+        (resource IN ('USERS', 'ROLES', 'PROJECTS', 'CUSTOMERS', 'CALCULATOR', 'MEDIA')
+            AND zone = 'PUBLIC') OR
+        (resource IN ('PRODUCTS', 'CATEGORIES', 'TEMPLATES', 'SUPPLIERS', 'SETTINGS', 'AUDIT_LOG')
+            AND zone = 'ADMIN')
+        """,
+            name="ck_permission_zone_by_resource",
+        ),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
@@ -73,6 +102,10 @@ class Permission(Base):
     action: Mapped[PermissionAction] = mapped_column(Enum(PermissionAction), nullable=False)
 
     is_system: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("false"))
+    zone: Mapped[PermissionZone] = mapped_column(
+        Enum(PermissionZone, name="permission_zone"),
+        nullable=False,
+    )
     # BR-ACCESS-039
     conditions: Mapped[list["PermissionCondition"]] = relationship(
         back_populates="permission",
