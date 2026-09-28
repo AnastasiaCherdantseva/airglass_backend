@@ -1,10 +1,14 @@
 import uuid
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, Column, String, Text, text
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, relationship
 
 from app.models.base import Base
+
+if TYPE_CHECKING:
+    from app.models.system.permission_condition import PermissionCondition
 
 
 # типы файлов
@@ -35,3 +39,7 @@ class MediaType(Base):
     )
     user_media = relationship("UserMedia", back_populates="media_type")
     template_gallery = relationship("TemplateGallery", back_populates="media_type")
+    conditions: Mapped[list["PermissionCondition"]] = relationship(
+        back_populates="media_type",
+        cascade="all, delete-orphan",
+    )

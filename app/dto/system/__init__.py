@@ -3,13 +3,15 @@ from app.dto.system.organization import (
     OrganizationOutPut,
     OrganizationPatch,
 )
-from app.dto.system.permission import PermissionData
+from app.dto.system.permission import PermissionData, PermissionOutput
 from app.dto.system.permission_condition import (
     PermissionConditionAllData,
     PermissionConditionAllOutPut,
     PermissionConditionCategoryData,
     PermissionConditionCategoryOutPut,
     PermissionConditionData,
+    PermissionConditionMediaData,
+    PermissionConditionMediaOutPut,
     PermissionConditionOutPut,
     PermissionConditionRoleData,
     PermissionConditionRoleOutPut,
@@ -37,6 +39,7 @@ __all__ = [
     "RolePatchData",
     #
     "PermissionData",
+    "PermissionOutput",
     #
     "PermissionConditionData",
     "PermissionConditionRoleData",
@@ -46,6 +49,8 @@ __all__ = [
     "PermissionConditionRoleOutPut",
     "PermissionConditionCategoryOutPut",
     "PermissionConditionAllOutPut",
+    "PermissionConditionMediaData",
+    "PermissionConditionMediaOutPut",
     #
     "SessionData",
     "SessionInput",

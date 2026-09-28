@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from uuid import UUID
 
 
 @dataclass(frozen=True)
@@ -9,3 +10,8 @@ class PermissionData:
     resource: str | None
     action: str | None
     is_system: bool
+
+
+@dataclass(frozen=True)
+class PermissionOutput(PermissionData):
+    id: UUID

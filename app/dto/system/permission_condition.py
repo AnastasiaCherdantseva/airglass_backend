@@ -23,9 +23,15 @@ class PermissionConditionCategoryData(PermissionConditionData):
 
 
 @dataclass(frozen=True)
+class PermissionConditionMediaData(PermissionConditionData):
+    media_type_id: UUID
+
+
+@dataclass(frozen=True)
 class PermissionConditionAllData(PermissionConditionData):
     category_id: UUID | None
     role_id: UUID | None
+    media_type_id: UUID | None
 
 
 @dataclass(frozen=True)
@@ -44,6 +50,12 @@ class PermissionConditionCategoryOutPut(PermissionConditionOutPut):
 
 
 @dataclass(frozen=True)
+class PermissionConditionMediaOutPut(PermissionConditionOutPut):
+    media_type_id: UUID
+
+
+@dataclass(frozen=True)
 class PermissionConditionAllOutPut(PermissionConditionOutPut):
     category_id: UUID | None
     role_id: UUID | None
+    media_type_id: UUID | None

@@ -7,10 +7,13 @@ from app.dto.system import (
     PermissionConditionCategoryData,
     PermissionConditionCategoryOutPut,
     PermissionConditionData,
+    PermissionConditionMediaData,
+    PermissionConditionMediaOutPut,
     PermissionConditionOutPut,
     PermissionConditionRoleData,
     PermissionConditionRoleOutPut,
     PermissionData,
+    PermissionOutput,
     RoleData,
     RoleOutput,
     RolePatchData,
@@ -37,6 +40,7 @@ __all__ = [
     "RolePatchData",
     #
     "PermissionData",
+    "PermissionOutput",
     #
     "PermissionConditionData",
     "PermissionConditionRoleData",
@@ -46,6 +50,8 @@ __all__ = [
     "PermissionConditionRoleOutPut",
     "PermissionConditionCategoryOutPut",
     "PermissionConditionAllOutPut",
+    "PermissionConditionMediaData",
+    "PermissionConditionMediaOutPut",
     #
     "SessionData",
     "SessionInput",

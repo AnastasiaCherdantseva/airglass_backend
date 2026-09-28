@@ -24,6 +24,7 @@ from app.models.base import Base
 
 if TYPE_CHECKING:
     from app.models.catalog import Category
+    from app.models.media import MediaType
     from app.models.system.permission import Permission
     from app.models.system.role import Role
     from app.models.system.role_permission import RolePermission
@@ -39,6 +40,7 @@ class ConditionType(enum.StrEnum):
     ROLE = "role"
     CREATOR = "creator"
     SUBTREE = "subtree"
+    MEDIA = "media"
 
 
 class PermissionEffect(enum.StrEnum):
@@ -60,16 +62,18 @@ class PermissionCondition(Base):
             "effect",
             "category_id",
             "role_id",
+            "media_type_id",
             name="uq_permission_condition",
         ),
         # ADR-ACCESS-011
         CheckConstraint(
             """
-            (type = 'ALL'      AND category_id IS NULL AND role_id IS NULL) OR
-            (type = 'CATEGORY' AND category_id IS NOT NULL AND role_id IS NULL) OR
-            (type = 'ROLE'     AND role_id IS NOT NULL AND category_id IS NULL) OR
-            (type = 'CREATOR'  AND category_id IS NULL AND role_id IS NULL) OR
-            (type = 'SUBTREE'  AND category_id IS NULL AND role_id IS NULL)
+            (type = 'ALL'      AND category_id IS NULL AND role_id IS NULL AND media_type_id IS NULL) OR
+            (type = 'CATEGORY' AND category_id IS NOT NULL AND role_id IS NULL AND media_type_id IS NULL) OR
+            (type = 'ROLE'     AND role_id IS NOT NULL AND category_id IS NULL AND media_type_id IS NULL) OR
+            (type = 'CREATOR'  AND category_id IS NULL AND role_id IS NULL AND media_type_id IS NULL) OR
+            (type = 'SUBTREE'  AND category_id IS NULL AND role_id IS NULL AND media_type_id IS NULL) OR
+            (type = 'MEDIA'    AND category_id IS NULL AND role_id IS NULL AND media_type_id IS NOT NULL)
             """,
             name="ck_permission_condition_type",
         ),
@@ -99,6 +103,13 @@ class PermissionCondition(Base):
         ForeignKey("categories.id", ondelete="CASCADE"),
         nullable=True,
     )
+    media_type_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey(
+            "media_types.id", ondelete="CASCADE", name="fk_permission_condition_media_type_id"
+        ),
+        nullable=True,
+    )
     role_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("roles.id", ondelete="CASCADE"),
@@ -116,6 +127,7 @@ class PermissionCondition(Base):
     category: Mapped["Category | None"] = relationship(
         back_populates="conditions",
     )
+    media_type: Mapped["MediaType | None"] = relationship(back_populates="conditions")
     # ADR-ACCESS-011
     role: Mapped["Role | None"] = relationship(back_populates="conditions")
 
