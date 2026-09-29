@@ -33,13 +33,14 @@ from app.repositories.deps import get_uow
 # Подключаем фикстуры из подпапок
 pytest_plugins = [
     "tests.fixtures.users",
+    "tests.fixtures.user_roles",
+    "tests.fixtures.user_permissions",
     "tests.fixtures.sessions",
     "tests.fixtures.fakes",
     "tests.fixtures.db",
     "tests.fixtures.http",
     "tests.fixtures.permissions",
     "tests.fixtures.permission_conditions",
-    "tests.fixtures.user_permissions",
     "tests.fixtures.roles",
 ]
 

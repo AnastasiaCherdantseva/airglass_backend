@@ -54,8 +54,9 @@ class UserRoleRepository(
                 is_system=row.is_system,
                 is_active=row.is_active,
                 description=row.description,
+                owner_id=row.owner_id,
             )
-            for row in result.all()
+            for row in result.scalars().all()
         ]
 
     async def get_users_by_role_id(self, role_id: UUID) -> list[UserOutput]:
@@ -76,8 +77,17 @@ class UserRoleRepository(
                 is_active=row.is_active,
                 parent_id=row.parent_id,
             )
-            for row in result.all()
+            for row in result.scalars().all()
         ]
+
+    async def get_user_ids_by_role_id(self, role_id: UUID) -> list[UUID]:
+        """ID пользователей с этой ролью. Для триггеров синхронизации."""
+        result = await self.db.execute(
+            select(UserRole.user_id).where(
+                UserRole.role_id == role_id,
+            )
+        )
+        return list(result.scalars().all())
 
     async def add_link(self, data: UserRoleLink) -> None:
         link = UserRole(

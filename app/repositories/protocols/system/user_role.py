@@ -22,6 +22,7 @@ class UserRoleReadRepositoryProtocol(Protocol):
         self,
         role_id: UUID,
     ) -> list[UserOutput]: ...
+    async def get_user_ids_by_role_id(self, role_id: UUID) -> list[UUID]: ...
 
 
 class UserRoleWriteRepositoryProtocol(Protocol):

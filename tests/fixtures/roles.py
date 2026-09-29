@@ -37,6 +37,24 @@ async def system_role(db_session: AsyncSession) -> Role:
 
 
 @pytest_asyncio.fixture
+async def system_roles(db_session: AsyncSession) -> list[Role]:
+    """Готовая системная роль в БД (owner_id = None)."""
+    roles = []
+    for i in range(3):
+        role = Role(
+            name=f"Системная Роль {i}",
+            owner_id=None,
+            description="Системная",
+            is_system=True,
+            is_active=True,
+        )
+        db_session.add(role)
+        roles.append(role)
+    await db_session.flush()
+    return roles
+
+
+@pytest_asyncio.fixture
 async def roles(db_session: AsyncSession, user: User) -> list[Role]:
     """Несколько пользовательских ролей для одного владельца."""
     result = []
