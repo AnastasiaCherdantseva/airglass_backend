@@ -301,7 +301,26 @@ export, import. `archive` включает восстановление.
   выражаются через `ConditionType.MEDIA`.
 
 
-  ## Роли
+### ADR-ACCESS-018. Сбор condition_ids при синхронизации
+
+Решение: при синхронизации `user_permissions`:
+
+1. Брать только **активные** роли (`Role.is_active = True`).
+2. Из активных ролей — `role_permissions` → `condition_ids`.
+3. Из `user_direct_permissions` — **все** (фильтр `is_active` —
+   на condition, проверяется в authorization).
+4. Объединять через `set()`.
+
+Обоснование:
+- неактивная роль не даёт прав (BR-ROLE-023);
+- `is_active` condition проверяется при authorization
+  (BR-ACCESS-032.2), не при синхронизации;
+- дедупликация — уникальность `(user_id, condition_id)` в PK.
+
+Следствие: `UserRoleRepository.get_roles_by_user_id` фильтрует
+`is_active` (уже реализовано). Синхронизация использует этот метод.
+
+## Роли
 
 ### ADR-ROLE-001. Роль — набор вариантов прав
 
@@ -433,6 +452,22 @@ export, import. `archive` включает восстановление.
 
 Следствие: `subtree` в названии прав означает
 «own и всё поддерево».
+
+### ADR-ROLE-010. Триггеры синхронизации при изменении ролей
+
+Решение: деактивация / активация роли и изменение `RolePermission`
+триггерят синхронизацию `user_permissions` для всех затронутых
+пользователей. В одной транзакции.
+
+Обоснование:
+- права пользователя зависят от активных ролей (BR-ROLE-023);
+- `RoleRepository` не должен знать о синхронизации — это
+  ответственность use case;
+- одна транзакция — нет окна рассинхрона.
+
+Следствие: use case `deactivate_roles` / `activate_roles` /
+`update_role_permissions` обязаны вызывать `sync_user_permissions`
+для затронутых пользователей.
 
 
 ## Пользователи
