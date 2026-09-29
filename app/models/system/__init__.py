@@ -4,6 +4,7 @@ from app.models.system.permission import (
     Permission,
     PermissionAction,
     PermissionResource,
+    PermissionZone,
 )
 from app.models.system.permission_condition import (
     ConditionType,
@@ -24,6 +25,7 @@ __all__ = [
     "Role",
     "Permission",
     "PermissionResource",
+    "PermissionZone",
     "PermissionAction",
     "PermissionCondition",
     "ConditionType",

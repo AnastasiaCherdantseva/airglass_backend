@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Literal
 from uuid import UUID
 
 
@@ -10,6 +11,7 @@ class PermissionData:
     resource: str | None
     action: str | None
     is_system: bool
+    zone: Literal["admin", "public"]
 
 
 @dataclass(frozen=True)
