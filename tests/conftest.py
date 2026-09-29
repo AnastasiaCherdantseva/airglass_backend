@@ -35,6 +35,10 @@ pytest_plugins = [
     "tests.fixtures.users",
     "tests.fixtures.sessions",
     "tests.fixtures.fakes",
+    "tests.fixtures.db",
+    "tests.fixtures.http",
+    "tests.fixtures.permissions",
+    "tests.fixtures.permission_conditions",
 ]
 
 TEST_DATABASE_URL = "postgresql+asyncpg://myuser:postgres@localhost:5432/airglass_test"
@@ -62,7 +66,14 @@ def setup_database() -> Generator[None, None, None]:
         check=True,
         env={**os.environ, "POSTGRES_DB": "airglass_test"},
         capture_output=True,
+        # text=True,
     )
+    # if result.returncode != 0:
+    #     print("=== ALEMBIC STDOUT ===")
+    #     print(result.stdout)
+    #     print("=== ALEMBIC STDERR ===")
+    #     print(result.stderr)
+    #     raise RuntimeError(f"alembic upgrade failed: {result.returncode}")
 
     yield
 
