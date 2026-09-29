@@ -1,4 +1,5 @@
 from app.dto.system import (
+    GroupedPermission,
     OrganizationData,
     OrganizationOutPut,
     OrganizationPatch,
@@ -23,6 +24,7 @@ from app.dto.system import (
     UserData,
     UserOutput,
     UserPatchInput,
+    UserPermissionLink,
     UserRoleLink,
 )
 
@@ -58,4 +60,6 @@ __all__ = [
     "SessionOutput",
     #
     "UserRoleLink",
+    "UserPermissionLink",
+    "GroupedPermission",
 ]

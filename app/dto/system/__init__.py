@@ -23,6 +23,7 @@ from app.dto.system.user import (
     UserOutput,
     UserPatchInput,
 )
+from app.dto.system.user_permission import GroupedPermission, UserPermissionLink
 from app.dto.system.user_role import UserRoleLink
 
 __all__ = [
@@ -57,4 +58,6 @@ __all__ = [
     "SessionOutput",
     #
     "UserRoleLink",
+    "UserPermissionLink",
+    "GroupedPermission",
 ]
