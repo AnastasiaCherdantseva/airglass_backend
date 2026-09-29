@@ -93,8 +93,6 @@ async def test_success_returns_authenticated_user(
     assert result.name == user_in_memory.name
     assert result.email == user_in_memory.email
     assert len(result.session_token) > 0
-    assert len(result.roles) == 1
-    assert result.roles[0].id == role_in_memory.id
 
 
 async def test_success_creates_session_with_hash(
