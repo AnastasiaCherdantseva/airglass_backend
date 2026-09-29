@@ -33,6 +33,14 @@ def upgrade() -> None:
         ),
     )
     op.alter_column('permissions', 'zone', server_default=None)
+    op.execute("""
+        UPDATE permissions SET zone = 'ADMIN'
+        WHERE resource IN ('PRODUCTS', 'CATEGORIES', 'TEMPLATES', 'SUPPLIERS', 'SETTINGS', 'AUDIT_LOG')
+    """)
+    op.execute("""
+        UPDATE permissions SET zone = 'PUBLIC'
+        WHERE resource IN ('USERS', 'ROLES', 'PROJECTS', 'CUSTOMERS', 'CALCULATOR', 'MEDIA')
+    """)
     op.create_check_constraint(
         'ck_permission_zone_by_resource',
         'permissions',
