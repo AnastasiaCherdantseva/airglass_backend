@@ -35,7 +35,6 @@ async def permissions(
                 description="Право на " + act["name"] + res["name"],
                 resource=res["item"],
                 action=act["item"],
-                is_system=True,
                 zone=zone,
             )
             permissions.append(new)
@@ -83,7 +82,6 @@ async def make_permission(db_session: AsyncSession):
         action: PermissionAction,
         name: str | None = None,
         description: str | None = None,
-        is_system: bool = False,
         zone: PermissionZone = PermissionZone.PUBLIC,
     ) -> Permission:
         permission = Permission(
@@ -91,7 +89,6 @@ async def make_permission(db_session: AsyncSession):
             description=description,
             resource=resource,
             action=action,
-            is_system=is_system,
             zone=zone,
         )
         db_session.add(permission)

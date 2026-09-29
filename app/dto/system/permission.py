@@ -10,7 +10,6 @@ class PermissionData:
     code: str
     resource: str | None
     action: str | None
-    is_system: bool
     zone: Literal["admin", "public"]
 
 

@@ -8,7 +8,7 @@ import enum
 import uuid
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, CheckConstraint, Computed, Enum, Index, String, Text, text
+from sqlalchemy import CheckConstraint, Computed, Enum, Index, String, Text, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -60,20 +60,20 @@ class Permission(Base):
     __tablename__ = "permissions"
     __table_args__ = (
         Index("ix_permission_resource_action", "resource", "action"),
-        CheckConstraint(
-            """
-            NOT (
-                (resource = 'USERS'      AND action = 'ARCHIVE') OR
-                (resource = 'PROJECTS'   AND action IN ('IMPORT', 'EXPORT')) OR
-                (resource = 'CUSTOMERS'  AND action = 'ARCHIVE') OR
-                (resource = 'MEDIA'      AND action IN ('ARCHIVE', 'EXPORT', 'IMPORT')) OR
-                (resource = 'CALCULATOR' AND action IN ('ARCHIVE', 'IMPORT')) OR
-                (resource = 'SETTINGS'   AND action IN ('CREATE', 'DELETE', 'ARCHIVE', 'EXPORT', 'IMPORT')) OR
-                (resource = 'AUDIT_LOG'  AND action IN ('CREATE', 'UPDATE', 'DELETE', 'ARCHIVE', 'IMPORT'))
-            )
-            """,
-            name="ck_permission_forbidden_combinations",
-        ),
+        # CheckConstraint(
+        #     """
+        #     NOT (
+        #         (resource = 'USERS'      AND action = 'ARCHIVE') OR
+        #         (resource = 'PROJECTS'   AND action IN ('IMPORT', 'EXPORT')) OR
+        #         (resource = 'CUSTOMERS'  AND action = 'ARCHIVE') OR
+        #         (resource = 'MEDIA'      AND action IN ('ARCHIVE', 'EXPORT', 'IMPORT')) OR
+        #         (resource = 'CALCULATOR' AND action IN ('ARCHIVE', 'IMPORT')) OR
+        #         (resource = 'SETTINGS'   AND action IN ('CREATE', 'DELETE', 'ARCHIVE', 'EXPORT', 'IMPORT')) OR
+        #         (resource = 'AUDIT_LOG'  AND action IN ('CREATE', 'UPDATE', 'DELETE', 'ARCHIVE', 'IMPORT'))
+        #     )
+        #     """,
+        #     name="ck_permission_forbidden_combinations",
+        # ),
         CheckConstraint(
             """
         (resource IN ('USERS', 'ROLES', 'PROJECTS', 'CUSTOMERS', 'CALCULATOR', 'MEDIA')
@@ -101,7 +101,6 @@ class Permission(Base):
     resource: Mapped[PermissionResource] = mapped_column(Enum(PermissionResource), nullable=False)
     action: Mapped[PermissionAction] = mapped_column(Enum(PermissionAction), nullable=False)
 
-    is_system: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("false"))
     zone: Mapped[PermissionZone] = mapped_column(
         Enum(PermissionZone, name="permission_zone"),
         nullable=False,

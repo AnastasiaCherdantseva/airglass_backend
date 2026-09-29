@@ -23,7 +23,6 @@ class PermissionRepository(BaseIdRepository[Permission]):
             code=permission.code,
             resource=permission.resource,
             action=permission.action,
-            is_system=permission.is_system,
             name=permission.name,
             description=permission.description,
             zone="admin" if permission.zone == "admin" else "public",

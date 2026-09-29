@@ -14,7 +14,6 @@ async def test_get_by_code_found(db_session, permissions):
     assert result.code == target.code
     assert result.resource == target.resource
     assert result.action == target.action
-    assert result.is_system == target.is_system
     assert result.name == target.name
     assert result.description == target.description
     assert result.zone == target.zone
