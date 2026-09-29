@@ -21,11 +21,13 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Add zone column to permissions."""
+    permission_zone = sa.Enum('PUBLIC', 'ADMIN', name='permission_zone')
+    permission_zone.create(op.get_bind(), checkfirst=True)
     op.add_column(
         'permissions',
         sa.Column(
             'zone',
-            sa.Enum('PUBLIC', 'ADMIN', name='permission_zone'),
+            permission_zone,
             nullable=False,
             server_default='PUBLIC',
         ),
@@ -47,3 +49,4 @@ def downgrade() -> None:
     """Drop zone column from permissions."""
     op.drop_constraint('ck_permission_zone_by_resource', 'permissions', type_='check')
     op.drop_column('permissions', 'zone')
+    sa.Enum(name='permission_zone').drop(op.get_bind(), checkfirst=True)
