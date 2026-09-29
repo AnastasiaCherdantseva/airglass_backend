@@ -5,6 +5,7 @@ from uuid import UUID
 @dataclass(frozen=True)
 class RoleData:
     name: str
+    owner_id: UUID | None
     description: str | None
     is_system: bool
     is_active: bool

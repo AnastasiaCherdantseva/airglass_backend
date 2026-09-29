@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING
 from sqlalchemy import (
     Boolean,
     CheckConstraint,
-    Column,
     ForeignKey,
     Index,
     String,
@@ -47,7 +46,7 @@ class Role(Base, TimestampMixin):
             name="ck_role_owner_system",
         ),
     )
-    id = Column(
+    id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
@@ -60,16 +59,16 @@ class Role(Base, TimestampMixin):
         nullable=True,
         index=True,
     )
-    name = Column(String(255), nullable=False)
-    description = Column(Text, nullable=True)
-    is_system = Column(
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    is_system: Mapped[bool] = mapped_column(
         Boolean,
         default=False,
         nullable=False,
         server_default=text("false"),
     )  # ADMIN, MANAGER
     # BR-ROLE-012.ADR-ROLE-006
-    is_active = Column(
+    is_active: Mapped[bool] = mapped_column(
         Boolean,
         default=True,
         nullable=False,
