@@ -42,6 +42,7 @@ pytest_plugins = [
     "tests.fixtures.permissions",
     "tests.fixtures.permission_conditions",
     "tests.fixtures.roles",
+    "tests.fixtures.role_permissions",
 ]
 
 TEST_DATABASE_URL = "postgresql+asyncpg://myuser:postgres@localhost:5432/airglass_test"
