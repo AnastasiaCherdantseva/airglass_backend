@@ -42,6 +42,33 @@ async def user_direct_permissions(
 
 
 @pytest_asyncio.fixture
+async def user_direct_permission_in_memory(
+    user_in_memory: User,
+    permission_conditions_allow_in_memory: list[PermissionCondition],
+) -> UserDirectPermission:
+    """Одна связь user ↔ direct condition в памяти (no DB)."""
+    return UserDirectPermission(
+        user_id=user_in_memory.id,
+        condition_id=permission_conditions_allow_in_memory[0].id,
+    )
+
+
+@pytest_asyncio.fixture
+async def user_direct_permissions_in_memory(
+    user_in_memory: User,
+    permission_conditions_allow_in_memory: list[PermissionCondition],
+) -> list[UserDirectPermission]:
+    """Несколько связей для одного юзера в памяти (no DB)."""
+    return [
+        UserDirectPermission(
+            user_id=user_in_memory.id,
+            condition_id=condition.id,
+        )
+        for condition in permission_conditions_allow_in_memory
+    ]
+
+
+@pytest_asyncio.fixture
 async def make_user_direct_permission(db_session: AsyncSession):
     """Фабрика связей user ↔ direct condition."""
 

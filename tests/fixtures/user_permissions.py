@@ -42,6 +42,33 @@ async def user_permissions(
 
 
 @pytest_asyncio.fixture
+async def user_permission_in_memory(
+    user_in_memory: User,
+    permission_conditions_allow_in_memory: list[PermissionCondition],
+) -> UserPermission:
+    """Одна связь user ↔ condition в памяти (no DB)."""
+    return UserPermission(
+        user_id=user_in_memory.id,
+        condition_id=permission_conditions_allow_in_memory[0].id,
+    )
+
+
+@pytest_asyncio.fixture
+async def user_permissions_in_memory(
+    user_in_memory: User,
+    permission_conditions_allow_in_memory: list[PermissionCondition],
+) -> list[UserPermission]:
+    """Несколько связей для одного юзера в памяти (no DB)."""
+    return [
+        UserPermission(
+            user_id=user_in_memory.id,
+            condition_id=condition.id,
+        )
+        for condition in permission_conditions_allow_in_memory
+    ]
+
+
+@pytest_asyncio.fixture
 async def make_user_permission(db_session: AsyncSession):
     """Фабрика связей user ↔ condition."""
 

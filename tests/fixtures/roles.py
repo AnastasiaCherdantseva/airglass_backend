@@ -38,7 +38,7 @@ async def system_role(db_session: AsyncSession) -> Role:
 
 @pytest_asyncio.fixture
 async def system_roles(db_session: AsyncSession) -> list[Role]:
-    """Готовая системная роль в БД (owner_id = None)."""
+    """Несколько системных ролей в БД (owner_id = None)."""
     roles = []
     for i in range(3):
         role = Role(
@@ -105,6 +105,60 @@ async def roles_for_two_users(
         user_a.id: [r.id for r in roles_a],
         user_b.id: [r.id for r in roles_b],
     }
+
+
+@pytest_asyncio.fixture
+async def role_in_memory(user_in_memory: User) -> Role:
+    """Готовая пользовательская роль в памяти (no DB)."""
+    return Role(
+        name="Тестовая роль",
+        owner_id=user_in_memory.id,
+        description="Для тестов",
+        is_system=False,
+        is_active=True,
+    )
+
+
+@pytest_asyncio.fixture
+async def system_role_in_memory() -> Role:
+    """Готовая системная роль в памяти (no DB)."""
+    return Role(
+        name="Системная роль",
+        owner_id=None,
+        description="Системная",
+        is_system=True,
+        is_active=True,
+    )
+
+
+@pytest_asyncio.fixture
+async def system_roles_in_memory() -> list[Role]:
+    """Несколько системных ролей в памяти (no DB)."""
+    return [
+        Role(
+            name=f"Системная Роль {i}",
+            owner_id=None,
+            description="Системная",
+            is_system=True,
+            is_active=True,
+        )
+        for i in range(3)
+    ]
+
+
+@pytest_asyncio.fixture
+async def roles_in_memory(user_in_memory: User) -> list[Role]:
+    """Несколько пользовательских ролей в памяти (no DB)."""
+    return [
+        Role(
+            name=f"Роль {i}",
+            owner_id=user_in_memory.id,
+            description=f"Описание {i}",
+            is_system=False,
+            is_active=True,
+        )
+        for i in range(3)
+    ]
 
 
 @pytest_asyncio.fixture

@@ -40,6 +40,38 @@ async def permission_conditions_deny(
 
 
 @pytest_asyncio.fixture
+async def permission_conditions_allow_in_memory(
+    permissions_in_memory: list[Permission],
+) -> list[PermissionCondition]:
+    """ALLOW-условия для всех permissions в памяти (no DB)."""
+    return [
+        PermissionCondition(
+            permission_id=p.id,
+            effect=PermissionEffect.ALLOW,
+            type=ConditionType.SUBTREE,
+            is_active=True,
+        )
+        for p in permissions_in_memory
+    ]
+
+
+@pytest_asyncio.fixture
+async def permission_conditions_deny_in_memory(
+    permissions_in_memory: list[Permission],
+) -> list[PermissionCondition]:
+    """DENY-условия для всех permissions в памяти (no DB)."""
+    return [
+        PermissionCondition(
+            permission_id=p.id,
+            effect=PermissionEffect.DENY,
+            type=ConditionType.ALL,
+            is_active=True,
+        )
+        for p in permissions_in_memory
+    ]
+
+
+@pytest_asyncio.fixture
 async def make_condition(db_session: AsyncSession):
     async def _make(
         permission: Permission,

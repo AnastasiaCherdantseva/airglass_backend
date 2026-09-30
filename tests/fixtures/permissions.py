@@ -43,35 +43,38 @@ async def permissions(
     return permissions
 
 
-# @pytest_asyncio.fixture
-# async def user_permissions(
-#     db_session: AsyncSession,
-# ) -> list[Permission]:
-#     SELECTED_RES = [
-#         {"name": "юзеров", "item": PermissionResource.USERS},
-#         {"name": "ролей", "item": PermissionResource.ROLES},
-#         {"name": "товаров", "item": PermissionResource.PRODUCTS},
-#     ]
-#     SELECTED_ACT = [
-#         {
-#             "name": "архивирование ",
-#             "item": PermissionAction.ARCHIVE,
-#         },
-#     ]
-#     permissions = []
-#     for res in SELECTED_RES:
-#         for act in SELECTED_ACT:
-#             new = Permission(
-#                 name=act["name"] + res["name"],
-#                 description="Право на " + act["name"] + res["name"],
-#                 resource=res["item"],
-#                 action=act["item"],
-#                 is_system=False,
-#             )
-#             permissions.append(new)
-#             db_session.add(new)
-#     await db_session.flush()
-#     return permissions
+@pytest_asyncio.fixture
+async def permissions_in_memory() -> list[Permission]:
+    """Те же permissions, но в памяти (no DB)."""
+    SELECTED_RES = [
+        {"name": "юзеров", "item": PermissionResource.USERS},
+        {"name": "ролей", "item": PermissionResource.ROLES},
+        {"name": "товаров", "item": PermissionResource.PRODUCTS},
+    ]
+    SELECTED_ACT = [
+        {"name": "добавление ", "item": PermissionAction.CREATE},
+        {"name": "чтение ", "item": PermissionAction.READ},
+        {"name": "обновление ", "item": PermissionAction.UPDATE},
+        {"name": "удаление", "item": PermissionAction.DELETE},
+    ]
+    permissions = []
+    for res in SELECTED_RES:
+        for act in SELECTED_ACT:
+            zone = (
+                PermissionZone.ADMIN
+                if res["item"] == PermissionResource.PRODUCTS
+                else PermissionZone.PUBLIC
+            )
+            permissions.append(
+                Permission(
+                    name=act["name"] + res["name"],
+                    description="Право на " + act["name"] + res["name"],
+                    resource=res["item"],
+                    action=act["item"],
+                    zone=zone,
+                )
+            )
+    return permissions
 
 
 @pytest_asyncio.fixture

@@ -36,6 +36,21 @@ async def user_roles(
 
 
 @pytest_asyncio.fixture
+async def user_role_in_memory(user_in_memory: User, system_role_in_memory: Role) -> UserRole:
+    """Одна связь user ↔ role в памяти (no DB)."""
+    return UserRole(user_id=user_in_memory.id, role_id=system_role_in_memory.id)
+
+
+@pytest_asyncio.fixture
+async def user_roles_in_memory(
+    user_in_memory: User,
+    system_roles_in_memory: list[Role],
+) -> list[UserRole]:
+    """Несколько связей для одного юзера в памяти (no DB)."""
+    return [UserRole(user_id=user_in_memory.id, role_id=role.id) for role in system_roles_in_memory]
+
+
+@pytest_asyncio.fixture
 async def make_user_role(db_session: AsyncSession):
     """Фабрика связей user ↔ role."""
 
