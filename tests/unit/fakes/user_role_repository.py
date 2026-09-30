@@ -51,6 +51,7 @@ class FakeUserRoleRepository:
                     description=role.description,
                     is_system=role.is_system,
                     is_active=role.is_active,
+                    owner_id=role.owner_id,
                 )
             )
         return result
@@ -88,9 +89,9 @@ class FakeUserRoleRepository:
     async def delete(self, entity: UserRole) -> None:
         """Удалить связь из памяти."""
         self.links = [
-            l
-            for l in self.links
-            if not (l.user_id == entity.user_id and l.role_id == entity.role_id)
+            i
+            for i in self.links
+            if not (i.user_id == entity.user_id and i.role_id == entity.role_id)
         ]
 
     async def flush(self) -> None:
@@ -105,18 +106,18 @@ class FakeUserRoleRepository:
         """Удалить связь. True, если была."""
         before = len(self.links)
         self.links = [
-            l for l in self.links if not (l.user_id == data.user_id and l.role_id == data.role_id)
+            i for i in self.links if not (i.user_id == data.user_id and i.role_id == data.role_id)
         ]
         return len(self.links) < before
 
     async def remove_by_user_id(self, user_id: UUID) -> int:
         """Удалить все связи юзера."""
         before = len(self.links)
-        self.links = [l for l in self.links if l.user_id != user_id]
+        self.links = [i for i in self.links if i.user_id != user_id]
         return before - len(self.links)
 
     async def remove_by_role_id(self, role_id: UUID) -> int:
         """Удалить все связи роли."""
         before = len(self.links)
-        self.links = [l for l in self.links if l.role_id != role_id]
+        self.links = [i for i in self.links if i.role_id != role_id]
         return before - len(self.links)

@@ -52,14 +52,14 @@ class UserPermissionRepository(
         rows = result.all()
 
         grouped: dict[UUID, GroupedPermission] = {}
-        for permission_id, code, condition in rows:
-            if permission_id not in grouped:
-                grouped[permission_id] = GroupedPermission(
-                    id=permission_id,
+        for id, code, condition in rows:
+            if id not in grouped:
+                grouped[id] = GroupedPermission(
+                    id=id,
                     code=code,
                     conditions=[],
                 )
-            grouped[permission_id].conditions.append(
+            grouped[id].conditions.append(
                 PermissionConditionAllOutPut(
                     id=condition.id,
                     permission_id=condition.permission_id,

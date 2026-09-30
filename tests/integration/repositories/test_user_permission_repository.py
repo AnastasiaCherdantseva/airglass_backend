@@ -41,8 +41,8 @@ async def test_get_grouped_metadata(
 
     result = await repo.get_grouped_by_permission(user.id)
 
-    assert result[0].permission_id == permission_conditions_allow[0].permission_id
-    target = next(p for p in permissions if p.id == result[0].permission_id)
+    assert result[0].id == permission_conditions_allow[0].permission_id
+    target = next(p for p in permissions if p.id == result[0].id)
     assert result[0].code == target.code
 
 
@@ -93,7 +93,7 @@ async def test_get_grouped_multiple_permissions(
     result = await repo.get_grouped_by_permission(user.id)
 
     assert len(result) == 2
-    permission_ids = {g.permission_id for g in result}
+    permission_ids = {g.id for g in result}
     assert permission_ids == {permissions[0].id, permissions[1].id}
 
 
@@ -141,7 +141,7 @@ async def test_replace_removes_old(
 
     result = await repo.get_grouped_by_permission(user.id)
     assert len(result) == 1
-    assert result[0].permission_id == permissions[1].id
+    assert result[0].id == permissions[1].id
 
 
 async def test_replace_with_empty_list_clears(
@@ -171,7 +171,7 @@ async def test_replace_does_not_touch_other_users(
 
     other = await repo.get_grouped_by_permission(users[1].id)
     assert len(other) == 1
-    assert other[0].permission_id == permissions[1].id
+    assert other[0].id == permissions[1].id
 
 
 # ─────────────────────────────────────────────────────────────
