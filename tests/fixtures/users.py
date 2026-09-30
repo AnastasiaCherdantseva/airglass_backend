@@ -2,6 +2,7 @@
 Фикстуры пользователей.
 """
 
+from datetime import datetime
 from uuid import uuid4
 
 import pytest_asyncio
@@ -32,6 +33,7 @@ async def user(db_session: AsyncSession) -> User:
         email="anya@example.com",
         password_hash=get_test_password_hash(),
         is_active=True,
+        email_verified=datetime.now(),
     )
     db_session.add(user)
     await db_session.flush()
