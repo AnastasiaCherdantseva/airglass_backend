@@ -57,6 +57,28 @@ async def session(
 
 
 @pytest_asyncio.fixture
+async def session_for_inactive_user(
+    db_session: AsyncSession,
+    inactive_user: User,
+) -> dict[str, Session | str]:
+    """Ready-to-use session for active user in the database."""
+    token = generate_session_token()
+    token_hash = hash_session_token(token)
+    now = datetime.now(UTC)
+
+    session = Session(
+        id=uuid4(),
+        user_id=inactive_user.id,
+        token_hash=token_hash,
+        expires_at=now + SESSION_TTL,
+        last_used_at=now,
+    )
+    db_session.add(session)
+    await db_session.flush()
+    return {"data": session, "token": token, "token_hash": token_hash}
+
+
+@pytest_asyncio.fixture
 async def sessions(
     db_session: AsyncSession,
     user: User,
