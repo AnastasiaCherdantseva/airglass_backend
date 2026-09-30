@@ -1,19 +1,17 @@
 from fastapi import APIRouter, Cookie, Depends, Request, Response, status
 
 from app.core.security import SESSION_COOKIE_NAME, SESSION_MAX_AGE
-from app.core.security_dependencies import get_current_user
-from app.dto import UserOutput
 from app.repositories.deps import get_session_repo, get_user_repo, get_user_role_repo
 from app.repositories.system.session import SessionRepository
 from app.repositories.system.user import UserRepository
 from app.repositories.system.user_role import UserRoleRepository
-from app.schemas.system import AuthLoginRequest, MeResponse
+from app.schemas.system import AuthLoginRequest, UserResponse
 from app.use_cases import authenticate_user, logout_user
 
 router = APIRouter(prefix="/auth", tags=["Аутентификация"])
 
 
-@router.post("/login/email", response_model=MeResponse, status_code=status.HTTP_200_OK)
+@router.post("/login/email", response_model=UserResponse, status_code=status.HTTP_200_OK)
 async def login_by_email(
     data: AuthLoginRequest,
     response: Response,
@@ -21,7 +19,7 @@ async def login_by_email(
     users: UserRepository = Depends(get_user_repo),
     sessions: SessionRepository = Depends(get_session_repo),
     user_roles: UserRoleRepository = Depends(get_user_role_repo),
-) -> MeResponse:
+) -> UserResponse:
     # Проверка активной сессии
     session_token = request.cookies.get(SESSION_COOKIE_NAME)
     auth_data = await authenticate_user(
@@ -43,19 +41,7 @@ async def login_by_email(
         max_age=SESSION_MAX_AGE,
         path="/",
     )
-    return MeResponse(id=auth_data.id, name=auth_data.name, email=auth_data.email)
-
-
-@router.get("/me", response_model=MeResponse)
-async def get_me(
-    current_user: UserOutput = Depends(get_current_user),
-) -> MeResponse:
-    """Return the currently authenticated user."""
-    return MeResponse(
-        id=current_user.id,
-        name=current_user.name,
-        email=current_user.email,
-    )
+    return UserResponse(id=auth_data.id, name=auth_data.name, email=auth_data.email)
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)

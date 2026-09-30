@@ -5,7 +5,7 @@ from pydantic import Field
 
 # from decimal import Decimal
 from app.schemas.base import BaseSchema, Email
-from app.schemas.system.role import RoleResponse
+from app.schemas.system.permission import PermissionWithConditions
 
 
 class UserBase(BaseSchema):
@@ -32,10 +32,12 @@ class UserResponse(UserBase):
     """Ответ."""
 
     id: UUID
-    roles: list[RoleResponse] = Field(default_factory=list)
 
 
 class MeResponse(UserBase):
     """Ответ."""
 
+    is_active: bool
     id: UUID
+    has_admin_access: bool
+    permissions: list[PermissionWithConditions]
