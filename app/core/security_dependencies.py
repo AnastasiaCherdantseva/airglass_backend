@@ -12,10 +12,9 @@ from app.core.security import (
     SESSION_TTL,
     hash_session_token,
 )
-from app.dto import UserOutput
-from app.repositories.deps import get_session_repo, get_user_repo
-from app.repositories.system.session import SessionRepository
-from app.repositories.system.user import UserRepository
+from app.dto import CurrentUserOutput
+from app.repositories.deps import get_session_repo, get_user_permission_repo, get_user_repo
+from app.repositories.system import SessionRepository, UserPermissionRepository, UserRepository
 
 SESSION_EXTEND_INTERVAL = timedelta(hours=24)
 
@@ -24,7 +23,8 @@ async def get_current_user(
     session_token: str | None = Cookie(default=None, alias=SESSION_COOKIE_NAME),
     sessions: SessionRepository = Depends(get_session_repo),
     users: UserRepository = Depends(get_user_repo),
-) -> UserOutput:
+    user_permissions: UserPermissionRepository = Depends(get_user_permission_repo),
+) -> CurrentUserOutput:
     """
     Resolve the current user from the session cookie.
 
@@ -52,15 +52,6 @@ async def get_current_user(
         await sessions.delete_by_token_hash(token_hash)
         raise AuthenticationError("Сессия истекла")
 
-    # BR-AUTH-011: extend no more than once per 24h
-    should_extend = (
-        session.last_used_at is None or (now - session.last_used_at) >= SESSION_EXTEND_INTERVAL
-    )
-    if should_extend:
-        session.expires_at = now + SESSION_TTL
-        session.last_used_at = now
-        # commit happens in get_uow after the request
-
     user = await users.get_by_id(session.user_id)
     if (
         user is None
@@ -70,10 +61,23 @@ async def get_current_user(
     ):
         raise AuthenticationError("Не аутентифицирован")
 
-    return UserOutput(
+    # BR-AUTH-011: extend no more than once per 24h
+    should_extend = (
+        session.last_used_at is None or (now - session.last_used_at) >= SESSION_EXTEND_INTERVAL
+    )
+    if should_extend:
+        session.expires_at = now + SESSION_TTL
+        session.last_used_at = now
+        # commit happens in get_uow after the request
+
+    conditions_groups = await user_permissions.get_grouped_by_permission(user.id)
+    has_admin_access = await user_permissions.has_admin_access(user.id)
+    return CurrentUserOutput(
         id=user.id,
         email=user.email,
         is_active=user.is_active,
         parent_id=user.parent_id,
         name=user.name,
+        permissions=conditions_groups,
+        has_admin_access=has_admin_access,
     )
