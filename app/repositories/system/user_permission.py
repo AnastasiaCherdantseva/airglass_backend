@@ -11,7 +11,7 @@ from app.dto import (
     GroupedPermission,
     PermissionConditionAllOutPut,
 )
-from app.models.system.permission import Permission
+from app.models.system.permission import Permission, PermissionZone
 from app.models.system.permission_condition import PermissionCondition
 from app.models.system.user_permission import UserPermission
 from app.repositories.protocols.system.user_permission import (
@@ -72,6 +72,27 @@ class UserPermissionRepository(
                 )
             )
         return list(grouped.values())
+
+    async def has_admin_access(self, user_id: UUID) -> bool:
+        stmt = (
+            select(Permission.id)
+            .join(
+                PermissionCondition,
+                PermissionCondition.permission_id == Permission.id,
+            )
+            .join(
+                UserPermission,
+                UserPermission.condition_id == PermissionCondition.id,
+            )
+            .where(
+                UserPermission.user_id == user_id,
+                PermissionCondition.is_active.is_(True),
+                Permission.zone == PermissionZone.ADMIN,
+            )
+            .limit(1)
+        )
+        result = await self.db.execute(stmt)
+        return result.scalar_one_or_none() is not None
 
     async def replace_for_user(
         self,

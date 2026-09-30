@@ -2,7 +2,7 @@
 
 from uuid import uuid4
 
-from app.models.system import ConditionType, PermissionEffect
+from app.models.system import ConditionType, PermissionEffect, PermissionResource
 from app.repositories.system.user_permission import UserPermissionRepository
 
 # ─────────────────────────────────────────────────────────────
@@ -213,3 +213,102 @@ async def test_delete_by_user_id_does_not_touch_others(
 
     other = await repo.get_grouped_by_permission(users[1].id)
     assert len(other) == 1
+
+
+async def test_has_admin_access_true(
+    db_session,
+    user,
+    permissions,
+    make_condition,
+    make_user_permission,
+):
+    """True, если у юзера есть admin-право."""
+    admin_permission = next(p for p in permissions if p.resource == PermissionResource.PRODUCTS)
+    condition = await make_condition(
+        admin_permission,
+        type_=ConditionType.ALL,
+        effect=PermissionEffect.ALLOW,
+        is_active=True,
+    )
+    await make_user_permission(user, condition)
+    repo = UserPermissionRepository(db_session)
+
+    result = await repo.has_admin_access(user.id)
+
+    assert result is True
+
+
+async def test_has_admin_access_false_public_only(
+    db_session,
+    user,
+    permissions,
+    make_condition,
+    make_user_permission,
+):
+    """False, если только public-права."""
+    public_permission = next(p for p in permissions if p.resource == PermissionResource.USERS)
+    condition = await make_condition(
+        public_permission,
+        type_=ConditionType.ALL,
+        effect=PermissionEffect.ALLOW,
+    )
+    await make_user_permission(user, condition)
+    repo = UserPermissionRepository(db_session)
+
+    result = await repo.has_admin_access(user.id)
+
+    assert result is False
+
+
+async def test_has_admin_access_false_empty(db_session, user):
+    """False, если user_permissions пустая."""
+    repo = UserPermissionRepository(db_session)
+
+    result = await repo.has_admin_access(user.id)
+
+    assert result is False
+
+
+async def test_has_admin_access_false_inactive_condition(
+    db_session,
+    user,
+    permissions,
+    make_condition,
+    make_user_permission,
+):
+    """False, если admin-condition неактивна."""
+    admin_permission = next(p for p in permissions if p.resource == PermissionResource.PRODUCTS)
+    condition = await make_condition(
+        admin_permission,
+        type_=ConditionType.ALL,
+        effect=PermissionEffect.ALLOW,
+        is_active=False,
+    )
+    await make_user_permission(user, condition)
+    repo = UserPermissionRepository(db_session)
+
+    result = await repo.has_admin_access(user.id)
+
+    assert result is False
+
+
+async def test_has_admin_access_isolated_by_user(
+    db_session,
+    users,
+    permissions,
+    make_condition,
+    make_user_permission,
+):
+    """False, если admin-право у другого юзера."""
+    admin_permission = next(p for p in permissions if p.resource == PermissionResource.PRODUCTS)
+    condition = await make_condition(
+        admin_permission,
+        type_=ConditionType.ALL,
+        effect=PermissionEffect.ALLOW,
+    )
+    await make_user_permission(users[0], condition)
+    repo = UserPermissionRepository(db_session)
+
+    result = await repo.has_admin_access(users[1].id)
+
+    assert result is False
