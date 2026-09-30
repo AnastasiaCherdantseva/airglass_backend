@@ -9,6 +9,9 @@ from datetime import timedelta
 from pwdlib import PasswordHash
 from pwdlib.hashers.bcrypt import BcryptHasher
 
+from app.dto.system.user import CurrentUserOutput
+from app.models.system.permission_condition import PermissionEffect
+
 # ✅ Явно указываем bcrypt
 password_hash = PasswordHash((BcryptHasher(),))
 SESSION_TOKEN_BYTES = 32  # 256 bits of entropy
@@ -43,3 +46,26 @@ def hash_session_token(token: str) -> str:
     slow down every request without adding security.
     """
     return hashlib.sha256(token.encode()).hexdigest()
+
+
+def user_has_permission(
+    current_user: CurrentUserOutput,
+    code: str,
+) -> bool:
+    """Есть ли у юзера активное ALLOW без DENY."""
+    grouped = next(
+        (g for g in current_user.permissions if g.code == code),
+        None,
+    )
+    if grouped is None:
+        return False
+
+    allow = False
+    for cond in grouped.conditions:
+        if not cond.is_active:
+            continue
+        if cond.effect == PermissionEffect.DENY:
+            return False
+        if cond.effect == PermissionEffect.ALLOW:
+            allow = True
+    return allow
