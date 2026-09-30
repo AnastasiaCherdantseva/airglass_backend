@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from uuid import UUID
 
+from app.dto.system.user_permission import GroupedPermission
+
 
 @dataclass(frozen=True)
 class UserData:
@@ -21,3 +23,9 @@ class UserPatchInput:
 class UserOutput(UserData):
     id: UUID
     parent_id: UUID | None
+
+
+@dataclass(frozen=True)
+class CurrentUserOutput(UserOutput):
+    permissions: list[GroupedPermission]
+    has_admin_access: bool

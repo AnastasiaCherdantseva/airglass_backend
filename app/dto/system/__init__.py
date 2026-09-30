@@ -18,11 +18,7 @@ from app.dto.system.permission_condition import (
 )
 from app.dto.system.role import RoleData, RoleOutput, RolePatchData
 from app.dto.system.session import SessionData, SessionInput, SessionOutput
-from app.dto.system.user import (
-    UserData,
-    UserOutput,
-    UserPatchInput,
-)
+from app.dto.system.user import CurrentUserOutput, UserData, UserOutput, UserPatchInput
 from app.dto.system.user_permission import GroupedPermission, UserPermissionLink
 from app.dto.system.user_role import UserRoleLink
 
@@ -30,6 +26,7 @@ __all__ = [
     "UserPatchInput",
     "UserData",
     "UserOutput",
+    "CurrentUserOutput",
     #
     "OrganizationPatch",
     "OrganizationOutPut",

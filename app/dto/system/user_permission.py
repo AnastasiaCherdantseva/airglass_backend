@@ -14,6 +14,12 @@ class UserPermissionLink:
 class GroupedPermission:
     """Permission с метаданными и списком условий пользователя."""
 
-    permission_id: UUID
+    id: UUID
     code: str
     conditions: list[PermissionConditionAllOutPut]
+
+
+@dataclass(frozen=True)
+class GroupedPermissionOutput(GroupedPermission):
+    name: str
+    description: str

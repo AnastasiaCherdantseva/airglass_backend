@@ -1,11 +1,14 @@
 from fastapi import APIRouter, Cookie, Depends, Request, Response, status
 
 from app.core.security import SESSION_COOKIE_NAME, SESSION_MAX_AGE
+from app.core.security_dependencies import get_current_user
+from app.dto.system.user import CurrentUserOutput
 from app.repositories.deps import get_session_repo, get_user_repo, get_user_role_repo
 from app.repositories.system.session import SessionRepository
 from app.repositories.system.user import UserRepository
 from app.repositories.system.user_role import UserRoleRepository
 from app.schemas.system import AuthLoginRequest, UserResponse
+from app.schemas.system.user import MeResponse
 from app.use_cases import authenticate_user, logout_user
 
 router = APIRouter(prefix="/auth", tags=["Аутентификация"])
@@ -42,6 +45,21 @@ async def login_by_email(
         path="/",
     )
     return UserResponse(id=auth_data.id, name=auth_data.name, email=auth_data.email)
+
+
+@router.get("/me", response_model=MeResponse)
+async def get_me(
+    current_user: CurrentUserOutput = Depends(get_current_user),
+) -> MeResponse:
+    """Return the currently authenticated user."""
+    return MeResponse(
+        id=current_user.id,
+        is_active=current_user.is_active,
+        name=current_user.name,
+        email=current_user.email,
+        has_admin_access=current_user.has_admin_access,
+        permissions=current_user.permissions,
+    )
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)

@@ -1,4 +1,5 @@
 from app.dto.system import (
+    CurrentUserOutput,
     GroupedPermission,
     OrganizationData,
     OrganizationOutPut,
@@ -32,6 +33,7 @@ __all__ = [
     "UserPatchInput",
     "UserData",
     "UserOutput",
+    "CurrentUserOutput",
     #
     "OrganizationPatch",
     "OrganizationOutPut",

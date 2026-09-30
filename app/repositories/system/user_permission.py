@@ -55,7 +55,7 @@ class UserPermissionRepository(
         for permission_id, code, condition in rows:
             if permission_id not in grouped:
                 grouped[permission_id] = GroupedPermission(
-                    permission_id=permission_id,
+                    id=permission_id,
                     code=code,
                     conditions=[],
                 )
