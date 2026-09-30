@@ -26,6 +26,11 @@ from app.repositories.protocols.system.user import (
     UserReadRepositoryProtocol,
     UserWriteRepositoryProtocol,
 )
+from app.repositories.protocols.system.user_direct_permission import (
+    UserDirectPermissionReadRepositoryProtocol,
+    UserDirectPermissionRepositoryProtocol,
+    UserDirectPermissionWriteRepositoryProtocol,
+)
 from app.repositories.protocols.system.user_permission import (
     UserPermissionReadRepositoryProtocol,
     UserPermissionRepositoryProtocol,
@@ -57,4 +62,7 @@ __all__ = [
     "UserPermissionRepositoryProtocol",
     "UserRoleReadRepositoryProtocol",
     "UserRoleWriteRepositoryProtocol",
+    "UserDirectPermissionReadRepositoryProtocol",
+    "UserDirectPermissionWriteRepositoryProtocol",
+    "UserDirectPermissionRepositoryProtocol",
 ]
