@@ -2,15 +2,18 @@
 FastAPI dependencies for authentication.
 """
 
+from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from fastapi import Cookie, Depends
 
-from app.core.exceptions import AuthenticationError
+from app.core.exceptions import AuthenticationError, PermissionDeniedError
 from app.core.security import (
     SESSION_COOKIE_NAME,
     SESSION_TTL,
     hash_session_token,
+    user_has_permission,
 )
 from app.dto import CurrentUserOutput
 from app.repositories.deps import get_session_repo, get_user_permission_repo, get_user_repo
@@ -81,3 +84,14 @@ async def get_current_user(
         permissions=conditions_groups,
         has_admin_access=has_admin_access,
     )
+
+
+def require_permission(code: str) -> Callable[..., Any]:
+    async def checker(
+        current_user: CurrentUserOutput = Depends(get_current_user),
+    ) -> bool:
+        if not user_has_permission(current_user, code):
+            raise PermissionDeniedError(f"Недостаточно прав: {code}")
+        return True
+
+    return checker
