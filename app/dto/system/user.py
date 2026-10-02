@@ -12,6 +12,18 @@ class UserData:
 
 
 @dataclass(frozen=True)
+class UserCreate(UserData):
+    password: str
+    role_ids: list[UUID]
+
+
+@dataclass(frozen=True)
+class UserCreateFull(UserData):
+    password_hash: str
+    parent_id: UUID
+
+
+@dataclass(frozen=True)
 class UserPatchInput:
     id: UUID
     email: str | None

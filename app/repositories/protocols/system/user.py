@@ -5,10 +5,7 @@ Protocols for the users repos.
 from typing import Protocol
 from uuid import UUID
 
-from app.dto import (
-    UserOutput,
-    UserPatchInput,
-)
+from app.dto import UserCreateFull, UserOutput, UserPatchInput
 from app.models import User
 from app.repositories.protocols import (
     ReadRepositoryProtocol,
@@ -28,5 +25,8 @@ class UserWriteRepositoryProtocol(WriteRepositoryProtocol[User], Protocol):
 
     async def soft_delete_by_id(self, user_id: UUID) -> list[UUID]: ...
     async def patch_user(self, data: UserPatchInput) -> UserOutput | None: ...
+    async def create(self, data: UserCreateFull) -> UserOutput: ...
 
-    pass  # всё нужное — в базовом WriteRepositoryProtocol
+
+class UserRepositoryProtocol(UserWriteRepositoryProtocol, UserReadRepositoryProtocol, Protocol):
+    pass

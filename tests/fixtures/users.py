@@ -9,6 +9,7 @@ import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import hash_password
+from app.dto.system.user import UserCreateFull
 from app.models.system import User
 
 _PASSWORD_HASH_CACHE: str | None = None
@@ -110,3 +111,17 @@ async def users_in_memory() -> list[User]:
         )
         for i in range(5)
     ]
+
+
+@pytest_asyncio.fixture
+async def new_user_data(user: User) -> UserCreateFull:
+    """Several active users in memory (no DB)."""
+
+    password_hash = hash_password(TEST_PASSWORD)
+    return UserCreateFull(
+        email="new@example.com",
+        name="Name",
+        parent_id=user.id,
+        password_hash=password_hash,
+        is_active=True,
+    )

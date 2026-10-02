@@ -7,7 +7,7 @@ from uuid import UUID
 
 from sqlalchemy import func, select
 
-from app.dto.system.user import UserOutput, UserPatchInput
+from app.dto import UserCreateFull, UserOutput, UserPatchInput
 from app.models import User
 from app.repositories.base import BaseIdRepository
 
@@ -99,6 +99,48 @@ class UserRepository(BaseIdRepository[User]):
         if data.new_password_hash is not None:
             user.password_hash = data.new_password_hash
 
+        await self.flush()
+
+        return UserOutput(
+            id=user.id,
+            parent_id=user.parent_id,
+            email=user.email,
+            name=user.name,
+            is_active=user.is_active,
+        )
+
+    async def create(self, data: UserCreateFull) -> UserOutput:
+        """
+        Create a new user.
+
+        Contract:
+            - `data.email` must already be normalized to lowercase
+            (`email.strip().lower()`). Normalization and uniqueness
+            check are performed in the use case.
+            - `data.password_hash` must be a ready bcrypt hash.
+            Hashing is performed in the use case.
+            - The repository does NOT normalize email, does NOT check
+            for duplicates, does NOT hash passwords.
+
+        Args:
+            data: DTO with ready-to-write data
+                (lowercase email, bcrypt password_hash).
+
+        Returns:
+            UserOutput with id, parent_id, email, name, is_active.
+
+        Raises:
+            IntegrityError: if email (lowercase) already exists
+                (uq_users_email_lower) — handled in the use case.
+        """
+        user = User(
+            parent_id=data.parent_id,
+            is_active=data.is_active,
+            email=data.email,
+            name=data.name,
+            password_hash=data.password_hash,
+        )
+        self.add(user)
         await self.flush()
 
         return UserOutput(
