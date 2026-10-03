@@ -88,17 +88,9 @@ def fake_permission_conditions_repo(
 @pytest.fixture
 def fake_roles_repo(
     role_in_memory: Role,
-) -> FakeRoleRepository:
-    """FakeRoleRepository с одной ролью."""
-    return FakeRoleRepository([role_in_memory])
-
-
-@pytest.fixture
-def fake_roles_repo_system(
     system_role_in_memory: Role,
 ) -> FakeRoleRepository:
-    """FakeRoleRepository с одной системной ролью."""
-    return FakeRoleRepository([system_role_in_memory])
+    return FakeRoleRepository([role_in_memory, system_role_in_memory])
 
 
 @pytest.fixture
