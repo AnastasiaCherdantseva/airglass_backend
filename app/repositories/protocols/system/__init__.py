@@ -2,7 +2,7 @@ from app.repositories.protocols.system.organization import (
     OrganizationReadRepositoryProtocol,
     OrganizationWriteRepositoryProtocol,
 )
-from app.repositories.protocols.system.permision import (
+from app.repositories.protocols.system.permission import (
     PermissionReadRepositoryProtocol,
     PermissionWriteRepositoryProtocol,
 )
@@ -20,10 +20,12 @@ from app.repositories.protocols.system.role_permission import (
 )
 from app.repositories.protocols.system.session import (
     SessionReadRepositoryProtocol,
+    SessionRepositoryProtocol,
     SessionWriteRepositoryProtocol,
 )
 from app.repositories.protocols.system.user import (
     UserReadRepositoryProtocol,
+    UserRepositoryProtocol,
     UserWriteRepositoryProtocol,
 )
 from app.repositories.protocols.system.user_direct_permission import (
@@ -44,8 +46,10 @@ from app.repositories.protocols.system.user_role import (
 __all__ = [
     "SessionReadRepositoryProtocol",
     "SessionWriteRepositoryProtocol",
+    "SessionRepositoryProtocol",
     "UserReadRepositoryProtocol",
     "UserWriteRepositoryProtocol",
+    "UserRepositoryProtocol",
     #
     "OrganizationReadRepositoryProtocol",
     "OrganizationWriteRepositoryProtocol",
