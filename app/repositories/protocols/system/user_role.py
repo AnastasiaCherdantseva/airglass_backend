@@ -35,3 +35,13 @@ class UserRoleWriteRepositoryProtocol(Protocol):
     async def remove_by_user_id(self, user_id: UUID) -> int: ...
 
     async def remove_by_role_id(self, role_id: UUID) -> int: ...
+
+
+class UserRoleRepositoryProtocol(
+    UserRoleWriteRepositoryProtocol,
+    UserRoleReadRepositoryProtocol,
+    Protocol,
+):
+    """Full UserPermission repository."""
+
+    pass

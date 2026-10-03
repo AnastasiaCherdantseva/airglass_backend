@@ -102,6 +102,10 @@ class FakeUserRoleRepository:
         """Создать связь."""
         self.links.append(UserRole(user_id=data.user_id, role_id=data.role_id))
 
+    async def add_links(self, links: list[UserRoleLink]) -> None:
+        """Создать связи."""
+        self.links.extend([UserRole(user_id=link.user_id, role_id=link.role_id) for link in links])
+
     async def remove_link(self, data: UserRoleLink) -> bool:
         """Удалить связь. True, если была."""
         before = len(self.links)
@@ -109,6 +113,17 @@ class FakeUserRoleRepository:
             i for i in self.links if not (i.user_id == data.user_id and i.role_id == data.role_id)
         ]
         return len(self.links) < before
+
+    async def remove_links(self, links: list[UserRoleLink]) -> int:
+        if not links:
+            return 0
+        count = 0
+        for link in links:
+            key = (link.user_id, link.role_id)
+            if key in self.links:
+                del self.links[key]
+                count += 1
+        return count
 
     async def remove_by_user_id(self, user_id: UUID) -> int:
         """Удалить все связи юзера."""
