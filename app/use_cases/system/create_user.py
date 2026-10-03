@@ -4,7 +4,7 @@ UseCase: получить пользователя по id.
 
 import logging
 
-from app.core.exceptions import ConflictError, PermissionDeniedError
+from app.core.exceptions import ConflictError, PermissionDeniedError, ValidationError
 from app.core.security import hash_password
 from app.dto import CurrentUser, UserCreate, UserCreateFull, UserRoleLink, UserWithRolesOutput
 from app.models.system.permission_condition import ConditionType, PermissionEffect
@@ -66,6 +66,11 @@ async def create_user(
         and condition.is_active
     ]
 
+    if not data.role_ids:
+        logger.info(
+            "User create failed: The new user must have at least one role",
+        )
+        raise ValidationError("У нового пользователя должна быть хотя бы одна роль.")
     allowed = set(condition_roles)
     for role_id in data.role_ids:
         if role_id not in allowed:
@@ -93,7 +98,7 @@ async def create_user(
         name=data.name,
         parent_id=actor.id,
         password_hash=password_hash,
-        is_active=True,
+        is_active=False,  # BR-USERS-003.
     )
     user = await users.create(full_data)
 
