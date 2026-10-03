@@ -11,7 +11,6 @@ from app.models.system.permission import Permission
 from app.models.system.permission_condition import PermissionCondition
 from app.models.system.role_permission import RolePermission
 from app.models.system.user_direct_permission import UserDirectPermission
-from app.models.system.user_permission import UserPermission
 from tests.unit.fakes.permission import FakePermissionRepository
 from tests.unit.fakes.permission_condition import FakePermissionConditionRepository
 from tests.unit.fakes.role import FakeRoleRepository
@@ -124,17 +123,9 @@ def fake_user_permissions_repo(
     """FakeUserPermissionRepository со связями user ↔ condition."""
     conditions = {c.id: c for c in permission_conditions_allow_in_memory}
     permissions = {p.id: p for p in permissions_in_memory}
-    links = [
-        UserPermission(
-            user_id=user_in_memory.id,
-            condition_id=c.id,
-        )
-        for c in permission_conditions_allow_in_memory
-    ]
     return FakeUserPermissionRepository(
         conditions=conditions,
         permissions=permissions,
-        links=links,
     )
 
 

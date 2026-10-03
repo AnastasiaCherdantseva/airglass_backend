@@ -44,7 +44,7 @@ class FakeUserPermissionRepository:
                 continue
             if permission.id not in grouped:
                 grouped[permission.id] = GroupedPermission(
-                    permission_id=permission.id,
+                    id=permission.id,
                     code=permission.code,
                     conditions=[],
                 )

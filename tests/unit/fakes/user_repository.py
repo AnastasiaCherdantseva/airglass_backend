@@ -7,8 +7,9 @@ UserWriteRepositoryProtocol — наследование не нужно.
 """
 # from uuid import uuid4
 
-from uuid import UUID
+from uuid import UUID, uuid4
 
+from app.dto import UserCreateFull, UserOutput
 from app.models import User
 
 
@@ -35,6 +36,29 @@ class FakeUserRepository:
         return next(
             (u for u in self.users.values() if u.email.lower() == normalized),
             None,
+        )
+
+    async def create(self, data: UserCreateFull) -> UserOutput:
+        """
+        Create a user in memory (mirrors UserRepository.create).
+
+        Создать пользователя в памяти (повторяет UserRepository.create).
+        """
+        user = User(
+            id=uuid4(),
+            parent_id=data.parent_id,
+            is_active=data.is_active,
+            email=data.email.strip().lower(),
+            name=data.name,
+            password_hash=data.password_hash,
+        )
+        self.add(user)
+        return UserOutput(
+            id=user.id,
+            parent_id=user.parent_id,
+            email=user.email,
+            name=user.name,
+            is_active=user.is_active,
         )
 
     # ========================================
