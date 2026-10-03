@@ -3,7 +3,7 @@
 from uuid import uuid4
 
 from app.core.security import user_has_permission
-from app.dto import CurrentUserOutput, GroupedPermission
+from app.dto import CurrentUser, GroupedPermission
 from app.dto.system.permission_condition import PermissionConditionAllOutPut
 from app.models.system.permission_condition import ConditionType, PermissionEffect
 
@@ -41,9 +41,9 @@ def make_grouped(
 
 def make_current_user(
     permissions: list[GroupedPermission] | None = None,
-) -> CurrentUserOutput:
-    """Создать CurrentUserOutput для тестов."""
-    return CurrentUserOutput(
+) -> CurrentUser:
+    """Создать CurrentUser для тестов."""
+    return CurrentUser(
         id=uuid4(),
         email="test@example.com",
         name="Test",

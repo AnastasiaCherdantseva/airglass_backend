@@ -38,6 +38,11 @@ class UserOutput(UserData):
 
 
 @dataclass(frozen=True)
-class CurrentUserOutput(UserOutput):
+class UserWithRolesOutput(UserOutput):
+    role_ids: list[UUID]
+
+
+@dataclass(frozen=True)
+class CurrentUser(UserOutput):
     permissions: list[GroupedPermission]
     has_admin_access: bool

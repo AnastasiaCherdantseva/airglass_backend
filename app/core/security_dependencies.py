@@ -15,7 +15,7 @@ from app.core.security import (
     hash_session_token,
     user_has_permission,
 )
-from app.dto import CurrentUserOutput
+from app.dto import CurrentUser
 from app.repositories.deps import get_session_repo, get_user_permission_repo, get_user_repo
 from app.repositories.system import SessionRepository, UserPermissionRepository, UserRepository
 
@@ -27,7 +27,7 @@ async def get_current_user(
     sessions: SessionRepository = Depends(get_session_repo),
     users: UserRepository = Depends(get_user_repo),
     user_permissions: UserPermissionRepository = Depends(get_user_permission_repo),
-) -> CurrentUserOutput:
+) -> CurrentUser:
     """
     Resolve the current user from the session cookie.
 
@@ -75,7 +75,7 @@ async def get_current_user(
 
     conditions_groups = await user_permissions.get_grouped_by_permission(user.id)
     has_admin_access = await user_permissions.has_admin_access(user.id)
-    return CurrentUserOutput(
+    return CurrentUser(
         id=user.id,
         email=user.email,
         is_active=user.is_active,
@@ -88,7 +88,7 @@ async def get_current_user(
 
 def require_permission(code: str) -> Callable[..., Any]:
     async def checker(
-        current_user: CurrentUserOutput = Depends(get_current_user),
+        current_user: CurrentUser = Depends(get_current_user),
     ) -> bool:
         if not user_has_permission(current_user, code):
             raise PermissionDeniedError(f"Недостаточно прав: {code}")

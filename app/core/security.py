@@ -9,7 +9,7 @@ from datetime import timedelta
 from pwdlib import PasswordHash
 from pwdlib.hashers.bcrypt import BcryptHasher
 
-from app.dto.system.user import CurrentUserOutput
+from app.dto.system.user import CurrentUser
 from app.models.system.permission_condition import PermissionEffect
 
 # ✅ Явно указываем bcrypt
@@ -49,7 +49,7 @@ def hash_session_token(token: str) -> str:
 
 
 def user_has_permission(
-    current_user: CurrentUserOutput,
+    current_user: CurrentUser,
     code: str,
 ) -> bool:
     """Есть ли у юзера активное ALLOW без DENY."""

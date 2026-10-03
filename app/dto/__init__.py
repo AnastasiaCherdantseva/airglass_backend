@@ -1,5 +1,5 @@
 from app.dto.system import (
-    CurrentUserOutput,
+    CurrentUser,
     GroupedPermission,
     OrganizationData,
     OrganizationOutPut,
@@ -29,13 +29,15 @@ from app.dto.system import (
     UserPatchInput,
     UserPermissionLink,
     UserRoleLink,
+    UserWithRolesOutput,
 )
 
 __all__ = [
     "UserPatchInput",
     "UserData",
     "UserOutput",
-    "CurrentUserOutput",
+    "UserWithRolesOutput",
+    "CurrentUser",
     "UserCreate",
     "UserCreateFull",
     #

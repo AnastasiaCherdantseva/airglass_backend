@@ -2,7 +2,7 @@ from fastapi import APIRouter, Cookie, Depends, Request, Response, status
 
 from app.core.security import SESSION_COOKIE_NAME, SESSION_MAX_AGE
 from app.core.security_dependencies import get_current_user
-from app.dto.system.user import CurrentUserOutput
+from app.dto.system.user import CurrentUser
 from app.repositories.deps import get_session_repo, get_user_repo, get_user_role_repo
 from app.repositories.system.session import SessionRepository
 from app.repositories.system.user import UserRepository
@@ -49,7 +49,7 @@ async def login_by_email(
 
 @router.get("/me", response_model=MeResponse)
 async def get_me(
-    current_user: CurrentUserOutput = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
 ) -> MeResponse:
     """Return the currently authenticated user."""
     return MeResponse(
