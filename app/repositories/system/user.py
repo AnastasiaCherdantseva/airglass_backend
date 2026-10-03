@@ -87,11 +87,13 @@ class UserRepository(BaseIdRepository[User]):
 
     async def patch_user(self, data: UserPatchInput) -> UserOutput | None:
         user = await self.get_by_id(data.id)
+
         if user is None:
             return None
 
         if data.email is not None:
-            user.email = data.email
+            normalized = data.email.strip().lower()
+            user.email = normalized
 
         if data.name is not None:
             user.name = data.name
@@ -110,33 +112,11 @@ class UserRepository(BaseIdRepository[User]):
         )
 
     async def create(self, data: UserCreateFull) -> UserOutput:
-        """
-        Create a new user.
-
-        Contract:
-            - `data.email` must already be normalized to lowercase
-            (`email.strip().lower()`). Normalization and uniqueness
-            check are performed in the use case.
-            - `data.password_hash` must be a ready bcrypt hash.
-            Hashing is performed in the use case.
-            - The repository does NOT normalize email, does NOT check
-            for duplicates, does NOT hash passwords.
-
-        Args:
-            data: DTO with ready-to-write data
-                (lowercase email, bcrypt password_hash).
-
-        Returns:
-            UserOutput with id, parent_id, email, name, is_active.
-
-        Raises:
-            IntegrityError: if email (lowercase) already exists
-                (uq_users_email_lower) — handled in the use case.
-        """
+        normalized = data.email.strip().lower()
         user = User(
             parent_id=data.parent_id,
             is_active=data.is_active,
-            email=data.email,
+            email=normalized,
             name=data.name,
             password_hash=data.password_hash,
         )
