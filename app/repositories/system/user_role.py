@@ -4,7 +4,7 @@ UserRole repository — link between users and roles.
 
 from uuid import UUID
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dto.system import (
@@ -97,6 +97,14 @@ class UserRoleRepository(
         self.db.add(link)
         await self.db.flush()
 
+    async def add_links(self, links: list[UserRoleLink]) -> None:
+        if not links:
+            return
+        await self.db.execute(
+            insert(UserRole),
+            [{"user_id": link.user_id, "role_id": link.role_id} for link in links],
+        )
+
     async def remove_link(self, data: UserRoleLink) -> bool:
         stmt = delete(UserRole).where(
             UserRole.user_id == data.user_id,
@@ -105,6 +113,18 @@ class UserRoleRepository(
         result = await self.db.execute(stmt)
         await self.db.flush()
         return result.rowcount > 0
+
+    async def remove_links(self, links: list[UserRoleLink]) -> int:
+        """Remove multiple user↔role links. Returns total rowcount."""
+        if not links:
+            return 0
+        from sqlalchemy import tuple_
+
+        pairs = [(link.user_id, link.role_id) for link in links]
+        stmt = delete(UserRole).where(tuple_(UserRole.user_id, UserRole.role_id).in_(pairs))
+        result = await self.db.execute(stmt)
+        await self.db.flush()
+        return result.rowcount or 0
 
     async def remove_by_user_id(self, user_id: UUID) -> int:
         stmt = delete(UserRole).where(UserRole.user_id == user_id)

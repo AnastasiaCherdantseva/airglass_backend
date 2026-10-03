@@ -142,6 +142,24 @@ async def test_add_link(db_session, user, system_role):
     assert roles[0].id == system_role.id
 
 
+async def test_add_links(db_session, user, system_roles):
+    """add_link создаёт связь."""
+    from app.dto.system import UserRoleLink
+
+    repo = UserRoleRepository(db_session)
+    data = []
+    for role in system_roles:
+        data.append(UserRoleLink(user_id=user.id, role_id=role.id))
+
+    await repo.add_links(data)
+
+    roles = await repo.get_roles_by_user_id(user.id)
+    assert len(roles) == len(system_roles)
+    role_ids = [role.id for role in roles]
+    for role in roles:
+        assert role.id in role_ids
+
+
 async def test_remove_link_found(db_session, user_role, user, system_role):
     """remove_link удаляет связь, возвращает True."""
     from app.dto.system import UserRoleLink
@@ -166,6 +184,22 @@ async def test_remove_link_not_found(db_session, user, system_role):
     result = await repo.remove_link(data)
 
     assert result is False
+
+
+async def test_remove_links_found(db_session, user_roles, user, system_roles):
+    """remove_link удаляет связь, возвращает True."""
+    from app.dto.system import UserRoleLink
+
+    repo = UserRoleRepository(db_session)
+    data = []
+    for role in system_roles:
+        data.append(UserRoleLink(user_id=user.id, role_id=role.id))
+
+    result = await repo.remove_links(data)
+
+    assert result == 3
+    roles = await repo.get_roles_by_user_id(user.id)
+    assert roles == []
 
 
 # ─────────────────────────────────────────────────────────────
