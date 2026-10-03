@@ -2,6 +2,8 @@
 
 from uuid import uuid4
 
+from backend.app.services.sync_user_permissions import sync_user_permissions
+
 from app.models.system import (
     PermissionCondition,
     Role,
@@ -10,7 +12,6 @@ from app.models.system import (
     UserPermission,
     UserRole,
 )
-from app.use_cases.system.sync_user_permissions import sync_user_permissions
 from tests.unit.fakes.role_permission import FakeRolePermissionRepository
 from tests.unit.fakes.user_direct_permission import FakeUserDirectPermissionRepository
 from tests.unit.fakes.user_permission import FakeUserPermissionRepository
