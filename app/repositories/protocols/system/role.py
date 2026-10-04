@@ -23,6 +23,8 @@ class RoleReadRepositoryProtocol(ReadRepositoryProtocol[Role], Protocol):
         is_active: bool | None = None,
     ) -> list[RoleOutput]: ...
 
+    async def get_by_ids(self, ids: list[UUID]) -> list[RoleOutput]: ...
+
 
 class RoleWriteRepositoryProtocol(WriteRepositoryProtocol[Role], Protocol):
     """Write Organizations."""

@@ -50,7 +50,14 @@ class RoleRepository(
     ) -> list[RoleOutput]:
         """Роли, созданные указанным владельцем."""
         stmt = select(Role).where(Role.owner_id == owner_id)
-        stmt = self._filter(stmt, is_active=is_active)
+        if is_active is not None:
+            stmt = self._filter(stmt, is_active=is_active)
+        result = await self.db.execute(stmt)
+        roles = result.scalars().all()
+        return [self._to_output(r) for r in roles]
+
+    async def get_by_ids(self, ids: list[UUID]) -> list[RoleOutput]:
+        stmt = select(Role).where(Role.id.in_(ids))
         result = await self.db.execute(stmt)
         roles = result.scalars().all()
         return [self._to_output(r) for r in roles]
