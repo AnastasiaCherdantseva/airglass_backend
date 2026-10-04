@@ -5,6 +5,7 @@ UseCase: синхронизация user_permissions для пользовате
 import logging
 from uuid import UUID
 
+from app.core.exceptions import NotFoundError
 from app.repositories.protocols.system import (
     RolePermissionReadRepositoryProtocol,
     UserDirectPermissionReadRepositoryProtocol,
@@ -37,7 +38,9 @@ async def sync_user_permissions(
     """
     # 1. Активные роли
     roles = await user_roles.get_roles_by_user_id(user_id)
-
+    if not roles:
+        logger.info("Sync user permissions failed: roles for user not found(user: %s)", user_id)
+        raise NotFoundError("Не удалось найти роли пользователя.")
     # 2. Conditions из ролей
     conditions_from_roles: list[UUID] = []
     for role in roles:
