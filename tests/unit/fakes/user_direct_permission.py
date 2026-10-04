@@ -6,16 +6,28 @@ Fake-реализация UserDirectPermissionRepository для юнит-тес�
 
 from uuid import UUID
 
-from app.models.system import UserDirectPermission
+from app.models.system import User, UserDirectPermission
+from app.models.system.permission_condition import PermissionCondition
 
 
 class FakeUserDirectPermissionRepository:
     """In-memory реализация UserDirectPermissionRepository."""
 
-    def __init__(self, initial: list[UserDirectPermission] | None = None) -> None:
+    def __init__(
+        self,
+        users: list[User] | None = None,
+        conditions: list[PermissionCondition] | None = None,
+        links: list[UserDirectPermission] | None = None,
+    ) -> None:
         self.links: dict[tuple[UUID, UUID], UserDirectPermission] = {}
-        if initial:
-            for link in initial:
+        self.conditions: dict[UUID, PermissionCondition] = {}
+        self.users: dict[UUID, User] = {}
+        if conditions:
+            self.users = {c.id: c for c in conditions}
+        if users:
+            self.users = {user.id: user for user in users}
+        if links and users and conditions:
+            for link in links:
                 self.links[(link.user_id, link.condition_id)] = link
 
     # ========================================

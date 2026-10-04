@@ -41,3 +41,14 @@ class FakePermissionRepository:
             name=p.name,
             description=p.description,
         )
+
+    # tests helpers
+    def get_by_code_sync(self, code: str) -> Permission | None:
+        """Найти permission по code."""
+        p = next(
+            (p for p in self.permissions.values() if p.code == code),
+            None,
+        )
+        if p is None:
+            return None
+        return p

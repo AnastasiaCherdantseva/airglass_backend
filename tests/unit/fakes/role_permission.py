@@ -6,16 +6,32 @@ Fake-реализация RolePermissionRepository для юнит-тестов.
 
 from uuid import UUID
 
-from app.models.system import RolePermission
+from app.models import Permission, PermissionCondition, Role, RolePermission
 
 
 class FakeRolePermissionRepository:
     """In-memory реализация RolePermissionRepository."""
 
-    def __init__(self, initial: list[RolePermission] | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        roles: list[Role] | None = None,
+        permissions: list[Permission] | None = None,
+        conditions: list[PermissionCondition] | None = None,
+        links: list[RolePermission] | None = None,
+    ) -> None:
         self.links: dict[tuple[UUID, UUID], RolePermission] = {}
-        if initial:
-            for link in initial:
+        self.roles: dict[UUID, Role] = {}
+        self.permissions: dict[UUID, Permission] = {}
+        self.conditions: dict[UUID, PermissionCondition] = {}
+        if roles:
+            self.roles = {role.id: role for role in roles}
+        if permissions:
+            self.permissions = {p.id: p for p in permissions}
+        if conditions:
+            self.conditions = {c.id: c for c in conditions}
+        if links and roles and conditions:
+            for link in links:
                 self.links[(link.role_id, link.condition_id)] = link
 
     # ========================================

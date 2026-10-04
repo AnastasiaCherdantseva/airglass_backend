@@ -2,7 +2,7 @@
 Fake-реализация RoleRepository для юнит-тестов.
 """
 
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from app.dto.system.role import RoleData, RoleOutput, RolePatchData
 from app.models.system import Role
@@ -24,6 +24,13 @@ class FakeRoleRepository:
     async def get_by_id(self, role_id: UUID) -> Role | None:
         return self.roles.get(role_id)
 
+    async def get_by_ids(self, role_ids: list[UUID]) -> list[RoleOutput]:
+        matched = []
+        for role_id in role_ids:
+            matched.extend([r for r in self.roles.values() if r.id == role_id])
+        res = [self._to_output(r) for r in matched]
+        return res
+
     async def get_by_owner_id(
         self,
         owner_id: UUID,
@@ -40,7 +47,6 @@ class FakeRoleRepository:
     # ========================================
 
     async def create(self, data: RoleData) -> RoleOutput:
-        from uuid import uuid4
 
         role = Role(
             id=uuid4(),

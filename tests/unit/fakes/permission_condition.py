@@ -10,18 +10,23 @@ from app.dto.system.permission_condition import (
     PermissionConditionMediaOutPut,
     PermissionConditionRoleOutPut,
 )
-from app.models.system import PermissionCondition
-from app.models.system.permission_condition import ConditionType, PermissionEffect
+from app.models.system import (
+    ConditionType,
+    PermissionCondition,
+    PermissionEffect,
+)
 
 
 class FakePermissionConditionRepository:
     """In-memory реализация PermissionConditionRepository."""
 
-    def __init__(self, initial: list[PermissionCondition] | None = None) -> None:
+    def __init__(
+        self,
+        conditions: list[PermissionCondition] | None = None,
+    ) -> None:
         self.conditions: dict[UUID, PermissionCondition] = {}
-        if initial:
-            for c in initial:
-                self.conditions[c.id] = c
+        if conditions:
+            self.conditions = {c.id: c for c in conditions}
 
     # ========================================
     # ЧТЕНИЕ

@@ -25,9 +25,16 @@ class FakeUserRoleRepository:
         roles: list[Role] | None = None,
         links: list[UserRole] | None = None,
     ) -> None:
-        self.users: dict[UUID, User] = {u.id: u for u in (users or [])}
-        self.roles: dict[UUID, Role] = {r.id: r for r in (roles or [])}
-        self.links: list[UserRole] = list(links or [])
+        self.links: dict[tuple[UUID, UUID], UserRole] = {}
+        self.roles: dict[UUID, Role] = {}
+        self.users: dict[UUID, User] = {}
+        if users:
+            self.users = {u.id: u for u in users}
+        if roles:
+            self.roles = {role.id: role for role in roles}
+        if links and roles and users:
+            for link in links:
+                self.links[(link.user_id, link.role_id)] = link
 
     # ========================================
     # ЧТЕНИЕ
@@ -36,13 +43,11 @@ class FakeUserRoleRepository:
     async def get_roles_by_user_id(self, user_id: UUID) -> list[RoleOutput]:
         """Найти все роли юзера."""
         result: list[RoleOutput] = []
-        for link in self.links:
-            if link.user_id != user_id:
+        for uid, rid in self.links:
+            if uid != user_id:
                 continue
-            role = self.roles.get(link.role_id)
-            if role is None:
-                continue
-            if not role.is_active:
+            role = self.roles.get(rid)
+            if role is None or not role.is_active:
                 continue
             result.append(
                 RoleOutput(
@@ -59,10 +64,10 @@ class FakeUserRoleRepository:
     async def get_users_by_role_id(self, role_id: UUID) -> list[UserOutput]:
         """Найти всех юзеров с ролью."""
         result: list[UserOutput] = []
-        for link in self.links:
-            if link.role_id != role_id:
+        for uid, rid in self.links:
+            if rid != role_id:
                 continue
-            user = self.users.get(link.user_id)
+            user = self.users.get(uid)
             if user is None:
                 continue
             if user.deleted_at is not None:
@@ -84,15 +89,11 @@ class FakeUserRoleRepository:
 
     def add(self, entity: UserRole) -> None:
         """Добавить связь в память."""
-        self.links.append(entity)
+        self.links[entity.user_id, entity.role_id] = entity
 
     async def delete(self, entity: UserRole) -> None:
         """Удалить связь из памяти."""
-        self.links = [
-            i
-            for i in self.links
-            if not (i.user_id == entity.user_id and i.role_id == entity.role_id)
-        ]
+        self.links.pop((entity.user_id, entity.role_id), None)
 
     async def flush(self) -> None:
         """No-op."""
@@ -100,19 +101,22 @@ class FakeUserRoleRepository:
 
     async def add_link(self, data: UserRoleLink) -> None:
         """Создать связь."""
-        self.links.append(UserRole(user_id=data.user_id, role_id=data.role_id))
+        self.links[data.user_id, data.role_id] = UserRole(
+            user_id=data.user_id, role_id=data.role_id
+        )
 
     async def add_links(self, links: list[UserRoleLink]) -> None:
-        """Создать связи."""
-        self.links.extend([UserRole(user_id=link.user_id, role_id=link.role_id) for link in links])
+        for link in links:
+            self.links[(link.user_id, link.role_id)] = UserRole(
+                user_id=link.user_id, role_id=link.role_id
+            )
 
     async def remove_link(self, data: UserRoleLink) -> bool:
-        """Удалить связь. True, если была."""
-        before = len(self.links)
-        self.links = [
-            i for i in self.links if not (i.user_id == data.user_id and i.role_id == data.role_id)
-        ]
-        return len(self.links) < before
+        key = (data.user_id, data.role_id)
+        if key in self.links:
+            del self.links[key]
+            return True
+        return False
 
     async def remove_links(self, links: list[UserRoleLink]) -> int:
         if not links:
@@ -126,13 +130,13 @@ class FakeUserRoleRepository:
         return count
 
     async def remove_by_user_id(self, user_id: UUID) -> int:
-        """Удалить все связи юзера."""
-        before = len(self.links)
-        self.links = [i for i in self.links if i.user_id != user_id]
-        return before - len(self.links)
+        keys = [k for k in self.links if k[0] == user_id]
+        for k in keys:
+            del self.links[k]
+        return len(keys)
 
     async def remove_by_role_id(self, role_id: UUID) -> int:
-        """Удалить все связи роли."""
-        before = len(self.links)
-        self.links = [i for i in self.links if i.role_id != role_id]
-        return before - len(self.links)
+        keys = [k for k in self.links if k[1] == role_id]
+        for k in keys:
+            del self.links[k]
+        return len(keys)

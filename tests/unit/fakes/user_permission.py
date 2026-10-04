@@ -10,6 +10,7 @@ from app.dto import GroupedPermission
 from app.dto.system.permission_condition import PermissionConditionAllOutPut
 from app.models.system import Permission, PermissionCondition, UserPermission
 from app.models.system.permission import PermissionZone
+from app.models.system.user import User
 
 
 class FakeUserPermissionRepository:
@@ -17,12 +18,23 @@ class FakeUserPermissionRepository:
 
     def __init__(
         self,
-        conditions: dict[UUID, PermissionCondition] | None = None,
-        permissions: dict[UUID, Permission] | None = None,
+        users: list[User] | None = None,
+        conditions: list[PermissionCondition] | None = None,
+        permissions: list[Permission] | None = None,
+        links: list[UserPermission] | None = None,
     ) -> None:
+        self.users: dict[UUID, User] = {}
         self.links: dict[tuple[UUID, UUID], UserPermission] = {}
-        self.conditions = conditions or {}
-        self.permissions = permissions or {}
+        self.conditions: dict[UUID, PermissionCondition] = {}
+        self.permissions: dict[UUID, Permission] = {}
+        if users:
+            self.users = {user.id: user for user in users}
+        if conditions:
+            self.conditions = {condition.id: condition for condition in conditions}
+        if permissions:
+            self.permissions = {permission.id: permission for permission in permissions}
+        if links:
+            self.links = {(link.user_id, link.condition_id): link for link in links}
 
     # ========================================
     # ЧТЕНИЕ
