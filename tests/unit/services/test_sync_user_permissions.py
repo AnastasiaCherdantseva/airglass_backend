@@ -254,7 +254,6 @@ async def test_sync_does_not_touch_other_users(
 
 async def test_sync_skips_inactive_roles(
     users_in_memory: list[User],
-    system_role_in_memory: Role,
     role_in_memory: Role,
     inactive_role_in_memory: Role,
     fake_role_permissions_repo: FakeRolePermissionRepository,
@@ -264,12 +263,17 @@ async def test_sync_skips_inactive_roles(
     permission_conditions_allow_in_memory: list[PermissionCondition],
 ) -> None:
     """Неактивная роль не даёт conditions (BR-ROLE-023)."""
-    user = users_in_memory[0]
+    user = users_in_memory[1]
 
     fake_user_roles_repo.links[(user.id, inactive_role_in_memory.id)] = UserRole(
         user_id=user.id, role_id=inactive_role_in_memory.id
     )
-    matched = [cid for (uid, cid) in fake_user_permissions_repo.links if uid == user.id]
+    inactive_role_cnd = [
+        cid for (rid, cid) in fake_role_permissions_repo.links if rid == inactive_role_in_memory.id
+    ]
+    base_role_cnd = [
+        cid for (rid, cid) in fake_role_permissions_repo.links if rid == role_in_memory.id
+    ]
     await sync_user_permissions(
         user.id,
         user_roles=fake_user_roles_repo,
@@ -278,4 +282,7 @@ async def test_sync_skips_inactive_roles(
         user_permissions=fake_user_permissions_repo,
     )
     matched_after = [cid for (uid, cid) in fake_user_permissions_repo.links if uid == user.id]
-    assert sorted(matched) == sorted(matched_after)
+    for m in inactive_role_cnd:
+        assert m not in matched_after
+    for m in base_role_cnd:
+        assert m in matched_after

@@ -131,7 +131,8 @@ def fake_role_permissions_repo(
     links.extend(
         [
             RolePermission(role_id=inactive_role_in_memory.id, condition_id=c.id)
-            for c in permission_conditions_allow_in_memory
+            for c in conditions_for_roles
+            if c.role_id != role_in_memory.id
         ]
     )
     links.extend(
