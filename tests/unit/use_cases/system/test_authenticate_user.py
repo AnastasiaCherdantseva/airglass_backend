@@ -74,36 +74,38 @@ async def test_wrong_password_raises(
 
 
 async def test_success_returns_authenticated_user(
-    user_in_memory: User,
+    users_in_memory: list[User],
     role_in_memory,
     fake_users_repo: FakeUserRepository,
     fake_sessions_repo: FakeSessionRepository,
     fake_user_roles_repo: FakeUserRoleRepository,
 ) -> None:
     """Успешная аутентификация возвращает AuthenticatedUser."""
+    user = users_in_memory[0]
     result = await authenticate_user(
-        email=user_in_memory.email,
+        email=user.email,
         password=TEST_PASSWORD,
         sessions=fake_sessions_repo,
         users=fake_users_repo,
         user_roles=fake_user_roles_repo,
     )
 
-    assert result.id == user_in_memory.id
-    assert result.name == user_in_memory.name
-    assert result.email == user_in_memory.email
+    assert result.id == user.id
+    assert result.name == user.name
+    assert result.email == user.email
     assert len(result.session_token) > 0
 
 
 async def test_success_creates_session_with_hash(
-    user_in_memory: User,
+    users_in_memory: list[User],
     fake_users_repo: FakeUserRepository,
     fake_sessions_repo: FakeSessionRepository,
     fake_user_roles_repo: FakeUserRoleRepository,
 ) -> None:
     """Сессия создана с хешем токена, не с открытым токеном."""
+    user = users_in_memory[0]
     result = await authenticate_user(
-        email=user_in_memory.email,
+        email=user.email,
         password=TEST_PASSWORD,
         sessions=fake_sessions_repo,
         users=fake_users_repo,
@@ -116,19 +118,20 @@ async def test_success_creates_session_with_hash(
     expected_hash = hash_session_token(result.session_token)
     assert session.token_hash == expected_hash
     assert session.token_hash != result.session_token
-    assert session.user_id == user_in_memory.id
+    assert session.user_id == user.id
 
 
 async def test_success_no_session_on_failure(
-    user_in_memory: User,
+    users_in_memory: list[User],
     fake_users_repo: FakeUserRepository,
     fake_sessions_repo: FakeSessionRepository,
     fake_user_roles_repo: FakeUserRoleRepository,
 ) -> None:
     """При ошибке аутентификации сессия НЕ создаётся."""
+    user = users_in_memory[0]
     with pytest.raises(AuthenticationError):
         await authenticate_user(
-            email=user_in_memory.email,
+            email=user.email,
             password="wrong",
             sessions=fake_sessions_repo,
             users=fake_users_repo,
@@ -139,14 +142,15 @@ async def test_success_no_session_on_failure(
 
 
 async def test_success_with_user_agent_and_ip(
-    user_in_memory: User,
+    users_in_memory: list[User],
     fake_users_repo: FakeUserRepository,
     fake_sessions_repo: FakeSessionRepository,
     fake_user_roles_repo: FakeUserRoleRepository,
 ) -> None:
     """user_agent и ip_address сохраняются в сессии."""
+    user = users_in_memory[0]
     await authenticate_user(
-        email=user_in_memory.email,
+        email=user.email,
         password=TEST_PASSWORD,
         user_agent="Mozilla/5.0",
         ip_address="127.0.0.1",
@@ -166,7 +170,7 @@ async def test_success_with_user_agent_and_ip(
 
 
 async def test_all_failures_same_message(
-    user_in_memory: User,
+    users_in_memory: list[User],
     inactive_user_in_memory: User,
     fake_users_repo: FakeUserRepository,
     fake_users_repo_inactive: FakeUserRepository,
@@ -174,6 +178,7 @@ async def test_all_failures_same_message(
     fake_user_roles_repo: FakeUserRoleRepository,
 ) -> None:
     """Все три ошибки дают одно и то же сообщение (защита от enumeration)."""
+    user = users_in_memory[0]
     with pytest.raises(AuthenticationError) as exc1:
         await authenticate_user(
             email="unknown@example.com",
@@ -194,7 +199,7 @@ async def test_all_failures_same_message(
 
     with pytest.raises(AuthenticationError) as exc3:
         await authenticate_user(
-            email=user_in_memory.email,
+            email=user.email,
             password="wrong",
             sessions=fake_sessions_repo,
             users=fake_users_repo,
