@@ -4,10 +4,11 @@ UseCase: получить пользователя по id.
 
 import logging
 
-from app.core.exceptions import ConflictError, PermissionDeniedError, ValidationError
+from app.core.exceptions import ConflictError, NotFoundError, PermissionDeniedError, ValidationError
 from app.core.security import hash_password
 from app.dto import CurrentUser, UserCreate, UserCreateFull, UserRoleLink, UserWithRolesOutput
 from app.models.system.permission_condition import ConditionType, PermissionEffect
+from app.repositories.protocols.system.role import RoleReadRepositoryProtocol
 from app.repositories.protocols.system.role_permission import RolePermissionReadRepositoryProtocol
 from app.repositories.protocols.system.user import UserRepositoryProtocol
 from app.repositories.protocols.system.user_direct_permission import (
@@ -25,6 +26,7 @@ async def create_user(
     data: UserCreate,
     *,
     users: UserRepositoryProtocol,
+    roles: RoleReadRepositoryProtocol,
     user_role: UserRoleRepositoryProtocol,
     role_permissions: RolePermissionReadRepositoryProtocol,
     user_direct_permissions: UserDirectPermissionReadRepositoryProtocol,
@@ -46,7 +48,7 @@ async def create_user(
         PermissionDeniedError: actor lacks permission for a role.
         ConflictError: email already exists.
     """
-    permission = next(
+    conditions = next(
         (
             permission.conditions
             for permission in actor.permissions
@@ -54,13 +56,13 @@ async def create_user(
         ),
         None,
     )
-    if permission is None:
+    if conditions is None:
         logger.info("User create failed: no USERS.CREATE (actor=%s)", actor.id)
         raise PermissionDeniedError("Нет права на создание пользователя")
 
     condition_roles = [
         condition.role_id
-        for condition in permission
+        for condition in conditions
         if condition.effect == PermissionEffect.ALLOW
         and condition.type == ConditionType.ROLE
         and condition.is_active
@@ -71,7 +73,19 @@ async def create_user(
             "User create failed: The new user must have at least one role",
         )
         raise ValidationError("У нового пользователя должна быть хотя бы одна роль.")
+    current_roles = await roles.get_by_ids(data.role_ids)
+
+    if len(current_roles) != len(data.role_ids):
+        logger.info("User create failed: One of the current role not found(ids: %s)", data.role_ids)
+        raise NotFoundError("Не удалось найти одну из ролей.")
+    for r in current_roles:
+        if not r.is_active:
+            logger.info("User create failed: Role with id %s is not active", data.role_ids)
+            raise ValidationError(
+                f"Нельзя создать пользователя с неактивной ролью ({r.name}). Активируйте роль, прежде чем создать пользователя."
+            )
     allowed = set(condition_roles)
+
     for role_id in data.role_ids:
         if role_id not in allowed:
             logger.info(
