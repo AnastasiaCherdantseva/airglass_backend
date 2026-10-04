@@ -66,6 +66,7 @@ async def users(db_session: AsyncSession) -> list[User]:
             email=f"user{i}@example.com",
             password_hash=get_test_password_hash(),
             is_active=True,
+            email_verified=datetime.now(),
         )
         for i in range(5)
     ]
@@ -83,6 +84,7 @@ async def user_in_memory() -> User:
         email="anya@example.com",
         password_hash=get_test_password_hash(),
         is_active=True,
+        email_verified=datetime.now(),
     )
 
 
@@ -108,6 +110,7 @@ async def users_in_memory() -> list[User]:
             email=f"user{i}@example.com",
             password_hash=get_test_password_hash(),
             is_active=True,
+            email_verified=datetime.now(),
         )
         for i in range(5)
     ]

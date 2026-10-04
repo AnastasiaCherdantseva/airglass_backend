@@ -1,5 +1,7 @@
 """Fixtures for Role."""
 
+from uuid import uuid4
+
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -111,6 +113,7 @@ async def roles_for_two_users(
 async def role_in_memory(user_in_memory: User) -> Role:
     """Готовая пользовательская роль в памяти (no DB)."""
     return Role(
+        id=uuid4(),
         name="Тестовая роль",
         owner_id=user_in_memory.id,
         description="Для тестов",
@@ -123,6 +126,7 @@ async def role_in_memory(user_in_memory: User) -> Role:
 async def system_role_in_memory() -> Role:
     """Готовая системная роль в памяти (no DB)."""
     return Role(
+        id=uuid4(),
         name="Системная роль",
         owner_id=None,
         description="Системная",
@@ -136,6 +140,7 @@ async def system_roles_in_memory() -> list[Role]:
     """Несколько системных ролей в памяти (no DB)."""
     return [
         Role(
+            id=uuid4(),
             name=f"Системная Роль {i}",
             owner_id=None,
             description="Системная",
@@ -147,10 +152,23 @@ async def system_roles_in_memory() -> list[Role]:
 
 
 @pytest_asyncio.fixture
+async def inactive_role_in_memory() -> Role:
+    return Role(
+        id=uuid4(),
+        name="Неактивная Роль",
+        owner_id=None,
+        description="Неактивная Роль",
+        is_system=True,
+        is_active=False,
+    )
+
+
+@pytest_asyncio.fixture
 async def roles_in_memory(user_in_memory: User) -> list[Role]:
     """Несколько пользовательских ролей в памяти (no DB)."""
     return [
         Role(
+            id=uuid4(),
             name=f"Роль {i}",
             owner_id=user_in_memory.id,
             description=f"Описание {i}",

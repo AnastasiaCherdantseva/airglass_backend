@@ -1,5 +1,6 @@
-from uuid import UUID
+from uuid import UUID, uuid4
 
+import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -46,6 +47,7 @@ async def permission_conditions_allow_in_memory(
     """ALLOW-условия для всех permissions в памяти (no DB)."""
     return [
         PermissionCondition(
+            id=uuid4(),
             permission_id=p.id,
             effect=PermissionEffect.ALLOW,
             type=ConditionType.SUBTREE,
@@ -62,6 +64,7 @@ async def permission_conditions_deny_in_memory(
     """DENY-условия для всех permissions в памяти (no DB)."""
     return [
         PermissionCondition(
+            id=uuid4(),
             permission_id=p.id,
             effect=PermissionEffect.DENY,
             type=ConditionType.ALL,
@@ -94,6 +97,33 @@ async def make_condition(db_session: AsyncSession):
         )
         db_session.add(condition)
         await db_session.flush()
+        return condition
+
+    return _make
+
+
+@pytest.fixture
+def make_condition_in_memory():
+    def _make(
+        permission: Permission,
+        *,
+        type_: ConditionType,
+        effect: PermissionEffect = PermissionEffect.ALLOW,
+        is_active: bool = True,
+        role_id: UUID | None = None,
+        category_id: UUID | None = None,
+        media_type_id: UUID | None = None,
+    ) -> PermissionCondition:
+        condition = PermissionCondition(
+            id=uuid4(),
+            permission_id=permission.id,
+            type=type_,
+            effect=effect,
+            is_active=is_active,
+            role_id=role_id,
+            category_id=category_id,
+            media_type_id=media_type_id,
+        )
         return condition
 
     return _make

@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -67,11 +69,13 @@ async def permissions_in_memory() -> list[Permission]:
             )
             permissions.append(
                 Permission(
+                    id=uuid4(),
                     name=act["name"] + res["name"],
                     description="Право на " + act["name"] + res["name"],
                     resource=res["item"],
                     action=act["item"],
                     zone=zone,
+                    code=f"{res['item'].name}.{act['item'].name}",
                 )
             )
     return permissions
