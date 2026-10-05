@@ -23,14 +23,8 @@ from app.repositories.system import (
 
 async def get_uow() -> AsyncGenerator[UnitOfWork, None]:
     async with AsyncSessionLocal() as session:
-        uow = UnitOfWork(session)
-        try:
+        async with UnitOfWork(session) as uow:
             yield uow
-        except Exception:
-            await uow.rollback()
-            raise
-        else:
-            await uow.commit()
 
 
 def get_session_repo(uow: UnitOfWork = Depends(get_uow)) -> SessionRepository:

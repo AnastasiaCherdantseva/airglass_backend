@@ -4,6 +4,7 @@ Unit of Work — управление транзакцией.
 
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from types import TracebackType
 
 from sqlalchemy.ext.asyncio import AsyncSession, AsyncSessionTransaction
 
@@ -19,11 +20,20 @@ class UnitOfWork:
         self.session = session
         self._transaction: AsyncSessionTransaction | None = None
 
-    async def begin(self) -> None:
-        """Начать основную транзакцию."""
-        if self._transaction is not None:
-            raise RuntimeError("Transaction is already active")
+    async def __aenter__(self) -> "UnitOfWork":
         self._transaction = await self.session.begin()
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
+        if exc_type is not None:
+            await self.rollback()
+        else:
+            await self._commit()
 
     async def flush(self) -> None:
         """Отправить изменения в БД без commit."""
@@ -33,9 +43,7 @@ class UnitOfWork:
     async def nested(self) -> AsyncGenerator[None, None]:
         """Создать SAVEPOINT внутри основной транзакции."""
         if self._transaction is None:
-            raise RuntimeError(
-                "Cannot start nested transaction without active transaction"
-            )
+            raise RuntimeError("Cannot start nested transaction without active transaction")
 
         transaction = await self.session.begin_nested()
         try:
@@ -46,10 +54,11 @@ class UnitOfWork:
         else:
             await transaction.commit()
 
-    async def commit(self) -> None:
+    async def _commit(self) -> None:
         """Зафиксировать основную транзакцию."""
         if self._transaction is None:
-            raise RuntimeError("No active transaction")
+            return
+            # raise RuntimeError("No active transaction")
 
         await self._transaction.commit()
         self._transaction = None
