@@ -9,7 +9,7 @@ from app.models import User
 from app.repositories.protocols.system.user import UserReadRepositoryProtocol
 
 
-async def get_user(
+async def get_users(
     user_id: UUID,
     *,
     users: UserReadRepositoryProtocol,
