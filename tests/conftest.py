@@ -9,6 +9,8 @@
 """
 
 import os
+from contextlib import asynccontextmanager
+from types import TracebackType
 
 os.environ["POSTGRES_DB"] = "airglass_test"
 import subprocess
@@ -25,7 +27,6 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.pool import NullPool
 
-from app.core.uow import UnitOfWork
 from app.main import app
 from app.models import *  # noqa: F401,F403 — регистрирует модели в Base.metadata
 from app.repositories.deps import get_uow
@@ -47,6 +48,45 @@ pytest_plugins = [
 ]
 
 TEST_DATABASE_URL = "postgresql+asyncpg://myuser:postgres@localhost:5432/airglass_test"
+
+
+class FakeUnitOfWork:
+    """UoW для тестов. Не управляет транзакцией."""
+
+    def __init__(self, session: AsyncSession) -> None:
+        self.session = session
+
+    async def __aenter__(self) -> "FakeUnitOfWork":
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
+        pass
+
+    async def flush(self) -> None:
+        await self.session.flush()
+
+    @asynccontextmanager
+    async def nested(self) -> AsyncGenerator[None, None]:
+        """Savepoint внутри текущей транзакции."""
+        transaction = await self.session.begin_nested()
+        try:
+            yield
+        except Exception:
+            await transaction.rollback()
+            raise
+        else:
+            await transaction.commit()
+
+    async def commit(self) -> None:
+        """No-op. Транзакцией управляет фикстура db_session."""
+
+    async def rollback(self) -> None:
+        """No-op. Транзакцией управляет фикстура db_session."""
 
 
 @pytest_asyncio.fixture(scope="session")
@@ -73,13 +113,6 @@ def setup_database() -> Generator[None, None, None]:
         capture_output=True,
         # text=True,
     )
-    # if result.returncode != 0:
-    #     print("=== ALEMBIC STDOUT ===")
-    #     print(result.stdout)
-    #     print("=== ALEMBIC STDERR ===")
-    #     print(result.stderr)
-    #     raise RuntimeError(f"alembic upgrade failed: {result.returncode}")
-
     yield
 
     subprocess.run(
@@ -118,8 +151,9 @@ async def client(
 ) -> AsyncGenerator[AsyncClient, None]:
     """HTTP-клиент для тестов роутеров."""
 
-    async def override_get_uow() -> AsyncGenerator[UnitOfWork, None]:
-        yield UnitOfWork(db_session)
+    async def override_get_uow() -> AsyncGenerator[FakeUnitOfWork, None]:
+        async with FakeUnitOfWork(db_session) as uow:
+            yield uow
 
     app.dependency_overrides[get_uow] = override_get_uow
 
