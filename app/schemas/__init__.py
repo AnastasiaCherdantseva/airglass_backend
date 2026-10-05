@@ -1,28 +1,22 @@
-from app.schemas.system.auth import AuthLoginRequest
-from app.schemas.system.permission import (
+from app.schemas.system import (
+    AuthLoginRequest,
+    MeResponse,
     PermissionBase,
-    PermissionFull,
-    PermissionWithConditions,
-)
-from app.schemas.system.permission_condition import (
     PermissionConditionAll,
     PermissionConditionBase,
     PermissionConditionCategory,
     PermissionConditionMediaType,
     PermissionConditionRole,
-)
-from app.schemas.system.role import (
+    PermissionFull,
+    PermissionWithConditions,
     RoleBase,
     RoleCreate,
     RoleDetailResponse,
     RoleResponse,
     RoleUpdate,
-)
-from app.schemas.system.session import SessionResponse
-from app.schemas.system.user import (
-    MeResponse,
+    SessionResponse,
     UserBase,
-    UserCreate,
+    UserCreateRequest,
     UserResponse,
     UserUpdate,
 )
@@ -50,7 +44,7 @@ __all__ = [
     "SessionResponse",
     # USER
     "UserBase",
-    "UserCreate",
+    "UserCreateRequest",
     "UserUpdate",
     "UserResponse",
     "MeResponse",

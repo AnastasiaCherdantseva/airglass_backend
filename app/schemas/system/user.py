@@ -13,7 +13,7 @@ class UserBase(BaseSchema):
     email: Email = Field(min_length=6, max_length=255)
 
 
-class UserCreate(UserBase):
+class UserCreateRequest(UserBase):
     password: str = Field(..., min_length=6, max_length=100)
     role_ids: list[UUID] = Field(default_factory=list)
 
