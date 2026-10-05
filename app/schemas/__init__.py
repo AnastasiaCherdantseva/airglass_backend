@@ -19,6 +19,7 @@ from app.schemas.system import (
     UserCreateRequest,
     UserResponse,
     UserUpdate,
+    UserWithRolesResponse,
 )
 
 __all__ = [
@@ -48,4 +49,5 @@ __all__ = [
     "UserUpdate",
     "UserResponse",
     "MeResponse",
+    "UserWithRolesResponse",
 ]

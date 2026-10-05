@@ -1,7 +1,7 @@
 # from typing import Optional
 from uuid import UUID
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
 # from decimal import Decimal
 from app.schemas.base import BaseSchema, Email
@@ -15,7 +15,17 @@ class UserBase(BaseSchema):
 
 class UserCreateRequest(UserBase):
     password: str = Field(..., min_length=6, max_length=100)
-    role_ids: list[UUID] = Field(default_factory=list)
+    role_ids: list[UUID] = Field(min_length=1)
+
+    @field_validator("role_ids")
+    @classmethod
+    def _dedupe_role_ids(cls, value: list[UUID]) -> list[UUID]:
+        """
+        Remove duplicate role ids, keep order.
+
+        Убирает дубли id ролей, порядок сохраняется.
+        """
+        return list(dict.fromkeys(value))
 
 
 class UserUpdate(BaseSchema):
@@ -32,6 +42,18 @@ class UserResponse(UserBase):
     """Ответ."""
 
     id: UUID
+
+
+class UserWithRolesResponse(UserResponse):
+    """
+    Response of POST /users: user with assigned roles.
+
+    Ответ POST /users: пользователь с назначенными ролями.
+    """
+
+    is_active: bool
+    parent_id: UUID | None
+    role_ids: list[UUID]
 
 
 class MeResponse(UserBase):
