@@ -13,26 +13,28 @@ async def role_permission(
     permission_conditions_allow: list[PermissionCondition],
 ) -> RolePermission:
     """Одна связь role ↔ condition."""
-    link = RolePermission(
-        role_id=role.id,
-        condition_id=permission_conditions_allow[0].id,
-    )
-    db_session.add(link)
-    await db_session.flush()
-    return link
+    for p in permission_conditions_allow:
+        if p.role_id == role.id:
+            link = RolePermission(
+                role_id=role.id,
+                condition_id=p.id,
+            )
+            db_session.add(link)
+            await db_session.flush()
+            return link
 
 
 @pytest_asyncio.fixture
-async def role_permissions(
+async def system_role_permissions(
     db_session: AsyncSession,
-    role: Role,
+    system_role: Role,
     permission_conditions_allow: list[PermissionCondition],
 ) -> list[RolePermission]:
     """Несколько связей для одной роли."""
     result = []
     for condition in permission_conditions_allow:
         link = RolePermission(
-            role_id=role.id,
+            role_id=system_role.id,
             condition_id=condition.id,
         )
         db_session.add(link)

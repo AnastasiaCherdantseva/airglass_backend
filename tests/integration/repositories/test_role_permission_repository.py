@@ -8,12 +8,12 @@ from app.repositories.system.role_permission import RolePermissionRepository
 
 
 async def test_get_condition_ids_by_role_id(
-    db_session, role, permission_conditions_allow, role_permissions
+    db_session, system_role, permission_conditions_allow, system_role_permissions
 ):
     """Возвращает все condition_id роли."""
     repo = RolePermissionRepository(db_session)
 
-    result = await repo.get_condition_ids_by_role_id(role.id)
+    result = await repo.get_condition_ids_by_role_id(system_role.id)
 
     expected = {c.id for c in permission_conditions_allow}
     assert set(result) == expected

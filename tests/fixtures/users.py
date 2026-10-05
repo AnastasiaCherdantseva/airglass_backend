@@ -11,6 +11,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.security import hash_password
 from app.dto.system.user import UserCreateFull
 from app.models.system import User
+from app.models.system.role import Role
+from app.models.system.role_permission import RolePermission
+from app.models.system.user_permission import UserPermission
+from app.models.system.user_role import UserRole
+from app.schemas.system.user import UserCreateRequest
 
 _PASSWORD_HASH_CACHE: str | None = None
 
@@ -128,3 +133,26 @@ async def new_user_data(user: User) -> UserCreateFull:
         password_hash=password_hash,
         is_active=True,
     )
+
+
+@pytest_asyncio.fixture
+async def new_user_data_request(role: Role) -> UserCreateRequest:
+    """Several active users in memory (no DB)."""
+
+    return {
+        "email": "new@example.com",
+        "name": "Новый",
+        "password": TEST_PASSWORD,
+        "role_ids": [str(role.id)],
+    }
+
+
+@pytest_asyncio.fixture
+async def user_admin(
+    user: User,
+    user_system_role: UserRole,
+    system_role_permissions: list[RolePermission],
+    user_permissions: list[UserPermission],
+) -> User:
+
+    return user

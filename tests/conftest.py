@@ -12,6 +12,8 @@ import os
 from contextlib import asynccontextmanager
 from types import TracebackType
 
+from app.core.security import SESSION_COOKIE_NAME
+
 os.environ["POSTGRES_DB"] = "airglass_test"
 import subprocess
 from collections.abc import AsyncGenerator, Generator
@@ -165,3 +167,10 @@ async def client(
         yield ac
 
     app.dependency_overrides.clear()
+
+
+@pytest_asyncio.fixture
+async def authorized_client(client: AsyncClient, session: dict) -> AsyncClient:
+    """Клиент с cookie сессии актора (user)."""
+    client.cookies.set(SESSION_COOKIE_NAME, session["token"])
+    return client

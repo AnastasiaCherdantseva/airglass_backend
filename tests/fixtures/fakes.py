@@ -31,7 +31,7 @@ from tests.unit.fakes.user_role_repository import FakeUserRoleRepository
 
 
 @pytest.fixture
-def conditions_for_roles(
+def conditions_for_roles_in_memory(
     role_in_memory: Role,
     system_role_in_memory: Role,
     inactive_role_in_memory: Role,
@@ -107,10 +107,10 @@ def fake_permissions_repo(
 @pytest.fixture
 def fake_permission_conditions_repo(
     permission_conditions_allow_in_memory: list[PermissionCondition],
-    conditions_for_roles: list[PermissionCondition],
+    conditions_for_roles_in_memory: list[PermissionCondition],
 ) -> FakePermissionConditionRepository:
     """FakePermissionConditionRepository с ALLOW-условиями."""
-    p = permission_conditions_allow_in_memory + conditions_for_roles
+    p = permission_conditions_allow_in_memory + conditions_for_roles_in_memory
     return FakePermissionConditionRepository(p)
 
 
@@ -121,7 +121,7 @@ def fake_role_permissions_repo(
     inactive_role_in_memory: Role,
     permissions_in_memory: list[Permission],
     permission_conditions_allow_in_memory: list[PermissionCondition],
-    conditions_for_roles: list[PermissionCondition],
+    conditions_for_roles_in_memory: list[PermissionCondition],
 ) -> FakeRolePermissionRepository:
     """FakeRolePermissionRepository со связями role ↔ condition."""
     links = [
@@ -131,23 +131,23 @@ def fake_role_permissions_repo(
     links.extend(
         [
             RolePermission(role_id=inactive_role_in_memory.id, condition_id=c.id)
-            for c in conditions_for_roles
+            for c in conditions_for_roles_in_memory
             if c.role_id != role_in_memory.id
         ]
     )
     links.extend(
         [
             RolePermission(role_id=system_role_in_memory.id, condition_id=c.id)
-            for c in conditions_for_roles
+            for c in conditions_for_roles_in_memory
         ]
     )
     condition_for_default_role = next(
-        c for c in conditions_for_roles if c.role_id == role_in_memory.id
+        c for c in conditions_for_roles_in_memory if c.role_id == role_in_memory.id
     )
     links.append(
         RolePermission(role_id=role_in_memory.id, condition_id=condition_for_default_role.id)
     )
-    p = permission_conditions_allow_in_memory + conditions_for_roles
+    p = permission_conditions_allow_in_memory + conditions_for_roles_in_memory
     return FakeRolePermissionRepository(
         roles=[role_in_memory, system_role_in_memory],
         conditions=p,
@@ -164,15 +164,15 @@ def fake_user_permissions_repo(
     inactive_user_in_memory: User,
     permissions_in_memory: list[Permission],
     permission_conditions_allow_in_memory: list[PermissionCondition],
-    conditions_for_roles: list[PermissionCondition],
+    conditions_for_roles_in_memory: list[PermissionCondition],
 ) -> FakeUserPermissionRepository:
     """FakeUserPermissionRepository со связями user ↔ condition."""
     first_user = users_in_memory[0]
     other_users = users_in_memory[1:]
-    conditions = permission_conditions_allow_in_memory + conditions_for_roles
+    conditions = permission_conditions_allow_in_memory + conditions_for_roles_in_memory
     links = [UserPermission(user_id=first_user.id, condition_id=c.id) for c in conditions]
     condition_for_default_role = next(
-        c for c in conditions_for_roles if c.role_id == role_in_memory.id
+        c for c in conditions_for_roles_in_memory if c.role_id == role_in_memory.id
     )
     links.extend(
         [
@@ -193,10 +193,10 @@ def fake_user_direct_permissions_repo(
     users_in_memory: list[User],
     inactive_user_in_memory: User,
     permission_conditions_allow_in_memory: list[PermissionCondition],
-    conditions_for_roles: list[PermissionCondition],
+    conditions_for_roles_in_memory: list[PermissionCondition],
 ) -> FakeUserDirectPermissionRepository:
     """FakeUserDirectPermissionRepository со связями user ↔ condition."""
-    p = permission_conditions_allow_in_memory + conditions_for_roles
+    p = permission_conditions_allow_in_memory + conditions_for_roles_in_memory
     return FakeUserDirectPermissionRepository(
         users=users_in_memory + [inactive_user_in_memory],
         conditions=p,

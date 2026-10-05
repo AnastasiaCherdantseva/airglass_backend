@@ -7,13 +7,26 @@ from app.models.system import Role, User, UserRole
 
 
 @pytest_asyncio.fixture
-async def user_role(
+async def user_system_role(
     db_session: AsyncSession,
     user: User,
     system_role: Role,
 ) -> UserRole:
-    """Одна связь user ↔ role."""
+    """Одна связь user ↔ системная role."""
     link = UserRole(user_id=user.id, role_id=system_role.id)
+    db_session.add(link)
+    await db_session.flush()
+    return link
+
+
+@pytest_asyncio.fixture
+async def user_default_role(
+    db_session: AsyncSession,
+    user: User,
+    role: Role,
+) -> UserRole:
+    """Одна связь user ↔ role."""
+    link = UserRole(user_id=user.id, role_id=role.id)
     db_session.add(link)
     await db_session.flush()
     return link

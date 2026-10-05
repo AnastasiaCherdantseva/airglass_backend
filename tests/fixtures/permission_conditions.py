@@ -5,14 +5,44 @@ import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.system import ConditionType, Permission, PermissionCondition, PermissionEffect
+from app.models.system.role import Role
 
 
 @pytest_asyncio.fixture
 async def permission_conditions_allow(
-    db_session: AsyncSession, permissions: list[Permission]
+    db_session: AsyncSession,
+    permissions: list[Permission],
+    role: Role,
+    system_role: Role,
+    inactive_role: Role,
 ) -> list[PermissionCondition]:
     result = []
     for p in permissions:
+        if p.resource == "users" and p.action == "create":
+            r1 = PermissionCondition(
+                permission_id=p.id,
+                effect=PermissionEffect.ALLOW,
+                type=ConditionType.ROLE,
+                role_id=role.id,
+                is_active=True,
+            )
+            r2 = PermissionCondition(
+                permission_id=p.id,
+                effect=PermissionEffect.ALLOW,
+                type=ConditionType.ROLE,
+                role_id=inactive_role.id,
+                is_active=True,
+            )
+            r3 = PermissionCondition(
+                permission_id=p.id,
+                effect=PermissionEffect.ALLOW,
+                type=ConditionType.ROLE,
+                role_id=system_role.id,
+                is_active=True,
+            )
+            db_session.add_all([r1, r2, r3])
+            result += [r1, r2, r3]
+            continue
         new = PermissionCondition(
             permission_id=p.id,
             effect=PermissionEffect.ALLOW,
