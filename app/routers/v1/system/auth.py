@@ -7,8 +7,7 @@ from app.repositories.deps import get_session_repo, get_user_repo, get_user_role
 from app.repositories.system.session import SessionRepository
 from app.repositories.system.user import UserRepository
 from app.repositories.system.user_role import UserRoleRepository
-from app.schemas.system import AuthLoginRequest, UserResponse
-from app.schemas.system.user import MeResponse
+from app.schemas import AuthLoginRequest, MeResponse, UserResponse
 from app.use_cases import authenticate_user, logout_user
 
 router = APIRouter(prefix="/auth", tags=["Аутентификация"])
