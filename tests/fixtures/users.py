@@ -93,6 +93,24 @@ async def user_admin(
 
 
 @pytest_asyncio.fixture
+async def children_user_admin(user_admin: User, make_user) -> list[User]:
+    """
+    Five direct children of user_admin in the DB (created_at ascending).
+
+    Пять прямых детей user_admin в БД (created_at по возрастанию).
+    """
+    base = datetime(2026, 1, 1, tzinfo=UTC)
+    return [
+        await make_user(
+            email=f"child{i}@example.com",
+            parent_id=user_admin.id,
+            created_at=base + timedelta(minutes=i),
+        )
+        for i in range(5)
+    ]
+
+
+@pytest_asyncio.fixture
 async def user_in_memory() -> User:
     """Ready-to-use active user in memory (no DB)."""
     return User(
@@ -196,6 +214,7 @@ async def make_user(db_session: AsyncSession):
         is_active: bool = True,
         email_verified: datetime | None = None,
         deleted_at: datetime | None = None,
+        created_at: datetime | None = None,
     ) -> User:
         user = User(
             id=uuid4(),
@@ -207,6 +226,8 @@ async def make_user(db_session: AsyncSession):
             email_verified=email_verified,
             deleted_at=deleted_at,
         )
+        if created_at is not None:
+            user.created_at = created_at
         db_session.add(user)
         await db_session.flush()
         return user
