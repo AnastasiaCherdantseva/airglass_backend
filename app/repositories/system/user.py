@@ -6,6 +6,7 @@ from datetime import UTC, datetime
 from uuid import UUID
 
 from sqlalchemy import func, select
+from sqlalchemy.orm import selectinload
 
 from app.dto import UserCreateFull, UserOutput, UserPatchInput
 from app.models import User
@@ -50,11 +51,22 @@ class UserRepository(BaseIdRepository[User]):
         return result.scalar_one_or_none()
 
     async def get_by_parent_id(
-        self,
-        parent_id: UUID,
+        self, parent_id: UUID, *, limit: int = 10, page: int = 0
     ) -> list[UserOutput]:
-        # тип выходных данных гарантирует отдачу без мягких полей (по типу password_hash)
-        users = await self._get_subtree(parent_id)
+        offset = page * limit
+        stmt = (
+            select(User)
+            .where(
+                User.parent_id == parent_id,
+                User.deleted_at.is_(None),
+            )
+            .order_by(User.created_at, User.id)
+            .limit(limit)
+            .offset(offset=offset)
+            .options(selectinload(User.children))
+        )
+        result = await self.db.scalars(stmt)
+        users = result.all()
         if not users:
             return []
 
@@ -66,9 +78,21 @@ class UserRepository(BaseIdRepository[User]):
                 email=row.email,
                 name=row.name,
                 is_active=row.is_active,
+                children_count=len(row.children),
             )
             for row in users
         ]
+
+    async def count_by_parent_id(
+        self,
+        parent_id: UUID,
+    ) -> int:
+        stmt = select(func.count(User.id)).where(
+            User.parent_id == parent_id,
+            User.deleted_at.is_(None),
+        )
+        result = await self.db.scalar(stmt)
+        return result or 0
 
     async def soft_delete_by_id(self, user_id: UUID) -> list[UUID]:
         deleted_time = datetime.now(UTC)
@@ -102,13 +126,14 @@ class UserRepository(BaseIdRepository[User]):
             user.password_hash = data.new_password_hash
 
         await self.flush()
-
+        await self.db.refresh(user, ["children"])
         return UserOutput(
             id=user.id,
             parent_id=user.parent_id,
             email=user.email,
             name=user.name,
             is_active=user.is_active,
+            children_count=len(user.children),
         )
 
     async def create(self, data: UserCreateFull) -> UserOutput:
@@ -129,4 +154,5 @@ class UserRepository(BaseIdRepository[User]):
             email=user.email,
             name=user.name,
             is_active=user.is_active,
+            children_count=0,
         )

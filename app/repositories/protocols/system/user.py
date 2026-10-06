@@ -17,7 +17,13 @@ class UserReadRepositoryProtocol(ReadRepositoryProtocol[User], Protocol):
     """Read users."""
 
     async def get_by_email(self, email: str) -> User | None: ...
-    async def get_by_parent_id(self, parent_id: UUID) -> list[UserOutput]: ...
+    async def get_by_parent_id(
+        self, parent_id: UUID, *, limit: int = 10, page: int = 0
+    ) -> list[UserOutput]: ...
+    async def count_by_parent_id(
+        self,
+        parent_id: UUID,
+    ) -> int: ...
 
 
 class UserWriteRepositoryProtocol(WriteRepositoryProtocol[User], Protocol):

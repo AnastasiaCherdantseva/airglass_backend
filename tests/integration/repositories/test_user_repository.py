@@ -164,3 +164,92 @@ async def test_create_duplicate_email_case_insensitive(
 
     with pytest.raises(IntegrityError):
         await repo.create(data)
+
+
+# ─────────────────────────────────────────────────────────────
+# count_by_parent_id
+# ─────────────────────────────────────────────────────────────
+
+
+async def test_count_by_parent_id_returns_zero(
+    db_session: AsyncSession,
+    user: User,
+) -> None:
+    """Нет детей → 0."""
+    repo = UserRepository(db_session)
+
+    result = await repo.count_by_parent_id(user.id)
+
+    assert result == 0
+
+
+async def test_count_by_parent_id_returns_correct_number(
+    db_session: AsyncSession,
+    user: User,
+    make_user,
+) -> None:
+    """Три прямых ребёнка → 3."""
+    for i in range(3):
+        await make_user(
+            email=f"child{i}@example.com",
+            parent_id=user.id,
+        )
+    repo = UserRepository(db_session)
+
+    result = await repo.count_by_parent_id(user.id)
+
+    assert result == 3
+
+
+async def test_count_by_parent_id_counts_only_direct_children(
+    db_session: AsyncSession,
+    user: User,
+    make_user,
+) -> None:
+    """Внуки не считаются."""
+    child = await make_user(email="child@example.com", parent_id=user.id)
+    await make_user(email="grandchild@example.com", parent_id=child.id)
+    repo = UserRepository(db_session)
+
+    result = await repo.count_by_parent_id(user.id)
+
+    assert result == 1
+
+
+async def test_count_by_parent_id_skips_deleted(
+    db_session: AsyncSession,
+    user: User,
+    make_user,
+) -> None:
+    """Мягко удалённые дети не считаются."""
+    from datetime import UTC, datetime
+
+    alive = await make_user(email="alive@example.com", parent_id=user.id)
+    deleted = await make_user(email="deleted@example.com", parent_id=user.id)
+    deleted.deleted_at = datetime.now(UTC)
+    await db_session.flush()
+    repo = UserRepository(db_session)
+
+    result = await repo.count_by_parent_id(user.id)
+
+    assert result == 1
+
+
+async def test_count_by_parent_id_isolated_by_parent(
+    db_session: AsyncSession,
+    users: list[User],
+    make_user,
+) -> None:
+    """Дети других родителей не считаются."""
+    parent_a, parent_b = users[0], users[1]
+    for i in range(2):
+        await make_user(email=f"a{i}@example.com", parent_id=parent_a.id)
+    for i in range(3):
+        await make_user(email=f"b{i}@example.com", parent_id=parent_b.id)
+    repo = UserRepository(db_session)
+
+    result_a = await repo.count_by_parent_id(parent_a.id)
+    result_b = await repo.count_by_parent_id(parent_b.id)
+
+    assert result_a == 2
+    assert result_b == 3
