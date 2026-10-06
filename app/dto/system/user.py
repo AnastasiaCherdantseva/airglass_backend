@@ -35,6 +35,7 @@ class UserPatchInput:
 class UserOutput(UserData):
     id: UUID
     parent_id: UUID | None
+    children_count: int
 
 
 @dataclass(frozen=True)
@@ -46,3 +47,13 @@ class UserWithRolesOutput(UserOutput):
 class CurrentUser(UserOutput):
     permissions: list[GroupedPermission]
     has_admin_access: bool
+
+
+@dataclass(frozen=True)
+class UserListOutput:
+    """Обёртка ответа GET /users."""
+
+    items: list[UserWithRolesOutput]
+    total: int
+    limit: int
+    page: int

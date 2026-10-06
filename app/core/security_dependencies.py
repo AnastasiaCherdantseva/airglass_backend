@@ -75,6 +75,7 @@ async def get_current_user(
 
     conditions_groups = await user_permissions.get_grouped_by_permission(user.id)
     has_admin_access = await user_permissions.has_admin_access(user.id)
+    children_count = await users.count_by_parent_id(user.id)
     return CurrentUser(
         id=user.id,
         email=user.email,
@@ -83,6 +84,7 @@ async def get_current_user(
         name=user.name,
         permissions=conditions_groups,
         has_admin_access=has_admin_access,
+        children_count=children_count,
     )
 
 

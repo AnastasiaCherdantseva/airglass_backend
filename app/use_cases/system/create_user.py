@@ -126,7 +126,7 @@ async def create_user(
         user_direct_permissions=user_direct_permissions,
         user_permissions=user_permissions,
     )
-
+    children_count = await users.count_by_parent_id(user.id)
     return UserWithRolesOutput(
         email=user.email,
         name=user.name,
@@ -134,4 +134,5 @@ async def create_user(
         id=user.id,
         parent_id=user.parent_id,
         role_ids=data.role_ids,
+        children_count=children_count,
     )

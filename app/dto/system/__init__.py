@@ -23,6 +23,7 @@ from app.dto.system.user import (
     UserCreate,
     UserCreateFull,
     UserData,
+    UserListOutput,
     UserOutput,
     UserPatchInput,
     UserWithRolesOutput,
@@ -38,6 +39,7 @@ __all__ = [
     "CurrentUser",
     "UserCreate",
     "UserCreateFull",
+    "UserListOutput",
     #
     "OrganizationPatch",
     "OrganizationOutPut",
