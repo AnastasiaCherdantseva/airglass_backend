@@ -2,7 +2,8 @@
 Фикстуры пользователей.
 """
 
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
+from itertools import count
 from uuid import UUID, uuid4
 
 import pytest_asyncio
@@ -81,6 +82,17 @@ async def users(db_session: AsyncSession) -> list[User]:
 
 
 @pytest_asyncio.fixture
+async def user_admin(
+    user: User,
+    user_system_role: UserRole,
+    system_role_permissions: list[RolePermission],
+    user_permissions: list[UserPermission],
+) -> User:
+
+    return user
+
+
+@pytest_asyncio.fixture
 async def user_in_memory() -> User:
     """Ready-to-use active user in memory (no DB)."""
     return User(
@@ -148,6 +160,31 @@ async def new_user_data_request(role: Role) -> UserCreateRequest:
 
 
 @pytest_asyncio.fixture
+async def user_admin_in_memory(users_in_memory: list[User]) -> User:
+    """
+    Actor for tests of children listing: users_in_memory[0].
+
+    Актор для тестов списка детей: users_in_memory[0].
+    """
+    return users_in_memory[0]
+
+
+@pytest_asyncio.fixture
+async def children_user_admin_in_memory(
+    user_admin_in_memory: User, make_user_in_memory
+) -> list[User]:
+    """
+    Five direct children of parent_in_memory (in memory, ascending created_at).
+
+    Пять прямых детей parent_in_memory (в памяти, created_at по возрастанию).
+    """
+    return [
+        make_user_in_memory(email=f"child{i}@example.com", parent_id=user_admin_in_memory.id)
+        for i in range(5)
+    ]
+
+
+@pytest_asyncio.fixture
 async def make_user(db_session: AsyncSession):
     """Фабрика пользователей."""
 
@@ -178,11 +215,35 @@ async def make_user(db_session: AsyncSession):
 
 
 @pytest_asyncio.fixture
-async def user_admin(
-    user: User,
-    user_system_role: UserRole,
-    system_role_permissions: list[RolePermission],
-    user_permissions: list[UserPermission],
-) -> User:
+async def make_user_in_memory():
+    """
+    Factory of in-memory users (no DB). created_at grows with each call,
+    so the order in paginated results is deterministic.
 
-    return user
+    Фабрика пользователей в памяти (без БД). created_at растёт с каждым
+    вызовом, поэтому порядок в пагинации стабилен.
+    """
+    counter = count()
+    base = datetime(2026, 1, 1, tzinfo=UTC)
+
+    def _make(
+        *,
+        email: str,
+        name: str = "Тестовый",
+        parent_id: UUID | None = None,
+        is_active: bool = True,
+        deleted_at: datetime | None = None,
+    ) -> User:
+        return User(
+            id=uuid4(),
+            email=email,
+            name=name,
+            parent_id=parent_id,
+            password_hash=get_test_password_hash(),
+            is_active=is_active,
+            email_verified=datetime.now(),
+            deleted_at=deleted_at,
+            created_at=base + timedelta(minutes=next(counter)),
+        )
+
+    return _make
