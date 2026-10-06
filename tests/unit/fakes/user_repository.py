@@ -38,6 +38,45 @@ class FakeUserRepository:
             None,
         )
 
+    async def get_by_parent_id(
+        self,
+        parent_id: UUID,
+        *,
+        limit: int = 10,
+        page: int = 0,
+    ) -> list[UserOutput]:
+        """
+        Прямые дети parent_id с пагинацией.
+
+        Сортировка: created_at ASC, id ASC (как в реальном репозитории).
+        """
+        children = [
+            u for u in self.users.values() if u.parent_id == parent_id and u.deleted_at is None
+        ]
+        children.sort(key=lambda u: (u.created_at, u.id))
+        offset = page * limit
+        page_items = children[offset : offset + limit]
+
+        return [
+            UserOutput(
+                id=u.id,
+                parent_id=u.parent_id,
+                email=u.email,
+                name=u.name,
+                is_active=u.is_active,
+                children_count=sum(
+                    1 for x in self.users.values() if x.parent_id == u.id and x.deleted_at is None
+                ),
+            )
+            for u in page_items
+        ]
+
+    async def count_by_parent_id(self, parent_id: UUID) -> int:
+        """Количество прямых детей (без мягко удалённых)."""
+        return sum(
+            1 for u in self.users.values() if u.parent_id == parent_id and u.deleted_at is None
+        )
+
     async def create(self, data: UserCreateFull) -> UserOutput:
         """
         Create a user in memory (mirrors UserRepository.create).
@@ -59,6 +98,7 @@ class FakeUserRepository:
             email=user.email,
             name=user.name,
             is_active=user.is_active,
+            children_count=0,
         )
 
     # ========================================
