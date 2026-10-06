@@ -3,7 +3,7 @@
 """
 
 from datetime import datetime
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -145,6 +145,36 @@ async def new_user_data_request(role: Role) -> UserCreateRequest:
         "password": TEST_PASSWORD,
         "role_ids": [str(role.id)],
     }
+
+
+@pytest_asyncio.fixture
+async def make_user(db_session: AsyncSession):
+    """Фабрика пользователей."""
+
+    async def _make(
+        *,
+        email: str,
+        name: str = "Тестовый",
+        parent_id: UUID | None = None,
+        is_active: bool = True,
+        email_verified: datetime | None = None,
+        deleted_at: datetime | None = None,
+    ) -> User:
+        user = User(
+            id=uuid4(),
+            email=email,
+            name=name,
+            parent_id=parent_id,
+            password_hash=get_test_password_hash(),
+            is_active=is_active,
+            email_verified=email_verified,
+            deleted_at=deleted_at,
+        )
+        db_session.add(user)
+        await db_session.flush()
+        return user
+
+    return _make
 
 
 @pytest_asyncio.fixture
