@@ -53,6 +53,7 @@ class UserRepository(BaseIdRepository[User]):
     async def get_by_parent_id(
         self, parent_id: UUID, *, limit: int = 10, page: int = 0
     ) -> list[UserOutput]:
+        # Удаленные пользователи не попадают
         offset = page * limit
         stmt = (
             select(User)
