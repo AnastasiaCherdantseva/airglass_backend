@@ -57,13 +57,13 @@ async def role_permission_in_memory(
 
 @pytest_asyncio.fixture
 async def role_permissions_in_memory(
-    role_in_memory: Role,
+    system_role_in_memory: Role,
     permission_conditions_allow_in_memory: list[PermissionCondition],
 ) -> list[RolePermission]:
     """Несколько связей для одной роли в памяти (no DB)."""
     return [
         RolePermission(
-            role_id=role_in_memory.id,
+            role_id=system_role_in_memory.id,
             condition_id=condition.id,
         )
         for condition in permission_conditions_allow_in_memory
