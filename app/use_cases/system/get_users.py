@@ -19,7 +19,7 @@ async def get_users(
     *,
     users: UserReadRepositoryProtocol,
     user_roles: UserRoleReadRepositoryProtocol,
-) -> UserListOutput | None:
+) -> UserListOutput:
     """
     Получить пользователя по id.
 
