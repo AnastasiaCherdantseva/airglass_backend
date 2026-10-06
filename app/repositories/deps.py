@@ -9,12 +9,14 @@ from fastapi import Depends
 from app.core.database import AsyncSessionLocal
 from app.core.uow import UnitOfWork
 from app.repositories.system import (
+    OrganizationRepository,
     PermissionConditionRepository,
     PermissionRepository,
     RolePermissionRepository,
     RoleRepository,
     SessionRepository,
     UserDirectPermissionRepository,
+    UserOrganizationRepository,
     UserPermissionRepository,
     UserRepository,
     UserRoleRepository,
@@ -37,6 +39,12 @@ def get_user_repo(uow: UnitOfWork = Depends(get_uow)) -> UserRepository:
 
 def get_role_repo(uow: UnitOfWork = Depends(get_uow)) -> RoleRepository:
     return RoleRepository(uow.session)
+
+
+def get_organization_repo(
+    uow: UnitOfWork = Depends(get_uow),
+) -> OrganizationRepository:
+    return OrganizationRepository(uow.session)
 
 
 def get_permission_repo(uow: UnitOfWork = Depends(get_uow)) -> PermissionRepository:
@@ -65,3 +73,9 @@ def get_user_direct_permission_repo(
 
 def get_user_permission_repo(uow: UnitOfWork = Depends(get_uow)) -> UserPermissionRepository:
     return UserPermissionRepository(uow.session)
+
+
+def get_user_organization_repo(
+    uow: UnitOfWork = Depends(get_uow),
+) -> UserOrganizationRepository:
+    return UserOrganizationRepository(uow.session)
