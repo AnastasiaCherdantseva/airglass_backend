@@ -4,7 +4,7 @@ Users router.
 Роутер пользователей.
 """
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 
 from app.core.security_dependencies import get_current_user, require_permission
 from app.dto import CurrentUser, UserCreate
@@ -24,13 +24,61 @@ from app.repositories.system import (
     UserRepository,
     UserRoleRepository,
 )
-from app.schemas.system.user import UserCreateRequest, UserWithRolesResponse
-from app.use_cases.system.create_user import create_user
+from app.schemas.system.user import (
+    UserCreateRequest,
+    UserWithRolesResponse,
+    meUsers,
+    meUsersListItem,
+)
+from app.use_cases import create_user, get_users
 
 router = APIRouter(prefix="/users", tags=["Пользователи"])
 
 # Коды прав
 USERS_CREATE = "USERS.CREATE"
+USERS_READ = "USERS.READ"
+
+
+@router.get(
+    "",
+    response_model=meUsers,
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission(USERS_READ))],
+)
+async def get_users_endpoint(
+    limit: int = Query(50, ge=1, le=100),
+    page: int = Query(0, ge=0),
+    current_user: CurrentUser = Depends(get_current_user),
+    users: UserRepository = Depends(get_user_repo),
+    user_roles: UserRoleRepository = Depends(get_user_role_repo),
+) -> meUsers:
+    """
+    Get a paginated list of direct children of the current user.
+    """
+    result = await get_users(
+        current_user.id,
+        limit,
+        page,
+        users=users,
+        user_roles=user_roles,
+    )
+    return meUsers(
+        items=[
+            meUsersListItem(
+                id=item.id,
+                email=item.email,
+                name=item.name,
+                is_active=item.is_active,
+                parent_id=item.parent_id,
+                role_ids=item.role_ids,
+                children_count=item.children_count,
+            )
+            for item in result.items
+        ],
+        total=result.total,
+        limit=result.limit,
+        page=result.page,
+    )
 
 
 @router.post(
