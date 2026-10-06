@@ -253,3 +253,83 @@ async def test_count_by_parent_id_isolated_by_parent(
 
     assert result_a == 2
     assert result_b == 3
+
+
+# ─────────────────────────────────────────────────────────────
+# count_children_by_parent_ids
+# ─────────────────────────────────────────────────────────────
+
+
+async def test_count_children_by_parent_ids_empty_input(
+    db_session: AsyncSession,
+) -> None:
+    """Пустой список → пустой словарь, без запроса в БД."""
+    repo = UserRepository(db_session)
+
+    result = await repo._count_children_by_parent_ids([])
+
+    assert result == {}
+
+
+async def test_count_children_by_parent_ids_returns_counts(
+    db_session: AsyncSession,
+    users: list[User],
+    make_user,
+) -> None:
+    """Для двух родителей — правильные счётчики."""
+    parent_a, parent_b = users[0], users[1]
+    for i in range(3):
+        await make_user(email=f"a{i}@example.com", parent_id=parent_a.id)
+    for i in range(2):
+        await make_user(email=f"b{i}@example.com", parent_id=parent_b.id)
+    repo = UserRepository(db_session)
+
+    result = await repo._count_children_by_parent_ids([parent_a.id, parent_b.id])
+
+    assert result == {parent_a.id: 3, parent_b.id: 2}
+
+
+async def test_count_children_by_parent_ids_missing_parent(
+    db_session: AsyncSession,
+    user: User,
+) -> None:
+    """Родитель без детей → {user.id: 0}."""
+    repo = UserRepository(db_session)
+
+    result = await repo._count_children_by_parent_ids([user.id])
+
+    assert result == {user.id: 0}
+
+
+async def test_count_children_by_parent_ids_skips_deleted(
+    db_session: AsyncSession,
+    user: User,
+    make_user,
+) -> None:
+    """Мягко удалённые дети не считаются."""
+    from datetime import UTC, datetime
+
+    await make_user(email="alive@example.com", parent_id=user.id)
+    deleted = await make_user(email="deleted@example.com", parent_id=user.id)
+    deleted.deleted_at = datetime.now(UTC)
+    await db_session.flush()
+    repo = UserRepository(db_session)
+
+    result = await repo._count_children_by_parent_ids([user.id])
+
+    assert result == {user.id: 1}
+
+
+async def test_count_children_by_parent_ids_only_direct(
+    db_session: AsyncSession,
+    user: User,
+    make_user,
+) -> None:
+    """Внуки не считаются."""
+    child = await make_user(email="child@example.com", parent_id=user.id)
+    await make_user(email="grandchild@example.com", parent_id=child.id)
+    repo = UserRepository(db_session)
+
+    result = await repo._count_children_by_parent_ids([user.id])
+
+    assert result == {user.id: 1}

@@ -6,7 +6,6 @@ from datetime import UTC, datetime
 from uuid import UUID
 
 from sqlalchemy import func, select
-from sqlalchemy.orm import selectinload
 
 from app.dto import UserCreateFull, UserOutput, UserPatchInput
 from app.models import User
@@ -37,6 +36,25 @@ class UserRepository(BaseIdRepository[User]):
         result = await self.db.execute(select(subtree))
         return list(result.scalars().all())
 
+    async def _count_children_by_parent_ids(
+        self,
+        parent_ids: list[UUID],
+    ) -> dict[UUID, int]:
+        """Количество прямых живых детей для каждого parent_id."""
+        if not parent_ids:
+            return {}
+        stmt = (
+            select(User.parent_id, func.count(User.id))
+            .where(
+                User.parent_id.in_(parent_ids),
+                User.deleted_at.is_(None),
+            )
+            .group_by(User.parent_id)
+        )
+        result = await self.db.execute(stmt)
+        counts = {parent_id: count for parent_id, count in result.all()}
+        return {pid: counts.get(pid, 0) for pid in parent_ids}
+
     async def get_by_email(self, email: str) -> User | None:
         """Найти пользователя по email."""
         # ADR-USER-002
@@ -64,13 +82,12 @@ class UserRepository(BaseIdRepository[User]):
             .order_by(User.created_at, User.id)
             .limit(limit)
             .offset(offset=offset)
-            .options(selectinload(User.children))
         )
         result = await self.db.scalars(stmt)
         users = result.all()
         if not users:
             return []
-
+        children_counts = await self._count_children_by_parent_ids([u.id for u in users])
         # 9. Сборка DTO
         return [
             UserOutput(
@@ -79,7 +96,7 @@ class UserRepository(BaseIdRepository[User]):
                 email=row.email,
                 name=row.name,
                 is_active=row.is_active,
-                children_count=len(row.children),
+                children_count=children_counts[row.id],
             )
             for row in users
         ]
