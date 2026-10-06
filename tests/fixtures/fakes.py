@@ -55,6 +55,20 @@ def fake_users_repo(
 
 
 @pytest.fixture
+def make_users_repo(users_in_memory: list[User], inactive_user_in_memory: User):
+    """
+    Factory: FakeUserRepository with the base users plus any extra ones.
+
+    Фабрика: FakeUserRepository с базовыми юзерами плюс переданные.
+    """
+
+    def _make(*extra: User) -> FakeUserRepository:
+        return FakeUserRepository(users_in_memory + [inactive_user_in_memory, *extra])
+
+    return _make
+
+
+@pytest.fixture
 def fake_users_repo_inactive(
     inactive_user_in_memory: User,
 ) -> FakeUserRepository:
