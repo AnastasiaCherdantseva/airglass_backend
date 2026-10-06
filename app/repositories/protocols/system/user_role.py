@@ -23,6 +23,17 @@ class UserRoleReadRepositoryProtocol(Protocol):
         role_id: UUID,
     ) -> list[UserOutput]: ...
     async def get_user_ids_by_role_id(self, role_id: UUID) -> list[UUID]: ...
+    async def get_role_ids_by_user_ids(
+        self,
+        user_ids: list[UUID],
+    ) -> dict[UUID, list[UUID]]: ...
+
+    """
+    Вернуть {user_id: [role_id, ...]} для указанных user_ids.
+
+    Контракт: возвращаются ТОЛЬКО ключи из user_ids.
+    Если у user нет ролей — его не будет в словаре.
+    """
 
 
 class UserRoleWriteRepositoryProtocol(Protocol):

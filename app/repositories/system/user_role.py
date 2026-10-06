@@ -6,6 +6,7 @@ from uuid import UUID
 
 from sqlalchemy import delete, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.dto.system import (
     RoleOutput,
@@ -67,6 +68,7 @@ class UserRoleRepository(
                 UserRole.role_id == role_id,
                 User.deleted_at.is_(None),
             )
+            .options(selectinload(User.children))
         )
         result = await self.db.execute(stmt)
         return [
@@ -76,6 +78,7 @@ class UserRoleRepository(
                 email=row.email,
                 is_active=row.is_active,
                 parent_id=row.parent_id,
+                children_count=len(row.children),
             )
             for row in result.scalars().all()
         ]
@@ -88,6 +91,19 @@ class UserRoleRepository(
             )
         )
         return list(result.scalars().all())
+
+    async def get_role_ids_by_user_ids(
+        self,
+        user_ids: list[UUID],
+    ) -> dict[UUID, list[UUID]]:
+        if not user_ids:
+            return {}
+        stmt = select(UserRole.user_id, UserRole.role_id).where(UserRole.user_id.in_(user_ids))
+        result = await self.db.execute(stmt)
+        grouped: dict[UUID, list[UUID]] = {}
+        for user_id, role_id in result.all():
+            grouped.setdefault(user_id, []).append(role_id)
+        return grouped
 
     async def add_link(self, data: UserRoleLink) -> None:
         link = UserRole(
