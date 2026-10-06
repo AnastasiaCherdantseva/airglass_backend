@@ -44,13 +44,11 @@ class UserResponse(UserBase):
     id: UUID
 
 
+class UserWithChildrenResponse(UserResponse):
+    children_count: int = Field(ge=0)
+
+
 class UserWithRolesResponse(UserResponse):
-    """
-    Response of POST /users: user with assigned roles.
-
-    Ответ POST /users: пользователь с назначенными ролями.
-    """
-
     is_active: bool
     parent_id: UUID | None
     role_ids: list[UUID]
@@ -63,3 +61,14 @@ class MeResponse(UserBase):
     id: UUID
     has_admin_access: bool
     permissions: list[PermissionWithConditions]
+
+
+class meUsersListItem(UserWithChildrenResponse, UserWithRolesResponse):
+    pass
+
+
+class meUsers(BaseSchema):
+    items: list[meUsersListItem]
+    limit: int
+    total: int
+    page: int

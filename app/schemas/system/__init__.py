@@ -22,6 +22,8 @@ from app.schemas.system.user import (
     UserResponse,
     UserUpdate,
     UserWithRolesResponse,
+    meUsers,
+    meUsersListItem,
 )
 
 __all__ = [
@@ -32,6 +34,8 @@ __all__ = [
     "UserResponse",
     "MeResponse",
     "UserWithRolesResponse",
+    "meUsers",
+    "meUsersListItem",
     # ROLE
     "RoleBase",
     "RoleCreate",
