@@ -79,6 +79,11 @@ class FakeUserRoleRepository:
                     email=user.email,
                     is_active=user.is_active,
                     parent_id=user.parent_id,
+                    children_count=sum(
+                        1
+                        for u in self.users.values()
+                        if u.parent_id == user.id and u.deleted_at is None
+                    ),
                 )
             )
         return result
