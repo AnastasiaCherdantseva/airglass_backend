@@ -83,6 +83,19 @@ class FakeUserRoleRepository:
             )
         return result
 
+    async def get_role_ids_by_user_ids(
+        self,
+        user_ids: list[UUID],
+    ) -> dict[UUID, list[UUID]]:
+        if not user_ids:
+            return {}
+
+        result: dict[UUID, list[UUID]] = {}
+        for user_id, role_id in self.links:
+            if user_id in user_ids:
+                result.setdefault(user_id, []).append(role_id)
+        return result
+
     # ========================================
     # ЗАПИСЬ
     # ========================================
