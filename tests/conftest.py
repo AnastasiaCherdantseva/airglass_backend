@@ -47,6 +47,8 @@ pytest_plugins = [
     "tests.fixtures.fakes",
     "tests.fixtures.db",
     "tests.fixtures.http",
+    "tests.fixtures.organizations",
+    "tests.fixtures.user_organizations",
 ]
 
 TEST_DATABASE_URL = "postgresql+asyncpg://myuser:postgres@localhost:5432/airglass_test"
