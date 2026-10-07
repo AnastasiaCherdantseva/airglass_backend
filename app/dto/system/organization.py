@@ -13,9 +13,9 @@ class OrganizationData:
 @dataclass(frozen=True)
 class OrganizationPatch:
     id: UUID
-    name: str | None
-    inn: str | None
-    address: str | None
+    name: str | None = None
+    inn: str | None = None
+    address: str | None = None
 
 
 @dataclass(frozen=True)

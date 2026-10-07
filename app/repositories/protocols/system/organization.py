@@ -16,7 +16,7 @@ from app.repositories.protocols import (
 class OrganizationReadRepositoryProtocol(ReadRepositoryProtocol[Organization], Protocol):
     """Read Organizations."""
 
-    async def get_by_user_id(self, user_id: UUID) -> list[OrganizationOutPut]: ...
+    async def get_by_owner_id(self, user_id: UUID) -> list[OrganizationOutPut]: ...
 
 
 class OrganizationWriteRepositoryProtocol(WriteRepositoryProtocol[Organization], Protocol):

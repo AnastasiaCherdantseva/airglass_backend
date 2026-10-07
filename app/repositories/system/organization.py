@@ -4,7 +4,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dto import OrganizationData, OrganizationOutPut, OrganizationPatch
-from app.models import Organization, UserOrganization
+from app.models import Organization
 from app.repositories.base import BaseIdRepository
 from app.repositories.protocols.system.organization import (
     OrganizationReadRepositoryProtocol,
@@ -37,19 +37,12 @@ class OrganizationRepository(
             updated_at=organization.updated_at,
         )
 
-    async def get_by_user_id(
+    async def get_by_owner_id(
         self,
         user_id: UUID,
     ) -> list[OrganizationOutPut]:
         """Получить организации, в которых пользователь является участником."""
-        stmt = (
-            select(Organization)
-            .join(
-                UserOrganization,
-                UserOrganization.organization_id == Organization.id,
-            )
-            .where(UserOrganization.user_id == user_id)
-        )
+        stmt = select(Organization).where(Organization.owner_id == user_id)
 
         result = await self.db.execute(stmt)
         return [self._to_output(row) for row in result.scalars().all()]
