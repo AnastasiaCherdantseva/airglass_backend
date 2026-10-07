@@ -1,6 +1,8 @@
 from typing import Protocol
 from uuid import UUID
 
+from app.dto.system.organization import OrganizationOutPut
+
 
 class UserOrganizationReadRepositoryProtocol(Protocol):
     """Контракт чтения связей пользователей и организаций."""
@@ -14,6 +16,10 @@ class UserOrganizationReadRepositoryProtocol(Protocol):
         self,
         user_id: UUID,
     ) -> list[UUID]: ...
+    async def get_organizations_by_user_id(
+        self,
+        user_id: UUID,
+    ) -> list[OrganizationOutPut]: ...
 
 
 class UserOrganizationWriteRepositoryProtocol(Protocol):

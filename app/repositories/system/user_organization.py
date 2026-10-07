@@ -3,7 +3,9 @@ from uuid import UUID
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.dto.system.organization import OrganizationOutPut
 from app.models import UserOrganization
+from app.models.system.organizations import Organization
 from app.repositories.protocols.system.user_organization import (
     UserOrganizationReadRepositoryProtocol,
     UserOrganizationWriteRepositoryProtocol,
@@ -43,6 +45,32 @@ class UserOrganizationRepository(
             )
         )
         return list(result.scalars().all())
+
+    async def get_organizations_by_user_id(
+        self,
+        user_id: UUID,
+    ) -> list[OrganizationOutPut]:
+        """Получить организаций с которыми юзер имеет связь."""
+        req = await self.db.execute(
+            select(Organization)
+            .join(UserOrganization, UserOrganization.organization_id == Organization.id)
+            .where(
+                UserOrganization.user_id == user_id,
+            )
+        )
+        result = req.scalars().all()
+        return [
+            OrganizationOutPut(
+                id=organization.id,
+                owner_id=organization.owner_id,
+                name=organization.name,
+                inn=organization.inn,
+                address=organization.address,
+                created_at=organization.created_at,
+                updated_at=organization.updated_at,
+            )
+            for organization in result
+        ]
 
     async def add_link(
         self,
