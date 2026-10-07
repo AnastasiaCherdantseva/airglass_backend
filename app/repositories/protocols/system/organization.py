@@ -32,3 +32,9 @@ class OrganizationWriteRepositoryProtocol(WriteRepositoryProtocol[Organization],
         self,
         owner_ids: list[UUID],
     ) -> int: ...
+
+
+class OrganizationRepositoryProtocol(
+    OrganizationWriteRepositoryProtocol, OrganizationReadRepositoryProtocol, Protocol
+):
+    pass
