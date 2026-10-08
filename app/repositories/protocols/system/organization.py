@@ -17,6 +17,15 @@ class OrganizationReadRepositoryProtocol(ReadRepositoryProtocol[Organization], P
     """Read Organizations."""
 
     async def get_by_owner_id(self, user_id: UUID) -> list[OrganizationOutPut]: ...
+    async def get_by_inn(
+        self,
+        inn: str,
+    ) -> OrganizationOutPut | None: ...
+    async def get_by_owner_id_and_name(
+        self,
+        user_id: UUID,
+        name: str,
+    ) -> OrganizationOutPut | None: ...
 
 
 class OrganizationWriteRepositoryProtocol(WriteRepositoryProtocol[Organization], Protocol):

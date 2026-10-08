@@ -47,6 +47,35 @@ class OrganizationRepository(
         result = await self.db.execute(stmt)
         return [self._to_output(row) for row in result.scalars().all()]
 
+    async def get_by_owner_id_and_name(
+        self,
+        user_id: UUID,
+        name: str,
+    ) -> OrganizationOutPut | None:
+        """Получить организации, в которых пользователь является участником."""
+        stmt = select(Organization).where(
+            Organization.owner_id == user_id, Organization.name == name
+        )
+
+        req = await self.db.execute(stmt)
+        result = req.scalar_one_or_none()
+        if result is None:
+            return None
+        return self._to_output(result)
+
+    async def get_by_inn(
+        self,
+        inn: str,
+    ) -> OrganizationOutPut | None:
+        """Получить организации, в которых пользователь является участником."""
+        stmt = select(Organization).where(Organization.inn == inn)
+
+        req = await self.db.execute(stmt)
+        result = req.scalar_one_or_none()
+        if result is None:
+            return None
+        return self._to_output(result)
+
     async def create_for_user(
         self,
         user_id: UUID,
