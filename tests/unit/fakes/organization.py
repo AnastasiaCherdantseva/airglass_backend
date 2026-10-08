@@ -1,5 +1,8 @@
 from datetime import UTC, datetime
+from types import SimpleNamespace
 from uuid import UUID, uuid4
+
+from sqlalchemy.exc import IntegrityError
 
 from app.dto import OrganizationData, OrganizationOutPut, OrganizationPatch
 from app.models import Organization
@@ -16,6 +19,31 @@ class FakeOrganizationRepository:
 
         if organizations:
             self.organizations = {organization.id: organization for organization in organizations}
+
+    @staticmethod
+    def _unique_violation(constraint_name: str) -> IntegrityError:
+        """Собрать IntegrityError с поведением asyncpg."""
+        orig = SimpleNamespace(constraint_name=constraint_name)
+        return IntegrityError(
+            "duplicate key value violates unique constraint",
+            None,
+            orig,
+        )
+
+    @staticmethod
+    def _to_output(
+        organization: Organization,
+    ) -> OrganizationOutPut:
+        """Преобразовать модель организации в DTO."""
+        return OrganizationOutPut(
+            id=organization.id,
+            owner_id=organization.owner_id,
+            name=organization.name,
+            inn=organization.inn,
+            address=organization.address,
+            created_at=organization.created_at,
+            updated_at=organization.updated_at,
+        )
 
     # ========================================
     # ЧТЕНИЕ
@@ -49,6 +77,15 @@ class FakeOrganizationRepository:
         data: OrganizationData,
     ) -> OrganizationOutPut:
         """Создать организацию с указанным пользователем как владельцем."""
+        if any(organization.inn == data.inn for organization in self.organizations.values()):
+            raise self._unique_violation("uq_organizations_inn")
+
+        if any(
+            organization.owner_id == user_id and organization.name == data.name
+            for organization in self.organizations.values()
+        ):
+            raise self._unique_violation("uq_organizations_owner_name")
+
         organization = Organization(
             id=uuid4(),
             owner_id=user_id,
@@ -77,7 +114,7 @@ class FakeOrganizationRepository:
             organization.inn = data.inn
         if data.address is not None:
             organization.address = data.address
-        organization.updated_at = (datetime.now(UTC),)
+        organization.updated_at = datetime.now(UTC)
         return self._to_output(organization)
 
     async def delete_by_owner_ids(
@@ -110,18 +147,3 @@ class FakeOrganizationRepository:
     async def flush(self) -> None:
         """No-op."""
         pass
-
-    @staticmethod
-    def _to_output(
-        organization: Organization,
-    ) -> OrganizationOutPut:
-        """Преобразовать модель организации в DTO."""
-        return OrganizationOutPut(
-            id=organization.id,
-            owner_id=organization.owner_id,
-            name=organization.name,
-            inn=organization.inn,
-            address=organization.address,
-            created_at=organization.created_at,
-            updated_at=organization.updated_at,
-        )

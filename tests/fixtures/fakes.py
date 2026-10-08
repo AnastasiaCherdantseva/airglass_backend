@@ -2,6 +2,8 @@
 Фикстуры для юнит-тестов с фейковыми репозиториями.
 """
 
+from collections.abc import Callable
+
 import pytest
 
 from app.models.system import Role, User, UserRole
@@ -10,6 +12,7 @@ from app.models.system.permission import Permission
 from app.models.system.permission_condition import PermissionCondition
 from app.models.system.role_permission import RolePermission
 from app.models.system.user_permission import UserPermission
+from tests.unit.fakes.organization import FakeOrganizationRepository
 from tests.unit.fakes.permission import FakePermissionRepository
 from tests.unit.fakes.permission_condition import FakePermissionConditionRepository
 from tests.unit.fakes.role import FakeRoleRepository
@@ -228,5 +231,25 @@ def make_user_organizations_repo(users_in_memory: list[User], inactive_user_in_m
             users=users_in_memory + [inactive_user_in_memory],
             organizations=list(organizations),
         )
+
+    return _make
+
+
+@pytest.fixture
+def fake_organizations_repo(
+    organizations_in_memory: list[Organization],
+) -> FakeOrganizationRepository:
+    """FakeOrganizationRepository с организациями в памяти."""
+    return FakeOrganizationRepository(organizations_in_memory)
+
+
+@pytest.fixture
+def make_organizations_repo(
+    organizations_in_memory: list[Organization],
+) -> Callable[..., FakeOrganizationRepository]:
+    """Фабрика FakeOrganizationRepository с базовыми организациями."""
+
+    def _make(*extra: Organization) -> FakeOrganizationRepository:
+        return FakeOrganizationRepository(organizations_in_memory + list(extra))
 
     return _make
