@@ -1,8 +1,9 @@
 from collections.abc import Awaitable, Callable
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
 from itertools import count
 from uuid import uuid4
 
+import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -76,3 +77,52 @@ async def new_organization_data() -> OrganizationData:
     DTO для create_for_user (в БД ещё ничего нет).
     """
     return OrganizationData(name="ООО Новая", inn="7701234567", address="г. Москва")
+
+
+@pytest.fixture
+def make_organization_in_memory() -> Callable[..., Organization]:
+    """Фабрика организаций в памяти (без БД).
+
+    created_at/updated_at задаются явно: без flush Python-default не сработает.
+    """
+    counter = count(1)
+    base = datetime(2026, 1, 1, tzinfo=UTC)
+
+    def _make(
+        *,
+        owner: User,
+        name: str | None = None,
+        inn: str | None = None,
+        address: str | None = None,
+    ) -> Organization:
+        n = next(counter)
+        ts = base + timedelta(minutes=n)
+        return Organization(
+            id=uuid4(),
+            owner_id=owner.id,
+            name=name or f"Организация {n}",
+            inn=inn or f"{n:010d}",
+            address=address,
+            created_at=ts,
+            updated_at=ts,
+        )
+
+    return _make
+
+
+@pytest.fixture
+def organization_in_memory(
+    users_in_memory: list[User],
+    make_organization_in_memory: Callable[..., Organization],
+) -> Organization:
+    """Одна организация в памяти, владелец users_in_memory[0]."""
+    return make_organization_in_memory(owner=users_in_memory[0], address=None)
+
+
+@pytest.fixture
+def organizations_in_memory(
+    users_in_memory: list[User],
+    make_organization_in_memory: Callable[..., Organization],
+) -> list[Organization]:
+    """Три организации в памяти, владелец users_in_memory[0]."""
+    return [make_organization_in_memory(owner=users_in_memory[0]) for _ in range(3)]

@@ -5,6 +5,7 @@
 import pytest
 
 from app.models.system import Role, User, UserRole
+from app.models.system.organizations import Organization
 from app.models.system.permission import Permission
 from app.models.system.permission_condition import PermissionCondition
 from app.models.system.role_permission import RolePermission
@@ -15,6 +16,7 @@ from tests.unit.fakes.role import FakeRoleRepository
 from tests.unit.fakes.role_permission import FakeRolePermissionRepository
 from tests.unit.fakes.session_repository import FakeSessionRepository
 from tests.unit.fakes.user_direct_permission import FakeUserDirectPermissionRepository
+from tests.unit.fakes.user_organization_repository import FakeUserOrganizationRepository
 from tests.unit.fakes.user_permission import FakeUserPermissionRepository
 from tests.unit.fakes.user_repository import FakeUserRepository
 from tests.unit.fakes.user_role_repository import FakeUserRoleRepository
@@ -215,3 +217,16 @@ def fake_user_direct_permissions_repo(
         users=users_in_memory + [inactive_user_in_memory],
         conditions=p,
     )
+
+
+@pytest.fixture
+def make_user_organizations_repo(users_in_memory: list[User], inactive_user_in_memory: User):
+    """Фабрика FakeUserOrganizationRepository: базовые юзеры + переданные организации, без связей."""
+
+    def _make(*organizations: Organization) -> FakeUserOrganizationRepository:
+        return FakeUserOrganizationRepository(
+            users=users_in_memory + [inactive_user_in_memory],
+            organizations=list(organizations),
+        )
+
+    return _make
