@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 from app.dto import OrganizationData, OrganizationOutPut, OrganizationPatch
@@ -54,6 +55,8 @@ class FakeOrganizationRepository:
             name=data.name,
             inn=data.inn,
             address=data.address,
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
         self.organizations[organization.id] = organization
 
@@ -74,7 +77,7 @@ class FakeOrganizationRepository:
             organization.inn = data.inn
         if data.address is not None:
             organization.address = data.address
-
+        organization.updated_at = (datetime.now(UTC),)
         return self._to_output(organization)
 
     async def delete_by_owner_ids(

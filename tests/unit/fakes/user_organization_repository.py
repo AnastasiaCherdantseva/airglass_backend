@@ -6,7 +6,9 @@ In-memory: хранит пользователей, организации и с
 
 from uuid import UUID
 
+from app.dto.system.organization import OrganizationOutPut
 from app.models import Organization, User, UserOrganization
+from tests.unit.fakes.organization import FakeOrganizationRepository
 
 
 class FakeUserOrganizationRepository:
@@ -60,6 +62,17 @@ class FakeUserOrganizationRepository:
             if linked_user_id == user_id
             and user_id in self.users
             and organization_id in self.organizations
+        ]
+
+    async def get_organizations_by_user_id(
+        self,
+        user_id: UUID,
+    ) -> list[OrganizationOutPut]:
+        """Получить организации, с которыми у юзера есть связь."""
+        return [
+            FakeOrganizationRepository._to_output(self.organizations[org_id])
+            for linked_user_id, org_id in self.links
+            if linked_user_id == user_id and user_id in self.users and org_id in self.organizations
         ]
 
     # ========================================
