@@ -144,6 +144,14 @@ class FakeOrganizationRepository:
 
         return len(organization_ids)
 
+    async def delete_by_id(self, organization_id: UUID) -> bool:
+        """Удалить организацию по ID."""
+        if organization_id not in self.organizations:
+            return False
+
+        del self.organizations[organization_id]
+        return True
+
     def add(self, entity: Organization) -> None:
         """Добавить организацию в память."""
         self.organizations[entity.id] = entity
