@@ -4,7 +4,7 @@ from uuid import UUID
 
 from app.dto import UserListOutput, UserRoleLink
 from app.models.system import Role, User
-from app.use_cases.system.get_users import get_users
+from app.use_cases.system.user.get_users import get_users
 from tests.unit.fakes.user_repository import FakeUserRepository
 from tests.unit.fakes.user_role_repository import FakeUserRoleRepository
 
