@@ -94,9 +94,12 @@ def make_organization_in_memory() -> Callable[..., Organization]:
         name: str | None = None,
         inn: str | None = None,
         address: str | None = None,
+        updated_at: datetime | None = None,
     ) -> Organization:
         n = next(counter)
         ts = base + timedelta(minutes=n)
+        if updated_at is None:
+            updated_at = ts
         return Organization(
             id=uuid4(),
             owner_id=owner.id,
@@ -104,7 +107,7 @@ def make_organization_in_memory() -> Callable[..., Organization]:
             inn=inn or f"{n:010d}",
             address=address,
             created_at=ts,
-            updated_at=ts,
+            updated_at=updated_at,
         )
 
     return _make

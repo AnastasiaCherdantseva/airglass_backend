@@ -108,9 +108,17 @@ class FakeOrganizationRepository:
         if organization is None:
             return None
 
-        if data.name is not None:
+        if data.name is not None and data.name != organization.name:
+            if any(
+                o.owner_id == organization.owner_id and o.name == data.name
+                for o in self.organizations.values()
+                if o.id != data.id
+            ):
+                raise self._unique_violation("uq_organizations_owner_name")
             organization.name = data.name
-        if data.inn is not None:
+        if data.inn is not None and data.inn != organization.inn:
+            if any(o.inn == data.inn for o in self.organizations.values() if o.id != data.id):
+                raise self._unique_violation("uq_organizations_inn")
             organization.inn = data.inn
         if data.address is not None:
             organization.address = data.address
