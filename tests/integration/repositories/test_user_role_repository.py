@@ -160,7 +160,7 @@ async def test_add_links(db_session, user, system_roles):
         assert role.id in role_ids
 
 
-async def test_remove_link_found(db_session, user, system_role):
+async def test_remove_link_found(db_session, user, system_role, user_system_role):
     """remove_link удаляет связь, возвращает True."""
     from app.dto.system import UserRoleLink
 

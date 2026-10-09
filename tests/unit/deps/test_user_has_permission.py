@@ -51,6 +51,7 @@ def make_current_user(
         parent_id=None,
         permissions=permissions or [],
         has_admin_access=False,
+        children_count=0,
     )
 
 

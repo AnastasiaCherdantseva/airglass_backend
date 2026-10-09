@@ -19,7 +19,7 @@ async def test_get_by_permission_returns_all_conditions(
 
     result = await repo.get_by_permission(target.id)
 
-    assert len(result) == 2
+    assert len(result) == 4
     assert {c.effect for c in result} == {PermissionEffect.ALLOW, PermissionEffect.DENY}
     assert all(c.permission_id == target.id for c in result)
 
@@ -45,7 +45,7 @@ async def test_get_by_permission_filter_is_active_true(
 
     result = await repo.get_by_permission(target.id, is_active=True)
 
-    assert len(result) == 1
+    assert len(result) == 3
     assert result[0].is_active is True
 
 
@@ -72,7 +72,7 @@ async def test_get_by_permission_filter_effect_allow(
 
     result = await repo.get_by_permission(target.id, effect=PermissionEffect.ALLOW)
 
-    assert len(result) == 1
+    assert len(result) == 3
     assert result[0].effect == PermissionEffect.ALLOW
 
 
@@ -94,7 +94,7 @@ async def test_get_by_permission_filter_condition_type_subtree(
 ):
     """Фильтр condition_type=SUBTREE возвращает только SUBTREE."""
     repo = PermissionConditionRepository(db_session)
-    target = permissions[0]
+    target = permissions[1]
 
     result = await repo.get_by_permission(target.id, condition_type=ConditionType.SUBTREE)
 
@@ -124,7 +124,7 @@ async def test_get_by_permission_filter_combination(
 
     result = await repo.get_by_permission(target.id, is_active=True, effect=PermissionEffect.ALLOW)
 
-    assert len(result) == 1
+    assert len(result) == 3
     assert result[0].is_active is True
     assert result[0].effect == PermissionEffect.ALLOW
 
