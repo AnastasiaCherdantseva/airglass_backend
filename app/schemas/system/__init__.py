@@ -1,7 +1,7 @@
 from app.schemas.system.auth import AuthLoginRequest
 from app.schemas.system.organization import (
     OrganizationCreateRequest,
-    OrganizationPatchRequest,
+    OrganizationPatchSchema,
     OrganizationResponse,
 )
 from app.schemas.system.permission import PermissionBase, PermissionFull, PermissionWithConditions
@@ -43,7 +43,7 @@ __all__ = [
     "meUsersListItem",
     # organization
     "OrganizationCreateRequest",
-    "OrganizationPatchRequest",
+    "OrganizationPatchSchema",
     "OrganizationResponse",
     # ROLE
     "RoleBase",

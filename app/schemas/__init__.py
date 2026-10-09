@@ -2,7 +2,7 @@ from app.schemas.system import (
     AuthLoginRequest,
     MeResponse,
     OrganizationCreateRequest,
-    OrganizationPatchRequest,
+    OrganizationPatchSchema,
     OrganizationResponse,
     PermissionBase,
     PermissionConditionAll,
@@ -59,6 +59,6 @@ __all__ = [
     "meUsersListItem",
     # organization
     "OrganizationCreateRequest",
-    "OrganizationPatchRequest",
     "OrganizationResponse",
+    "OrganizationPatchSchema",
 ]

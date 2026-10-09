@@ -2,6 +2,7 @@ from app.use_cases.system import (
     authenticate_user,
     create_organization,
     create_user,
+    delete_organization,
     get_organizations,
     get_users,
     logout_user,
@@ -16,4 +17,5 @@ __all__ = [
     "create_organization",
     "get_organizations",
     "patch_organization",
+    "delete_organization",
 ]
