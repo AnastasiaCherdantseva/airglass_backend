@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dto.system.organization import OrganizationOutPut
@@ -84,6 +84,19 @@ class UserOrganizationRepository(
                 organization_id=organization_id,
             )
         )
+        await self.db.flush()
+
+    async def add_links_to_user(
+        self,
+        user_id: UUID,
+        organization_ids: list[UUID],
+    ) -> None:
+        if not organization_ids:
+            return
+        stmt = insert(UserOrganization).values(
+            [{"user_id": user_id, "organization_id": org_id} for org_id in organization_ids]
+        )
+        await self.db.execute(stmt)
         await self.db.flush()
 
     async def remove_link(

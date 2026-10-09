@@ -30,6 +30,11 @@ class UserOrganizationWriteRepositoryProtocol(Protocol):
         user_id: UUID,
         organization_id: UUID,
     ) -> None: ...
+    async def add_links_to_user(
+        self,
+        user_id: UUID,
+        organization_ids: list[UUID],
+    ) -> None: ...
 
     async def remove_link(
         self,

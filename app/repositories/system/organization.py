@@ -37,6 +37,12 @@ class OrganizationRepository(
             updated_at=organization.updated_at,
         )
 
+    async def get_by_ids(self, ids: list[UUID]) -> list[OrganizationOutPut]:
+        stmt = select(Organization).where(Organization.id.in_(ids))
+
+        result = await self.db.execute(stmt)
+        return [self._to_output(row) for row in result.scalars().all()]
+
     async def get_by_owner_id(
         self,
         user_id: UUID,

@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from uuid import UUID
 
+from pydantic import Field
+
 from app.dto.system.user_permission import GroupedPermission
 
 
@@ -14,7 +16,8 @@ class UserData:
 @dataclass(frozen=True)
 class UserCreate(UserData):
     password: str
-    role_ids: list[UUID]
+    role_ids: list[UUID] = Field(default_factory=list)
+    organization_ids: list[UUID] = Field(default_factory=list)
 
 
 @dataclass(frozen=True)
