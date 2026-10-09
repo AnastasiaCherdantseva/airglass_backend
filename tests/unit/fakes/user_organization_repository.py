@@ -105,6 +105,18 @@ class FakeUserOrganizationRepository:
             organization_id=organization_id,
         )
 
+    async def add_links_to_user(
+        self,
+        user_id: UUID,
+        organization_ids: list[UUID],
+    ) -> None:
+        """Link a user to multiple organizations.
+
+        Связать пользователя с несколькими организациями.
+        """
+        for organization_id in organization_ids:
+            await self.add_link(user_id, organization_id)
+
     async def remove_link(
         self,
         user_id: UUID,

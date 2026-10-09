@@ -23,7 +23,7 @@ class FakeUserDirectPermissionRepository:
         self.conditions: dict[UUID, PermissionCondition] = {}
         self.users: dict[UUID, User] = {}
         if conditions:
-            self.users = {c.id: c for c in conditions}
+            self.conditions = {c.id: c for c in conditions}
         if users:
             self.users = {user.id: user for user in users}
         if links and users and conditions:

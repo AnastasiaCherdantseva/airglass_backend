@@ -88,6 +88,13 @@ class FakeUserRoleRepository:
             )
         return result
 
+    async def get_user_ids_by_role_id(self, role_id: UUID) -> list[UUID]:
+        """Get IDs of users assigned to a role.
+
+        Получить идентификаторы пользователей с указанной ролью.
+        """
+        return [user_id for user_id, linked_role_id in self.links if linked_role_id == role_id]
+
     async def get_role_ids_by_user_ids(
         self,
         user_ids: list[UUID],

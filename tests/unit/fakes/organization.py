@@ -48,6 +48,16 @@ class FakeOrganizationRepository:
     # ========================================
     # ЧТЕНИЕ
     # ========================================
+    async def get_by_ids(self, ids: list[UUID]) -> list[OrganizationOutPut]:
+        """Get organizations by their IDs.
+
+        Получить организации по их идентификаторам.
+        """
+        return [
+            self._to_output(self.organizations[organization_id])
+            for organization_id in ids
+            if organization_id in self.organizations
+        ]
 
     async def get_by_id(
         self,
@@ -66,6 +76,36 @@ class FakeOrganizationRepository:
             for organization in self.organizations.values()
             if organization.owner_id == user_id
         ]
+
+    async def get_by_inn(self, inn: str) -> OrganizationOutPut | None:
+        """Get an organization by INN.
+
+        Получить организацию по ИНН.
+        """
+        organization = next(
+            (item for item in self.organizations.values() if item.inn == inn),
+            None,
+        )
+        return self._to_output(organization) if organization is not None else None
+
+    async def get_by_owner_id_and_name(
+        self,
+        user_id: UUID,
+        name: str,
+    ) -> OrganizationOutPut | None:
+        """Get an organization by owner and name.
+
+        Получить организацию по владельцу и названию.
+        """
+        organization = next(
+            (
+                item
+                for item in self.organizations.values()
+                if item.owner_id == user_id and item.name == name
+            ),
+            None,
+        )
+        return self._to_output(organization) if organization is not None else None
 
     # ========================================
     # ЗАПИСЬ
