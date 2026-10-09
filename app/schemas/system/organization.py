@@ -1,6 +1,8 @@
 from datetime import datetime
 from uuid import UUID
 
+from pydantic import Field
+
 from app.dto.system.organization import OrganizationOutPut
 from app.schemas.base import BaseSchema
 
@@ -8,16 +10,23 @@ from app.schemas.base import BaseSchema
 class OrganizationCreateRequest(BaseSchema):
     """Схема создания организации."""
 
-    name: str
-    inn: str
+    name: str = Field(
+        min_length=1,
+        max_length=255,
+    )
+    inn: str = Field(pattern=r"^\d{12}$")
     address: str | None = None
 
 
 class OrganizationPatchSchema(BaseSchema):
     """Схема частичного обновления организации."""
 
-    name: str | None = None
-    inn: str | None = None
+    name: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=255,
+    )
+    inn: str | None = Field(default=None, pattern=r"^\d{12}$")
     address: str | None = None
 
 
@@ -27,7 +36,7 @@ class OrganizationResponse(BaseSchema):
     id: UUID
     owner_id: UUID
     name: str
-    inn: str
+    inn: str = Field(pattern=r"^\d{12}$")
     address: str | None
     created_at: datetime
     updated_at: datetime

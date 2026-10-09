@@ -34,7 +34,7 @@ async def make_organization(
             id=uuid4(),
             owner_id=owner.id,
             name=name or f"Организация {n}",
-            inn=inn or f"{n:010d}",
+            inn=inn or f"{n:012d}",
             address=address,
         )
         if updated_at is not None:
@@ -76,7 +76,7 @@ async def new_organization_data() -> OrganizationData:
 
     DTO для create_for_user (в БД ещё ничего нет).
     """
-    return OrganizationData(name="ООО Новая", inn="7701234567", address="г. Москва")
+    return OrganizationData(name="ООО Новая", inn="770123456711", address="г. Москва")
 
 
 @pytest.fixture
@@ -104,7 +104,7 @@ def make_organization_in_memory() -> Callable[..., Organization]:
             id=uuid4(),
             owner_id=owner.id,
             name=name or f"Организация {n}",
-            inn=inn or f"{n:010d}",
+            inn=inn or f"{n:012d}",
             address=address,
             created_at=ts,
             updated_at=updated_at,
