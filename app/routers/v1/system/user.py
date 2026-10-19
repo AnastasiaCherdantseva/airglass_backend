@@ -9,17 +9,21 @@ from fastapi import APIRouter, Depends, Query, status
 from app.core.security_dependencies import get_current_user, require_permission
 from app.dto import CurrentUser, UserCreate
 from app.repositories.deps import (
+    get_organization_repo,
     get_role_permission_repo,
     get_role_repo,
     get_user_direct_permission_repo,
+    get_user_organization_repo,
     get_user_permission_repo,
     get_user_repo,
     get_user_role_repo,
 )
 from app.repositories.system import (
+    OrganizationRepository,
     RolePermissionRepository,
     RoleRepository,
     UserDirectPermissionRepository,
+    UserOrganizationRepository,
     UserPermissionRepository,
     UserRepository,
     UserRoleRepository,
@@ -98,6 +102,8 @@ async def create_user_endpoint(
         get_user_direct_permission_repo
     ),
     user_permissions: UserPermissionRepository = Depends(get_user_permission_repo),
+    organizations: OrganizationRepository = Depends(get_organization_repo),
+    user_organizations: UserOrganizationRepository = Depends(get_user_organization_repo),
 ) -> UserWithRolesResponse:
     """
     Create a user with roles on behalf of the current user.
@@ -110,6 +116,7 @@ async def create_user_endpoint(
         is_active=False,  # BR-USERS-003ы
         password=body.password,
         role_ids=body.role_ids,
+        organization_ids=body.organization_ids,
     )
     result = await create_user(
         current_user,
@@ -120,6 +127,8 @@ async def create_user_endpoint(
         role_permissions=role_permissions,
         user_direct_permissions=user_direct_permissions,
         user_permissions=user_permissions,
+        organizations=organizations,
+        user_organizations=user_organizations,
     )
     return UserWithRolesResponse(
         id=result.id,

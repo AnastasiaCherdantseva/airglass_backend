@@ -16,6 +16,7 @@ class UserBase(BaseSchema):
 class UserCreateRequest(UserBase):
     password: str = Field(..., min_length=6, max_length=100)
     role_ids: list[UUID] = Field(min_length=1)
+    organization_ids: list[UUID]
 
     @field_validator("role_ids")
     @classmethod
