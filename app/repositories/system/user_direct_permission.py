@@ -4,7 +4,7 @@ UserDirectPermission repository — manual overrides.
 
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.system.user_direct_permission import UserDirectPermission
@@ -38,3 +38,9 @@ class UserDirectPermissionRepository(
             )
         )
         return list(result.scalars().all())
+
+    async def remove_by_user_ids(self, user_ids: list[UUID]) -> int:
+        stmt = delete(UserDirectPermission).where(UserDirectPermission.user_id.in_(user_ids))
+        result = await self.db.execute(stmt)
+        await self.db.flush()
+        return result.rowcount

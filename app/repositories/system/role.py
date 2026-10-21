@@ -4,7 +4,7 @@ Role repository.
 
 from uuid import UUID
 
-from sqlalchemy import Select, select, update
+from sqlalchemy import Select, delete, select, update
 
 from app.dto import RoleData, RoleOutput, RolePatchData
 from app.models.system.role import Role
@@ -50,6 +50,20 @@ class RoleRepository(
     ) -> list[RoleOutput]:
         """Роли, созданные указанным владельцем."""
         stmt = select(Role).where(Role.owner_id == owner_id)
+        if is_active is not None:
+            stmt = self._filter(stmt, is_active=is_active)
+        result = await self.db.execute(stmt)
+        roles = result.scalars().all()
+        return [self._to_output(r) for r in roles]
+
+    async def get_ids_by_owner_ids(
+        self,
+        owner_ids: list[UUID],
+        *,
+        is_active: bool | None = None,
+    ) -> list[RoleOutput]:
+        """Роли, созданные указанными владельцами."""
+        stmt = select(Role).where(Role.owner_id.in_(owner_ids))
         if is_active is not None:
             stmt = self._filter(stmt, is_active=is_active)
         result = await self.db.execute(stmt)
@@ -112,3 +126,9 @@ class RoleRepository(
             .values(is_active=False)
         )
         return result.rowcount or 0
+
+    async def delete_by_owner_ids(self, owner_ids: list[UUID]) -> int:
+        stmt = delete(Role).where(Role.owner_id.in_(owner_ids))
+        result = await self.db.execute(stmt)
+        await self.flush()
+        return result.rowcount

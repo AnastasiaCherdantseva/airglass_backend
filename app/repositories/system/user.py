@@ -5,7 +5,7 @@
 from datetime import UTC, datetime
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text
 
 from app.dto import UserCreateFull, UserOutput, UserPatchInput
 from app.models import User
@@ -22,19 +22,44 @@ class UserRepository(BaseIdRepository[User]):
 
     model = User
 
-    async def _get_subtree(self, user_id: UUID) -> list[User]:
+    async def get_subtree(self, user_id: UUID) -> list[User]:
         anchor = select(User).where(User.id == user_id)
         subtree = anchor.cte(name="subtree", recursive=True)
 
         subtree_alias = subtree.alias()
-        user_alias = User.__table__.alias()
-
-        recursive = select(user_alias).where(user_alias.c.parent_id == subtree_alias.c.id)
+        recursive = select(User).join(
+            subtree_alias,
+            User.parent_id == subtree_alias.c.id,
+        )
 
         subtree = subtree.union_all(recursive)
 
-        result = await self.db.execute(select(subtree))
+        stmt = select(User).where(User.id.in_(select(subtree.c.id)))
+        result = await self.db.execute(stmt)
         return list(result.scalars().all())
+
+    async def is_in_subtree(self, root_id: UUID, user_id: UUID) -> bool:
+        stmt = text(
+            """
+            WITH RECURSIVE subtree AS (
+                SELECT id
+                FROM users
+                WHERE id = :ancestor_id
+                UNION ALL
+                SELECT u.id
+                FROM users u
+                JOIN subtree s ON u.parent_id = s.id
+            )
+            SELECT EXISTS (
+                SELECT 1 FROM subtree WHERE id = :user_id
+            )
+            """
+        )
+        result = await self.db.scalar(
+            stmt,
+            {"ancestor_id": root_id, "user_id": user_id},
+        )
+        return bool(result)
 
     async def _count_children_by_parent_ids(
         self,
@@ -112,20 +137,17 @@ class UserRepository(BaseIdRepository[User]):
         result = await self.db.scalar(stmt)
         return result or 0
 
-    async def soft_delete_by_id(self, user_id: UUID) -> list[UUID]:
+    async def soft_delete_by_id(self, user_id: UUID) -> int:
         deleted_time = datetime.now(UTC)
-
-        users = await self._get_subtree(user_id)
+        users = await self.get_subtree(user_id)
         if not users:
-            return []
+            return 0
 
-        user_ids = []
         for user in users:
             user.is_active = False
             user.deleted_at = deleted_time
-            user_ids.append(user.id)
         await self.flush()
-        return user_ids
+        return len(users)
 
     async def patch_user(self, data: UserPatchInput) -> UserOutput | None:
         user = await self.get_by_id(data.id)

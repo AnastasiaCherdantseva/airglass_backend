@@ -39,6 +39,13 @@ class SessionRepository(BaseIdRepository[Session]):
         await self.flush()
         return result.rowcount
 
+    async def delete_by_user_ids(self, user_ids: list[UUID]) -> int:
+        """Delete all sessions of the given user."""
+        stmt = delete(Session).where(Session.user_id.in_(user_ids))
+        result = await self.db.execute(stmt)
+        await self.flush()
+        return result.rowcount
+
     async def delete_by_token_hash(self, token_hash: str) -> bool:
         """Delete session by token."""
         stmt = delete(Session).where(Session.token_hash == token_hash)

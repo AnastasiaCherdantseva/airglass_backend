@@ -148,6 +148,12 @@ class UserRoleRepository(
         await self.db.flush()
         return result.rowcount
 
+    async def remove_by_user_ids(self, user_ids: list[UUID]) -> int:
+        stmt = delete(UserRole).where(UserRole.user_id.in_(user_ids))
+        result = await self.db.execute(stmt)
+        await self.db.flush()
+        return result.rowcount
+
     async def remove_by_role_id(self, role_id: UUID) -> int:
         stmt = delete(UserRole).where(UserRole.role_id == role_id)
         result = await self.db.execute(stmt)

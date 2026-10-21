@@ -24,6 +24,12 @@ class RoleReadRepositoryProtocol(ReadRepositoryProtocol[Role], Protocol):
     ) -> list[RoleOutput]: ...
 
     async def get_by_ids(self, ids: list[UUID]) -> list[RoleOutput]: ...
+    async def get_ids_by_owner_ids(
+        self,
+        owner_ids: list[UUID],
+        *,
+        is_active: bool | None = None,
+    ) -> list[RoleOutput]: ...
 
 
 class RoleWriteRepositoryProtocol(WriteRepositoryProtocol[Role], Protocol):
@@ -37,6 +43,10 @@ class RoleWriteRepositoryProtocol(WriteRepositoryProtocol[Role], Protocol):
 
     async def create(self, data: RoleData) -> RoleOutput: ...
 
-    # async def delete_by_owner_ids(self, owner_ids: list[UUID]) -> int: ...
+    async def delete_by_owner_ids(self, owner_ids: list[UUID]) -> int: ...
 
     async def patch(self, data: RolePatchData) -> RoleOutput | None: ...
+
+
+class RoleRepositoryProtocol(RoleWriteRepositoryProtocol, RoleReadRepositoryProtocol, Protocol):
+    pass

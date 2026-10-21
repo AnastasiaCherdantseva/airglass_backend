@@ -46,6 +46,10 @@ class UserOrganizationWriteRepositoryProtocol(Protocol):
         self,
         user_id: UUID,
     ) -> int: ...
+    async def remove_by_user_ids(
+        self,
+        user_ids: list[UUID],
+    ) -> int: ...
 
     async def remove_by_organization_id(
         self,

@@ -114,3 +114,10 @@ class UserPermissionRepository(
             delete(UserPermission).where(UserPermission.user_id == user_id)
         )
         return result.rowcount or 0
+
+    async def delete_by_user_ids(self, user_ids: list[UUID]) -> int:
+        """Удалить все conditions пользователя. Возвращает rowcount."""
+        result = await self.db.execute(
+            delete(UserPermission).where(UserPermission.user_id.in_(user_ids))
+        )
+        return result.rowcount or 0

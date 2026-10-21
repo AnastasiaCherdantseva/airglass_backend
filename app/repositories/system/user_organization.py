@@ -129,6 +129,18 @@ class UserOrganizationRepository(
 
         return result.rowcount or 0
 
+    async def remove_by_user_ids(
+        self,
+        user_ids: list[UUID],
+    ) -> int:
+        """Удалить все связи пользователей с организациями."""
+        result = await self.db.execute(
+            delete(UserOrganization).where(UserOrganization.user_id.in_(user_ids))
+        )
+        await self.db.flush()
+
+        return result.rowcount or 0
+
     async def remove_by_organization_id(
         self,
         organization_id: UUID,
