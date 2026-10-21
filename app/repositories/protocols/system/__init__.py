@@ -1,5 +1,6 @@
 from app.repositories.protocols.system.organization import (
     OrganizationReadRepositoryProtocol,
+    OrganizationRepositoryProtocol,
     OrganizationWriteRepositoryProtocol,
 )
 from app.repositories.protocols.system.permission import (
@@ -12,6 +13,7 @@ from app.repositories.protocols.system.permission_condition import (
 )
 from app.repositories.protocols.system.role import (
     RoleReadRepositoryProtocol,
+    RoleRepositoryProtocol,
     RoleWriteRepositoryProtocol,
 )
 from app.repositories.protocols.system.role_permission import (
@@ -58,6 +60,7 @@ __all__ = [
     #
     "OrganizationReadRepositoryProtocol",
     "OrganizationWriteRepositoryProtocol",
+    "OrganizationRepositoryProtocol",
     #
     "PermissionReadRepositoryProtocol",
     "PermissionWriteRepositoryProtocol",
@@ -67,6 +70,7 @@ __all__ = [
     "RolePermissionWriteRepositoryProtocol",
     "RoleReadRepositoryProtocol",
     "RoleWriteRepositoryProtocol",
+    "RoleRepositoryProtocol",
     "UserPermissionReadRepositoryProtocol",
     "UserPermissionWriteRepositoryProtocol",
     "UserPermissionRepositoryProtocol",
