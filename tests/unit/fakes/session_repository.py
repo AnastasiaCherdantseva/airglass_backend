@@ -80,6 +80,18 @@ class FakeSessionRepository:
             del self.sessions[sid]
         return len(expired)
 
+    async def delete_by_user_ids(self, user_ids: list[UUID]) -> int:
+        """Delete sessions of several users (mirrors SessionRepository).
+
+        Удаляет сессии нескольких пользователей.
+        """
+        if not user_ids:
+            return 0
+        ids = [sid for sid, s in self.sessions.items() if s.user_id in user_ids]
+        for sid in ids:
+            del self.sessions[sid]
+        return len(ids)
+
     async def create(self, data: SessionInput) -> SessionOutput:
         """Создать новую сессию в памяти."""
         now = datetime.now(UTC)

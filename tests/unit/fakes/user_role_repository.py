@@ -165,3 +165,15 @@ class FakeUserRoleRepository:
         for k in keys:
             del self.links[k]
         return len(keys)
+
+    async def remove_by_user_ids(self, user_ids: list[UUID]) -> int:
+        """Remove links of several users (mirrors UserRoleRepository).
+
+        Удаляет связи нескольких пользователей.
+        """
+        if not user_ids:
+            return 0
+        keys = [k for k in self.links if k[0] in user_ids]
+        for k in keys:
+            del self.links[k]
+        return len(keys)

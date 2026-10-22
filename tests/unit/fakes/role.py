@@ -42,6 +42,18 @@ class FakeRoleRepository:
             matched = [r for r in matched if r.is_active == is_active]
         return [self._to_output(r) for r in matched]
 
+    async def get_ids_by_owner_ids(
+        self,
+        owner_ids: list[UUID],
+        *,
+        is_active: bool | None = None,
+    ) -> list[RoleOutput]:
+        matched = [r for r in self.roles.values() if r.owner_id in owner_ids]
+        if is_active is not None:
+            matched = [r for r in matched if r.is_active == is_active]
+        matched = list(set(matched))
+        return [self._to_output(r) for r in matched]
+
     # ========================================
     # ЗАПИСЬ
     # ========================================
@@ -92,6 +104,18 @@ class FakeRoleRepository:
                 r.is_active = False
                 count += 1
         return count
+
+    async def delete_by_owner_ids(self, owner_ids: list[UUID]) -> int:
+        """Delete roles of given owners (mirrors RoleRepository).
+
+        Удаляет роли указанных владельцев.
+        """
+        if not owner_ids:
+            return 0
+        ids = [rid for rid, r in self.roles.items() if r.owner_id in owner_ids]
+        for rid in ids:
+            del self.roles[rid]
+        return len(ids)
 
     def add(self, role: Role) -> None:
         self.roles[role.id] = role

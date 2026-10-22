@@ -39,3 +39,19 @@ class FakeUserDirectPermissionRepository:
 
     async def get_user_ids_by_condition_id(self, condition_id: UUID) -> list[UUID]:
         return [uid for (uid, cid) in self.links if cid == condition_id]
+
+    # ========================================
+    # ЗАПИСЬ
+    # ========================================
+
+    async def remove_by_user_ids(self, user_ids: list[UUID]) -> int:
+        """Remove links of several users (mirrors UserDirectPermissionRepository).
+
+        Удаляет связи нескольких пользователей.
+        """
+        if not user_ids:
+            return 0
+        keys = [k for k in self.links if k[0] in user_ids]
+        for k in keys:
+            del self.links[k]
+        return len(keys)

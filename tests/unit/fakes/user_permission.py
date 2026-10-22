@@ -111,6 +111,18 @@ class FakeUserPermissionRepository:
             del self.links[k]
         return len(keys)
 
+    async def delete_by_user_ids(self, user_ids: list[UUID]) -> int:
+        """Delete links of several users (mirrors UserPermissionRepository).
+
+        Удаляет связи нескольких пользователей.
+        """
+        if not user_ids:
+            return 0
+        keys = [k for k in self.links if k[0] in user_ids]
+        for k in keys:
+            del self.links[k]
+        return len(keys)
+
     def add(self, link: UserPermission) -> None:
         self.links[(link.user_id, link.condition_id)] = link
 
