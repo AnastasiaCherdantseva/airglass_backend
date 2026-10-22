@@ -4,6 +4,8 @@ Users router.
 Роутер пользователей.
 """
 
+from uuid import UUID
+
 from fastapi import APIRouter, Depends, Query, status
 
 from app.core.security_dependencies import get_current_user, require_permission
@@ -12,6 +14,7 @@ from app.repositories.deps import (
     get_organization_repo,
     get_role_permission_repo,
     get_role_repo,
+    get_session_repo,
     get_user_direct_permission_repo,
     get_user_organization_repo,
     get_user_permission_repo,
@@ -28,19 +31,21 @@ from app.repositories.system import (
     UserRepository,
     UserRoleRepository,
 )
+from app.repositories.system.session import SessionRepository
 from app.schemas.system.user import (
     UserCreateRequest,
     UserWithRolesResponse,
     meUsers,
     meUsersListItem,
 )
-from app.use_cases import create_user, get_users
+from app.use_cases import create_user, delete_user, get_users
 
 router = APIRouter(prefix="/users", tags=["Пользователи"])
 
 # Коды прав
 USERS_CREATE = "USERS.CREATE"
 USERS_READ = "USERS.READ"
+USERS_DELETE = "USERS.DELETE"
 
 
 @router.get(
@@ -137,4 +142,42 @@ async def create_user_endpoint(
         is_active=result.is_active,
         parent_id=result.parent_id,
         role_ids=result.role_ids,
+    )
+
+
+@router.delete(
+    "/{id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_permission(USERS_DELETE))],
+)
+async def delete_user_endpoint(
+    id: UUID,
+    current_user: CurrentUser = Depends(get_current_user),
+    users: UserRepository = Depends(get_user_repo),
+    roles: RoleRepository = Depends(get_role_repo),
+    organizations: OrganizationRepository = Depends(get_organization_repo),
+    user_roles: UserRoleRepository = Depends(get_user_role_repo),
+    user_organizations: UserOrganizationRepository = Depends(get_user_organization_repo),
+    user_direct_permissions: UserDirectPermissionRepository = Depends(
+        get_user_direct_permission_repo
+    ),
+    user_permissions: UserPermissionRepository = Depends(get_user_permission_repo),
+    sessions: SessionRepository = Depends(get_session_repo),
+) -> None:
+    """
+    Delete a user and all descendants (soft), removing dependent data.
+
+    Удалить пользователя и всех потомков (мягко), удалив зависимые данные.
+    """
+    await delete_user(
+        current_user,
+        id,
+        users=users,
+        roles=roles,
+        organizations=organizations,
+        user_roles=user_roles,
+        user_organizations=user_organizations,
+        user_direct_permissions=user_direct_permissions,
+        user_permissions=user_permissions,
+        sessions=sessions,
     )
