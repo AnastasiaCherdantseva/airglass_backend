@@ -1,5 +1,8 @@
 """Tests for UserDirectPermissionRepository."""
 
+from uuid import uuid4
+
+from app.repositories.system.permission_condition import PermissionConditionRepository
 from app.repositories.system.user_direct_permission import (
     UserDirectPermissionRepository,
 )
@@ -84,3 +87,38 @@ async def test_get_user_ids_by_condition_id_isolated(
     result = await repo.get_user_ids_by_condition_id(permission_conditions_allow[0].id)
 
     assert result == [user_a.id]
+
+
+async def test_remove_by_user_ids_user_direct_permission(
+    db_session, users, permission_conditions_allow, make_user_direct_permission
+):
+    """Removes links of several users, keeps other users and the conditions themselves.
+
+    Удаляет связи нескольких пользователей; чужие связи и сами conditions остаются.
+    """
+    c0, c1 = permission_conditions_allow[:2]
+    await make_user_direct_permission(users[0], c0)
+    await make_user_direct_permission(users[0], c1)
+    await make_user_direct_permission(users[1], c0)
+    await make_user_direct_permission(users[2], c0)
+    repo = UserDirectPermissionRepository(db_session)
+
+    rowcount = await repo.remove_by_user_ids([users[0].id, users[1].id])
+
+    assert rowcount == 3
+    assert await repo.get_condition_ids_by_user_id(users[0].id) == []
+    assert await repo.get_condition_ids_by_user_id(users[1].id) == []
+    assert await repo.get_condition_ids_by_user_id(users[2].id) == [c0.id]
+    kept = await PermissionConditionRepository(db_session).get_by_ids([c0.id, c1.id])
+    assert len(kept) == 2
+
+
+async def test_remove_by_user_ids_user_direct_permission_empty_and_unknown(db_session):
+    """Empty list and unknown ids -> 0.
+
+    Пустой список и неизвестные id -> 0.
+    """
+    repo = UserDirectPermissionRepository(db_session)
+
+    assert await repo.remove_by_user_ids([]) == 0
+    assert await repo.remove_by_user_ids([uuid4()]) == 0

@@ -1,6 +1,11 @@
 """Tests for PermissionConditionRepository."""
 
+from types import SimpleNamespace
 from uuid import uuid4
+
+import pytest
+import pytest_asyncio
+from sqlalchemy import UUID
 
 from app.models.system import ConditionType, PermissionEffect
 from app.repositories.system.permission_condition import PermissionConditionRepository
@@ -316,3 +321,120 @@ async def test_activate_by_ids_mixed(db_session, permissions, permission_conditi
     rowcount = await repo.activate_by_ids([inactive, already_active, uuid4()])
 
     assert rowcount == 1
+
+
+@pytest_asyncio.fixture(params=["role"])
+async def scope(request, user, make_role) -> SimpleNamespace:
+    """Describes one of get_by_role .
+
+    Описывает один из методов get_by_role /  get_by_media_type.
+    """
+
+    async def new_role() -> UUID:
+        return (await make_role(name=f"Role {uuid4().hex}", owner_id=user.id)).id
+
+    spec = {
+        "role": (ConditionType.ROLE, "get_by_role", "role_id", new_role),
+    }
+    type_, method, field, factory = spec[request.param]
+    return SimpleNamespace(type=type_, method=method, field=field, new_target=factory)
+
+
+async def test_get_by_scope_returns_only_matching(db_session, permissions, make_condition, scope):
+    """Returns conditions of the requested role/media type only.
+
+    Возвращает условия только указанной роли /  типа медиа.
+    """
+    target, other = await scope.new_target(), await scope.new_target()
+    c1 = await make_condition(permissions[0], type_=scope.type, **{scope.field: target})
+    c2 = await make_condition(permissions[1], type_=scope.type, **{scope.field: target})
+    await make_condition(permissions[0], type_=scope.type, **{scope.field: other})
+    repo = PermissionConditionRepository(db_session)
+
+    result = await getattr(repo, scope.method)(target)
+
+    assert {c.id for c in result} == {c1.id, c2.id}
+    assert all(getattr(c, scope.field) == target and c.type == scope.type for c in result)
+    assert {c.permission_id for c in result} == {permissions[0].id, permissions[1].id}
+
+
+async def test_get_by_scope_unknown_id(db_session, scope):
+    """Unknown id -> empty list.
+
+    Неизвестный id -> пустой список.
+    """
+    repo = PermissionConditionRepository(db_session)
+
+    assert await getattr(repo, scope.method)(uuid4()) == []
+
+
+@pytest.mark.parametrize(
+    ("filters", "expected"),
+    [
+        pytest.param({}, {"allow", "deny", "inactive"}, id="no_filters"),
+        pytest.param({"is_active": True}, {"allow", "deny"}, id="active"),
+        pytest.param({"is_active": False}, {"inactive"}, id="inactive"),
+        pytest.param({"effect": PermissionEffect.DENY}, {"deny"}, id="deny"),
+        pytest.param(
+            {"is_active": True, "effect": PermissionEffect.ALLOW}, {"allow"}, id="active_allow"
+        ),
+    ],
+)
+async def test_get_by_scope_filters(
+    db_session, permissions, make_condition, scope, filters, expected
+):
+    """is_active / effect filters, alone and combined.
+
+    Фильтры is_active / effect по отдельности и вместе.
+    """
+    target = await scope.new_target()
+    kw = {scope.field: target}
+    created = {
+        "allow": await make_condition(permissions[0], type_=scope.type, **kw),
+        "deny": await make_condition(
+            permissions[0], type_=scope.type, effect=PermissionEffect.DENY, **kw
+        ),
+        "inactive": await make_condition(permissions[1], type_=scope.type, is_active=False, **kw),
+    }
+    repo = PermissionConditionRepository(db_session)
+
+    result = await getattr(repo, scope.method)(target, **filters)
+
+    assert {c.id for c in result} == {created[name].id for name in expected}
+
+
+async def test_get_by_permission_filter_condition_type_role(
+    db_session, permissions, role, make_condition
+):
+    """condition_type=ROLE returns only ROLE conditions.
+
+    condition_type=ROLE возвращает только ROLE-условия.
+    """
+    target = permissions[0]
+    await make_condition(target, type_=ConditionType.ALL)
+    await make_condition(target, type_=ConditionType.SUBTREE)
+    role_condition = await make_condition(target, type_=ConditionType.ROLE, role_id=role.id)
+    repo = PermissionConditionRepository(db_session)
+
+    result = await repo.get_by_permission(target.id, condition_type=ConditionType.ROLE)
+
+    assert [c.id for c in result] == [role_condition.id]
+    assert result[0].role_id == role.id
+
+
+async def test_get_by_permission_filter_effect_and_type(db_session, permissions, make_condition):
+    """effect + condition_type combine with AND.
+
+    effect + condition_type объединяются через AND.
+    """
+    target = permissions[0]
+    await make_condition(target, type_=ConditionType.ALL, effect=PermissionEffect.ALLOW)
+    wanted = await make_condition(target, type_=ConditionType.ALL, effect=PermissionEffect.DENY)
+    await make_condition(target, type_=ConditionType.SUBTREE, effect=PermissionEffect.DENY)
+    repo = PermissionConditionRepository(db_session)
+
+    result = await repo.get_by_permission(
+        target.id, effect=PermissionEffect.DENY, condition_type=ConditionType.ALL
+    )
+
+    assert [c.id for c in result] == [wanted.id]

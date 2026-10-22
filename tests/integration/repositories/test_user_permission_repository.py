@@ -312,3 +312,67 @@ async def test_has_admin_access_isolated_by_user(
     result = await repo.has_admin_access(users[1].id)
 
     assert result is False
+
+
+async def test_get_grouped_returns_inactive_conditions(
+    db_session, user, permissions, make_condition, make_user_permission
+):
+    """Inactive conditions are returned with is_active=False (filtered later in authorization).
+
+    Неактивные conditions возвращаются с is_active=False (отфильтровываются при авторизации).
+    """
+    condition = await make_condition(permissions[0], type_=ConditionType.ALL, is_active=False)
+    await make_user_permission(user, condition)
+
+    result = await UserPermissionRepository(db_session).get_grouped_by_permission(user.id)
+
+    assert [c.is_active for c in result[0].conditions] == [False]
+
+
+async def test_delete_by_user_ids(
+    db_session, users, permission_conditions_allow, make_user_permission
+):
+    """Deletes links of several users, returns rowcount, keeps other users.
+
+    Удаляет связи нескольких пользователей, возвращает rowcount, чужие остаются.
+    """
+    c0, c1 = permission_conditions_allow[:2]
+    await make_user_permission(users[0], c0)
+    await make_user_permission(users[0], c1)
+    await make_user_permission(users[1], c0)
+    await make_user_permission(users[2], c0)
+    repo = UserPermissionRepository(db_session)
+
+    rowcount = await repo.delete_by_user_ids([users[0].id, users[1].id])
+
+    assert rowcount == 3
+    assert await repo.get_grouped_by_permission(users[0].id) == []
+    assert await repo.get_grouped_by_permission(users[1].id) == []
+    assert len(await repo.get_grouped_by_permission(users[2].id)) == 1
+
+
+async def test_delete_by_user_ids_empty_and_unknown(db_session):
+    """Empty list and unknown ids -> 0.
+
+    Пустой список и неизвестные id -> 0.
+    """
+    repo = UserPermissionRepository(db_session)
+
+    assert await repo.delete_by_user_ids([]) == 0
+    assert await repo.delete_by_user_ids([uuid4()]) == 0
+
+
+async def test_has_admin_access_false_deny_only(
+    db_session, user, permissions, make_condition, make_user_permission
+):
+    """False if the only admin condition is DENY.
+
+    False, если единственное admin-условие - DENY.
+    """
+    admin_permission = next(p for p in permissions if p.resource == PermissionResource.PRODUCTS)
+    condition = await make_condition(
+        admin_permission, type_=ConditionType.ALL, effect=PermissionEffect.DENY
+    )
+    await make_user_permission(user, condition)
+
+    assert await UserPermissionRepository(db_session).has_admin_access(user.id) is False

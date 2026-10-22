@@ -2,7 +2,11 @@
 
 from uuid import uuid4
 
+import pytest
+from sqlalchemy import func, select
+
 from app.dto import RoleData, RolePatchData
+from app.models.system.user_role import UserRole
 from app.repositories.system.role import RoleRepository
 
 # ─────────────────────────────────────────────────────────────
@@ -285,3 +289,143 @@ async def test_activate_by_ids_mixed(db_session, user, make_role):
     rowcount = await repo.activate_by_ids([inactive.id, active.id, uuid4()])
 
     assert rowcount == 1
+
+
+async def test_get_by_ids_returns_found_and_ignores_unknown(db_session, roles):
+    """Existing ids are returned, unknown ones are ignored.
+
+    Существующие id возвращаются, неизвестные игнорируются.
+    """
+    repo = RoleRepository(db_session)
+
+    result = await repo.get_by_ids([roles[0].id, roles[1].id, uuid4()])
+
+    assert {r.id for r in result} == {roles[0].id, roles[1].id}
+
+
+async def test_get_by_ids_empty_list(db_session):
+    """Empty list -> empty result.
+
+    Пустой список -> пустой результат.
+    """
+    assert await RoleRepository(db_session).get_by_ids([]) == []
+
+
+async def test_get_ids_by_owner_ids_several_owners(db_session, users, make_role):
+    """Returns roles of all given owners and no others.
+
+    Возвращает роли всех указанных владельцев и только их.
+    """
+    ra = [await make_role(name=f"A{i}", owner_id=users[0].id) for i in range(2)]
+    rb = await make_role(name="B", owner_id=users[1].id)
+    await make_role(name="C", owner_id=users[2].id)
+    repo = RoleRepository(db_session)
+
+    result = await repo.get_ids_by_owner_ids([users[0].id, users[1].id])
+
+    assert {r.id for r in result} == {ra[0].id, ra[1].id, rb.id}
+
+
+@pytest.mark.parametrize("is_active", [True, False])
+async def test_get_ids_by_owner_ids_filter_is_active(db_session, users, make_role, is_active):
+    """is_active filter keeps only matching roles.
+
+    Фильтр is_active оставляет только подходящие роли.
+    """
+    active = await make_role(name="Активная", owner_id=users[0].id, is_active=True)
+    inactive = await make_role(name="Неактивная", owner_id=users[0].id, is_active=False)
+    repo = RoleRepository(db_session)
+
+    result = await repo.get_ids_by_owner_ids([users[0].id], is_active=is_active)
+
+    assert [r.id for r in result] == [(active if is_active else inactive).id]
+
+
+async def test_get_ids_by_owner_ids_empty_list(db_session):
+    """Empty list -> empty result.
+
+    Пустой список -> пустой результат.
+    """
+    assert await RoleRepository(db_session).get_ids_by_owner_ids([]) == []
+
+
+async def test_delete_by_owner_ids(db_session, users, make_role):
+    """Deletes roles of several owners, returns rowcount, keeps other owners.
+
+    Удаляет роли нескольких владельцев, возвращает rowcount, чужие роли остаются.
+    """
+    doomed = [
+        await make_role(name="A1", owner_id=users[0].id),
+        await make_role(name="A2", owner_id=users[0].id),
+        await make_role(name="B", owner_id=users[1].id),
+    ]
+    kept = await make_role(name="C", owner_id=users[2].id)
+    repo = RoleRepository(db_session)
+
+    rowcount = await repo.delete_by_owner_ids([users[0].id, users[1].id])
+
+    assert rowcount == 3
+    for role in doomed:
+        assert await repo.get_by_id(role.id) is None
+    assert await repo.get_by_id(kept.id) is not None
+
+
+async def test_delete_by_owner_ids_empty_and_unknown(db_session):
+    """Empty list and unknown owners -> 0.
+
+    Пустой список и неизвестные владельцы -> 0.
+    """
+    repo = RoleRepository(db_session)
+
+    assert await repo.delete_by_owner_ids([]) == 0
+    assert await repo.delete_by_owner_ids([uuid4()]) == 0
+
+
+async def test_delete_by_owner_ids_cascades_user_roles(
+    db_session, users, make_role, make_user_role
+):
+    """Links user<->role of the deleted roles disappear (ondelete CASCADE).
+
+    Связи user<->role удалённых ролей исчезают (ondelete CASCADE).
+    """
+    role = await make_role(name="A", owner_id=users[0].id)
+    await make_user_role(users[1], role)
+
+    await RoleRepository(db_session).delete_by_owner_ids([users[0].id])
+
+    links = await db_session.scalar(
+        select(func.count()).select_from(UserRole).where(UserRole.role_id == role.id)
+    )
+    assert links == 0
+
+
+# BaseIdRepository.delete_by_id (проверяется на RoleRepository)
+async def test_delete_by_id_found(db_session, role):
+    """Deletes the row and returns True.
+
+    Удаляет строку и возвращает True.
+    """
+    repo = RoleRepository(db_session)
+
+    assert await repo.delete_by_id(role.id) is True
+    assert await repo.get_by_id(role.id) is None
+
+
+async def test_delete_by_id_unknown(db_session):
+    """Unknown id -> False.
+
+    Неизвестный id -> False.
+    """
+    assert await RoleRepository(db_session).delete_by_id(uuid4()) is False
+
+
+async def test_delete_by_id_deletes_only_target(db_session, roles):
+    """Only the target row is deleted.
+
+    Удаляется только целевая строка.
+    """
+    repo = RoleRepository(db_session)
+
+    await repo.delete_by_id(roles[0].id)
+
+    assert await repo.get_by_id(roles[1].id) is not None

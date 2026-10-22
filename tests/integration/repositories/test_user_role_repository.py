@@ -1,7 +1,12 @@
 """Tests for UserRoleRepository."""
 
+from datetime import UTC, datetime
 from uuid import uuid4
 
+import pytest
+from sqlalchemy.exc import IntegrityError
+
+from app.dto.system.user_role import UserRoleLink
 from app.repositories.system.user_role import UserRoleRepository
 
 # ─────────────────────────────────────────────────────────────
@@ -247,3 +252,123 @@ async def test_remove_by_role_id_unknown(db_session):
     rowcount = await repo.remove_by_role_id(uuid4())
 
     assert rowcount == 0
+
+
+async def test_get_role_ids_by_user_ids_groups_by_user(
+    db_session, users, system_roles, make_user_role
+):
+    """Roles are grouped per user; a user without roles is absent.
+
+    Роли группируются по пользователям; пользователя без ролей в словаре нет.
+    """
+    r1, r2, _ = system_roles
+    await make_user_role(users[0], r1)
+    await make_user_role(users[0], r2)
+    await make_user_role(users[1], r1)
+    repo = UserRoleRepository(db_session)
+
+    result = await repo.get_role_ids_by_user_ids([users[0].id, users[1].id, users[2].id])
+
+    assert {k: set(v) for k, v in result.items()} == {
+        users[0].id: {r1.id, r2.id},
+        users[1].id: {r1.id},
+    }
+
+
+async def test_get_role_ids_by_user_ids_only_requested_keys(
+    db_session, users, system_role, make_user_role
+):
+    """Users that were not requested never appear in the result.
+
+    Незапрошенные пользователи в результат не попадают.
+    """
+    await make_user_role(users[0], system_role)
+    await make_user_role(users[3], system_role)
+    repo = UserRoleRepository(db_session)
+
+    result = await repo.get_role_ids_by_user_ids([users[0].id])
+
+    assert set(result) == {users[0].id}
+
+
+async def test_get_role_ids_by_user_ids_empty_input(db_session):
+    """Empty input -> empty dict.
+
+    Пустой вход -> пустой словарь.
+    """
+    assert await UserRoleRepository(db_session).get_role_ids_by_user_ids([]) == {}
+
+
+async def test_remove_by_user_ids_user_role(db_session, users, system_role, make_user_role):
+    """Removes links of several users, returns rowcount, keeps other users.
+
+    Удаляет связи нескольких пользователей, возвращает rowcount, чужие остаются.
+    """
+    for u in users[:3]:
+        await make_user_role(u, system_role)
+    repo = UserRoleRepository(db_session)
+
+    rowcount = await repo.remove_by_user_ids([users[0].id, users[1].id])
+
+    assert rowcount == 2
+    assert await repo.get_user_ids_by_role_id(system_role.id) == [users[2].id]
+
+
+async def test_remove_by_user_ids_user_role_empty_and_unknown(db_session):
+    """Empty list and unknown ids -> 0.
+
+    Пустой список и неизвестные id -> 0.
+    """
+    repo = UserRoleRepository(db_session)
+
+    assert await repo.remove_by_user_ids([]) == 0
+    assert await repo.remove_by_user_ids([uuid4(), uuid4()]) == 0
+
+
+async def test_add_links_duplicate_raises(db_session, user, system_role):
+    """Inserting an existing user<->role pair -> IntegrityError.
+
+    Вставка уже существующей пары user<->role -> IntegrityError.
+    """
+    repo = UserRoleRepository(db_session)
+    link = UserRoleLink(user_id=user.id, role_id=system_role.id)
+    await repo.add_link(link)
+
+    with pytest.raises(IntegrityError):
+        await repo.add_links([link])
+
+
+async def test_add_links_empty_is_noop(db_session, user):
+    """Empty list: no error, nothing created.
+
+    Пустой список: без ошибки, ничего не создаётся.
+    """
+    repo = UserRoleRepository(db_session)
+
+    await repo.add_links([])
+
+    assert await repo.get_roles_by_user_id(user.id) == []
+
+
+async def test_remove_links_empty_list(db_session):
+    """Empty list -> 0.
+
+    Пустой список -> 0.
+    """
+    assert await UserRoleRepository(db_session).remove_links([]) == 0
+
+
+async def test_get_users_by_role_id_children_count_skips_deleted(
+    db_session, users, system_role, make_user_role, make_user
+):
+    """children_count counts only live children.
+
+    children_count считает только живых детей.
+    """
+    await make_user_role(users[0], system_role)
+    await make_user(email="alive@example.com", parent_id=users[0].id)
+    await make_user(email="gone@example.com", parent_id=users[0].id, deleted_at=datetime.now(UTC))
+
+    result = await UserRoleRepository(db_session).get_users_by_role_id(system_role.id)
+
+    assert [(u.id, u.children_count) for u in result] == [(users[0].id, 1)]

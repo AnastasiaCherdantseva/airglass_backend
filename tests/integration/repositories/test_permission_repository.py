@@ -63,3 +63,16 @@ async def test_get_by_code_returns_correct_one(db_session, permissions):
     assert result is not None
     assert result.id == target.id
     assert result.id != other.id
+
+
+async def test_get_by_code_admin_zone(db_session, permissions):
+    """Permission of the ADMIN zone is returned with zone == "admin".
+
+    Право зоны ADMIN возвращается с zone == "admin".
+    """
+    target = next(p for p in permissions if p.resource == PermissionResource.PRODUCTS)
+
+    result = await PermissionRepository(db_session).get_by_code(target.code)
+
+    assert result is not None
+    assert result.zone == "admin"

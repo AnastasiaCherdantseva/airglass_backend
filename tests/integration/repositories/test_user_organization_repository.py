@@ -6,6 +6,7 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.dto.system.organization import OrganizationOutPut
 from app.models.system import Organization, User, UserOrganization
 from app.repositories.system.organization import OrganizationRepository
 from app.repositories.system.user import UserRepository
@@ -344,3 +345,138 @@ async def test_get_organization_ids_by_user_id_isolated(
     result = await repo.get_organization_ids_by_user_id(users[0].id)
 
     assert result == [organizations[0].id]
+
+
+async def test_get_organizations_by_user_id_output_fields(
+    db_session: AsyncSession, user: User, make_organization, make_user_organization
+) -> None:
+    """Returns OrganizationOutPut with all fields filled.
+
+    Возвращает OrganizationOutPut со всеми заполненными полями.
+    """
+    org = await make_organization(owner=user, address="г. Москва")
+    await make_user_organization(user, org)
+
+    [item] = await UserOrganizationRepository(db_session).get_organizations_by_user_id(user.id)
+
+    assert item == OrganizationOutPut(
+        id=org.id,
+        owner_id=user.id,
+        name=org.name,
+        inn=org.inn,
+        address="г. Москва",
+        created_at=org.created_at,
+        updated_at=org.updated_at,
+    )
+
+
+async def test_get_organizations_by_user_id_empty(db_session: AsyncSession, user: User) -> None:
+    """No links -> empty list.
+
+    Нет связей -> пустой список.
+    """
+    assert await UserOrganizationRepository(db_session).get_organizations_by_user_id(user.id) == []
+
+
+async def test_get_organizations_by_user_id_isolated_and_by_link(
+    db_session: AsyncSession, users: list[User], make_organization, make_user_organization
+) -> None:
+    """Selection goes by link: foreign org with membership is returned, unlinked is not.
+
+    Выборка по связи: чужая организация с участием возвращается, без связи - нет.
+    """
+    member_of = await make_organization(owner=users[1])
+    await make_organization(owner=users[0])
+    await make_user_organization(users[0], member_of)
+
+    result = await UserOrganizationRepository(db_session).get_organizations_by_user_id(users[0].id)
+
+    assert [(o.id, o.owner_id) for o in result] == [(member_of.id, users[1].id)]
+
+
+async def test_add_links_to_user_creates_links(
+    db_session: AsyncSession, user: User, organizations: list[Organization]
+) -> None:
+    """Links a user to several organizations at once.
+
+    Связывает пользователя сразу с несколькими организациями.
+    """
+    repo = UserOrganizationRepository(db_session)
+
+    await repo.add_links_to_user(user.id, [o.id for o in organizations])
+
+    assert set(await repo.get_organization_ids_by_user_id(user.id)) == {o.id for o in organizations}
+
+
+async def test_add_links_to_user_empty_is_noop(db_session: AsyncSession, user: User) -> None:
+    """Empty list: no error, nothing created.
+
+    Пустой список: без ошибки, ничего не создаётся.
+    """
+    repo = UserOrganizationRepository(db_session)
+
+    await repo.add_links_to_user(user.id, [])
+
+    assert await repo.get_organization_ids_by_user_id(user.id) == []
+
+
+async def test_add_links_to_user_duplicate_raises(
+    db_session: AsyncSession, user: User, organization: Organization
+) -> None:
+    """Inserting an existing pair -> IntegrityError.
+
+    Вставка уже существующей пары -> IntegrityError.
+    """
+    repo = UserOrganizationRepository(db_session)
+    await repo.add_link(user.id, organization.id)
+
+    with pytest.raises(IntegrityError):
+        await repo.add_links_to_user(user.id, [organization.id])
+
+
+async def test_add_links_to_user_isolated(
+    db_session: AsyncSession, users: list[User], organization: Organization
+) -> None:
+    """Other users get no links.
+
+    У других пользователей связей не появляется.
+    """
+    repo = UserOrganizationRepository(db_session)
+
+    await repo.add_links_to_user(users[0].id, [organization.id])
+
+    assert await repo.get_organization_ids_by_user_id(users[1].id) == []
+
+
+async def test_remove_by_user_ids_user_organization(
+    db_session: AsyncSession,
+    users: list[User],
+    organizations: list[Organization],
+    make_user_organization,
+) -> None:
+    """Removes links of several users, keeps other users and the organizations.
+
+    Удаляет связи нескольких пользователей; чужие связи и организации остаются.
+    """
+    for u in users[:3]:
+        await make_user_organization(u, organizations[0])
+    repo = UserOrganizationRepository(db_session)
+
+    rowcount = await repo.remove_by_user_ids([users[0].id, users[1].id])
+
+    assert rowcount == 2
+    assert await repo.get_user_ids_by_organization_id(organizations[0].id) == [users[2].id]
+    assert await OrganizationRepository(db_session).get_by_id(organizations[0].id) is not None
+
+
+async def test_remove_by_user_ids_user_organization_empty_and_unknown(
+    db_session: AsyncSession,
+) -> None:
+    """Empty list and unknown ids -> 0.
+
+    Пустой список и неизвестные id -> 0.
+    """
+    repo = UserOrganizationRepository(db_session)
+
+    assert await repo.remove_by_user_ids([]) == 0
+    assert await repo.remove_by_user_ids([uuid4(), uuid4()]) == 0

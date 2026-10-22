@@ -407,3 +407,58 @@ async def test_delete_by_owner_ids_does_not_touch_other_owners(
     assert rowcount == 1
     assert await repo.get_by_id(kept.id) is not None
     assert await _count_links(db_session, [kept.id]) == 1
+
+
+async def test_get_by_ids_organization_returns_found_and_ignores_unknown(
+    db_session: AsyncSession, user: User, make_organization
+) -> None:
+    """Existing ids are returned, unknown ones are ignored.
+
+    Существующие id возвращаются, неизвестные игнорируются.
+    """
+    orgs = [await make_organization(owner=user) for _ in range(2)]
+    repo = OrganizationRepository(db_session)
+
+    result = await repo.get_by_ids([orgs[0].id, orgs[1].id, uuid4()])
+
+    assert {o.id for o in result} == {o.id for o in orgs}
+
+
+async def test_get_by_ids_empty_list(db_session: AsyncSession) -> None:
+    """Empty list -> empty result.
+
+    Пустой список -> пустой результат.
+    """
+    assert await OrganizationRepository(db_session).get_by_ids([]) == []
+
+
+async def test_get_by_inn(db_session: AsyncSession, organization: Organization) -> None:
+    """Finds an organization by INN; unknown INN -> None.
+
+    Находит организацию по ИНН; неизвестный ИНН -> None.
+    """
+    repo = OrganizationRepository(db_session)
+
+    found = await repo.get_by_inn(organization.inn)
+
+    assert found is not None
+    assert found.id == organization.id
+    assert await repo.get_by_inn("999999999999") is None
+
+
+async def test_get_by_owner_id_and_name(
+    db_session: AsyncSession, users: list[User], make_organization
+) -> None:
+    """Match requires both owner and name.
+
+    Совпадение требует и владельца, и название.
+    """
+    org = await make_organization(owner=users[0], name="ООО Ромашка")
+    repo = OrganizationRepository(db_session)
+
+    found = await repo.get_by_owner_id_and_name(users[0].id, "ООО Ромашка")
+
+    assert found is not None
+    assert found.id == org.id
+    assert await repo.get_by_owner_id_and_name(users[0].id, "Другое") is None
+    assert await repo.get_by_owner_id_and_name(users[1].id, "ООО Ромашка") is None

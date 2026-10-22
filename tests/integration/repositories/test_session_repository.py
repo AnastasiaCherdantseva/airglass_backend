@@ -291,3 +291,49 @@ async def test_delete_expired_removes_multiple(
     assert count == 3
     remaining = await repo.get_by_user_id(user.id)
     assert remaining == []
+
+
+async def test_delete_by_user_ids_removes_several_users(
+    db_session: AsyncSession,
+    user: User,
+    users: list[User],
+    sessions: dict,
+    sessions_for_two_users: dict,
+) -> None:
+    """Deletes sessions of several users, keeps other users' sessions.
+
+    Удаляет сессии нескольких пользователей, чужие сессии остаются.
+    """
+    repo = SessionRepository(db_session)
+
+    count = await repo.delete_by_user_ids([users[0].id, users[1].id])
+
+    assert count == 6
+    assert await repo.get_by_user_id(users[0].id) == []
+    assert len(await repo.get_by_user_id(user.id)) == 3
+
+
+async def test_delete_by_user_ids_single_user_isolated(
+    db_session: AsyncSession, users: list[User], sessions_for_two_users: dict
+) -> None:
+    """One user in the list -> only his sessions are removed.
+
+    Один пользователь в списке -> удаляются только его сессии.
+    """
+    repo = SessionRepository(db_session)
+
+    count = await repo.delete_by_user_ids([users[0].id])
+
+    assert count == 3
+    assert len(await repo.get_by_user_id(users[1].id)) == 3
+
+
+async def test_delete_by_user_ids_empty_and_unknown(db_session: AsyncSession) -> None:
+    """Empty list and unknown ids -> 0.
+
+    Пустой список и неизвестные id -> 0.
+    """
+    repo = SessionRepository(db_session)
+
+    assert await repo.delete_by_user_ids([]) == 0
+    assert await repo.delete_by_user_ids([uuid.uuid4()]) == 0
