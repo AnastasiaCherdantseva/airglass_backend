@@ -23,15 +23,15 @@ class UserRepository(BaseIdRepository[User]):
     model = User
 
     async def get_subtree(self, user_id: UUID) -> list[User]:
-        anchor = select(User).where(User.id == user_id)
+        anchor = select(User).where(User.id == user_id, User.deleted_at.is_(None))
         subtree = anchor.cte(name="subtree", recursive=True)
 
         subtree_alias = subtree.alias()
-        recursive = select(User).join(
-            subtree_alias,
-            User.parent_id == subtree_alias.c.id,
+        recursive = (
+            select(User)
+            .join(subtree_alias, User.parent_id == subtree_alias.c.id)
+            .where(User.deleted_at.is_(None))
         )
-
         subtree = subtree.union_all(recursive)
 
         stmt = select(User).where(User.id.in_(select(subtree.c.id)))
@@ -44,11 +44,13 @@ class UserRepository(BaseIdRepository[User]):
             WITH RECURSIVE subtree AS (
                 SELECT id
                 FROM users
-                WHERE id = :ancestor_id
+                WHERE id = :root_id
+                AND deleted_at IS NULL
                 UNION ALL
                 SELECT u.id
                 FROM users u
                 JOIN subtree s ON u.parent_id = s.id
+                WHERE u.deleted_at IS NULL
             )
             SELECT EXISTS (
                 SELECT 1 FROM subtree WHERE id = :user_id
@@ -57,7 +59,7 @@ class UserRepository(BaseIdRepository[User]):
         )
         result = await self.db.scalar(
             stmt,
-            {"ancestor_id": root_id, "user_id": user_id},
+            {"root_id": root_id, "user_id": user_id},
         )
         return bool(result)
 
@@ -173,7 +175,7 @@ class UserRepository(BaseIdRepository[User]):
             email=user.email,
             name=user.name,
             is_active=user.is_active,
-            children_count=len(user.children),
+            children_count=sum(1 for c in user.children if c.deleted_at is None),
         )
 
     async def create(self, data: UserCreateFull) -> UserOutput:

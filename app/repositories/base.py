@@ -32,9 +32,11 @@ class BaseIdRepository(BaseRepository[ModelT]):
     """Для моделей с полем id — добавляет get_by_id."""
 
     async def get_by_id(self, entity_id: UUID) -> ModelT | None:
-        result = await self.db.execute(
-            select(self.model).where(self.model.id == entity_id)  # type: ignore[attr-defined]
-        )
+        stmt = select(self.model).where(self.model.id == entity_id)  # type: ignore[attr-defined]
+
+        if hasattr(self.model, "deleted_at"):
+            stmt = stmt.where(self.model.deleted_at.is_(None))  # type: ignore[attr-defined]
+        result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
     async def delete_by_id(self, entity_id: UUID) -> bool:

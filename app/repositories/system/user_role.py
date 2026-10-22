@@ -68,7 +68,7 @@ class UserRoleRepository(
                 UserRole.role_id == role_id,
                 User.deleted_at.is_(None),
             )
-            .options(selectinload(User.children))
+            .options(selectinload(User.children.and_(User.deleted_at.is_(None))))
         )
         result = await self.db.execute(stmt)
         return [
