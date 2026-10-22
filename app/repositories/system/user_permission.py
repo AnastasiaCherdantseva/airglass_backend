@@ -12,7 +12,7 @@ from app.dto import (
     PermissionConditionAllOutPut,
 )
 from app.models.system.permission import Permission, PermissionZone
-from app.models.system.permission_condition import PermissionCondition
+from app.models.system.permission_condition import PermissionCondition, PermissionEffect
 from app.models.system.user_permission import UserPermission
 from app.repositories.protocols.system.user_permission import (
     UserPermissionReadRepositoryProtocol,
@@ -87,6 +87,7 @@ class UserPermissionRepository(
             .where(
                 UserPermission.user_id == user_id,
                 PermissionCondition.is_active.is_(True),
+                PermissionCondition.effect == PermissionEffect.ALLOW,
                 Permission.zone == PermissionZone.ADMIN,
             )
             .limit(1)
