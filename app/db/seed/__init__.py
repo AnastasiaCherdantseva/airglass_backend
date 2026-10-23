@@ -4,8 +4,9 @@
 
 import logging
 from datetime import UTC, datetime
+from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import hash_password
@@ -13,6 +14,8 @@ from app.db.seed.attribute_options import ATTRIBUTE_OPTIONS
 from app.db.seed.attributes import ATTRIBUTES
 from app.db.seed.binding_types import BINDING_TYPES
 from app.db.seed.categories import CATEGORIES
+from app.db.seed.category_color_groups import CATEGORY_COLOR_GROUPS
+from app.db.seed.category_material_groups import CATEGORY_MATERIAL_GROUPS
 from app.db.seed.color_groups import COLOR_GROUPS
 from app.db.seed.color_visual_types import COLOR_VISUAL_TYPES
 from app.db.seed.colors import ALL_COLORS
@@ -20,7 +23,7 @@ from app.db.seed.gallery_rules import GALLERY_RULES
 from app.db.seed.material_groups import MATERIAL_GROUPS
 from app.db.seed.materials import MATERIALS
 from app.db.seed.media_types import MEDIA_TYPES
-from app.db.seed.permissions import PERMISSIONS
+from app.db.seed.permissions import PERMISSIONS, ZONE_BY_RESOURCE
 from app.db.seed.project_statuses import PROJECT_STATUSES
 from app.db.seed.roles import ROLES
 from app.db.seed.units import UNITS
@@ -38,6 +41,8 @@ from app.models.catalog import (
     Unit,
     VisualType,
 )
+from app.models.catalog.category_color_group import CategoryColorGroup
+from app.models.catalog.category_material_group import CategoryMaterialGroup
 from app.models.media import MediaType
 from app.models.projects import ProjectStatus
 from app.models.system import (
@@ -49,6 +54,7 @@ from app.models.system import (
     User,
     UserRole,
 )
+from app.models.system.permission import PermissionZone
 from app.models.system.permission_condition import (
     ConditionType,
     PermissionCondition,
@@ -56,6 +62,11 @@ from app.models.system.permission_condition import (
 )
 from app.models.templates import BindingType, GalleryRule, GalleryRuleCondition
 from app.models.usage import UsageRole
+from app.repositories.system.role_permission import RolePermissionRepository
+from app.repositories.system.user_direct_permission import UserDirectPermissionRepository
+from app.repositories.system.user_permission import UserPermissionRepository
+from app.repositories.system.user_role import UserRoleRepository
+from app.services.sync_user_permissions import sync_user_permissions
 
 logger = logging.getLogger(__name__)
 
@@ -96,8 +107,13 @@ async def seed_all(db: AsyncSession) -> None:
 
     # 6. Категории и правила галереи (зависят от категорий)
     categories = await _seed_categories(db)
+    await _seed_category_color_groups(db, categories, color_groups)
+    await _seed_category_material_groups(db, categories, material_groups)
     await _seed_gallery_rules(db, categories)
-    await _seed_admin_user(db, roles["SYSTEM_ADMIN"])
+
+    # 7. Админ + материализация его прав (user_permissions)
+    admin = await _seed_admin_user(db, roles["SYSTEM_ADMIN"])
+    await _sync_admin_permissions(db, admin.id)
 
     await db.commit()
     print("✅ Seed-данные загружены!")
@@ -413,33 +429,45 @@ async def _seed_permissions(
     session: AsyncSession,
 ) -> dict[str, list[PermissionCondition]]:
     """
-    Создать права и их варианты (идемпотентно).
+    Create permissions and their conditions (idempotent).
+
+    A permission is looked up by (resource, action), because ``code`` is a
+    DB-computed column (``USERS.CREATE``).
 
     Returns:
-        {permission_code: [PermissionCondition]}.
+        ``{"USERS.CREATE": [PermissionCondition, ...]}``.
+
+    Создать права и их варианты (идемпотентно).
+
+    Право ищется по (resource, action), так как ``code`` — вычисляемая
+    колонка БД (``USERS.CREATE``).
+
+    Returns:
+        ``{"USERS.CREATE": [PermissionCondition, ...]}``.
     """
     result_map: dict[str, list[PermissionCondition]] = {}
 
     for perm_seed in PERMISSIONS:
-        # 1. Permission
-        stmt = select(Permission).where(Permission.code == perm_seed["code"])
-        result = await session.execute(stmt)
-        permission = result.scalar_one_or_none()
+        resource = PermissionResource(perm_seed["resource"])
+        action = PermissionAction(perm_seed["action"])
+
+        stmt = select(Permission).where(
+            Permission.resource == resource,
+            Permission.action == action,
+        )
+        permission = (await session.execute(stmt)).scalar_one_or_none()
 
         if permission is None:
             permission = Permission(
-                code=perm_seed["code"],
                 name=perm_seed["name"],
-                resource=PermissionResource(perm_seed["resource"]),
-                action=PermissionAction(perm_seed["action"]),
-                is_system=perm_seed["is_system"],
+                resource=resource,
+                action=action,
+                zone=PermissionZone(ZONE_BY_RESOURCE[perm_seed["resource"]]),
             )
             session.add(permission)
             await session.flush()
 
-        # 2. Conditions
         conditions: list[PermissionCondition] = []
-
         for cond_seed in perm_seed["conditions"]:
             cond_type = ConditionType(cond_seed["type"])
             cond_effect = PermissionEffect(cond_seed["effect"])
@@ -449,8 +477,7 @@ async def _seed_permissions(
                 PermissionCondition.type == cond_type,
                 PermissionCondition.effect == cond_effect,
             )
-            result = await session.execute(stmt)
-            condition = result.scalar_one_or_none()
+            condition = (await session.execute(stmt)).scalar_one_or_none()
 
             if condition is None:
                 condition = PermissionCondition(
@@ -464,9 +491,87 @@ async def _seed_permissions(
 
             conditions.append(condition)
 
-        result_map[perm_seed["code"]] = conditions
+        result_map[f"{resource.name}.{action.name}"] = conditions
 
     return result_map
+
+
+async def _seed_category_color_groups(
+    db: AsyncSession,
+    categories: dict[str, Category],
+    color_groups: dict[str, ColorGroup],
+) -> None:
+    """
+    Link categories to available color groups (idempotent).
+
+    Связать категории с доступными группами цветов (идемпотентно).
+    """
+    result = await db.execute(
+        select(CategoryColorGroup.category_id, CategoryColorGroup.color_group_id)
+    )
+    existing = {(row[0], row[1]) for row in result.all()}
+
+    added = 0
+    for item in CATEGORY_COLOR_GROUPS:
+        category = categories.get(item["category_code"])
+        group = color_groups.get(item["color_group_code"])
+        if category is None or group is None:
+            print(f"   ⚠️  Не найдена пара '{item['category_code']}' / '{item['color_group_code']}'")
+            continue
+
+        key = (category.id, group.id)
+        if key in existing:
+            continue
+
+        db.add(CategoryColorGroup(category_id=category.id, color_group_id=group.id))
+        existing.add(key)
+        added += 1
+
+    if added:
+        await db.flush()
+        print(f"   • Связи категория↔группа цветов: добавлено {added}")
+    else:
+        print("   • Связи категория↔группа цветов: уже загружены")
+
+
+async def _seed_category_material_groups(
+    db: AsyncSession,
+    categories: dict[str, Category],
+    material_groups: dict[str, MaterialGroup],
+) -> None:
+    """
+    Link categories to available material groups (idempotent).
+
+    Связать категории с доступными группами материалов (идемпотентно).
+    """
+    result = await db.execute(
+        select(CategoryMaterialGroup.category_id, CategoryMaterialGroup.material_group_id)
+    )
+    existing = {(row[0], row[1]) for row in result.all()}
+
+    added = 0
+    for item in CATEGORY_MATERIAL_GROUPS:
+        category = categories.get(item["category_code"])
+        group = material_groups.get(item["material_group_code"])
+        if category is None or group is None:
+            print(
+                f"   ⚠️  Не найдена пара '{item['category_code']}' / '{item['material_group_code']}'"
+            )
+            continue
+
+        key = (category.id, group.id)
+        if key in existing:
+            continue
+
+        db.add(CategoryMaterialGroup(category_id=category.id, material_group_id=group.id))
+        existing.add(key)
+        added += 1
+
+    if added:
+        await db.flush()
+        print(f"   • Связи категория↔группа материалов: добавлено {added}")
+    else:
+        print("   • Связи категория↔группа материалов: уже загружены")
 
 
 async def _seed_media_types(db: AsyncSession) -> dict[str, MediaType]:
@@ -522,35 +627,42 @@ async def _seed_project_statuses(db: AsyncSession) -> dict[str, ProjectStatus]:
     return existing
 
 
-async def _seed_admin_user(
-    session: AsyncSession,
-    admin_role: Role,
-) -> None:
+async def _seed_admin_user(session: AsyncSession, admin_role: Role) -> User:
     """
-    Создать администратора и назначить ему роль (идемпотентно).
+    Create the admin user and assign the role (idempotent).
+
+    Email is matched via ``lower(email)`` among non-deleted users (ADR-USER-002).
 
     Args:
         session: AsyncSession.
-        admin_role: системная роль администратора.
+        admin_role: System administrator role.
 
     Returns:
-        None.
-    """
-    email = SEED_ADMIN["email"]
+        The admin ``User``.
 
-    # 1. Проверить, есть ли уже такой пользователь
-    stmt = select(User).where(User.email == email)
-    result = await session.execute(stmt)
-    user = result.scalar_one_or_none()
+    Создать администратора и назначить роль (идемпотентно).
+
+    Email ищется по ``lower(email)`` среди неудалённых (ADR-USER-002).
+
+    Args:
+        session: AsyncSession.
+        admin_role: Системная роль администратора.
+
+    Returns:
+        Пользователь-администратор ``User``.
+    """
+    email = SEED_ADMIN["email"].strip().lower()
+
+    stmt = select(User).where(func.lower(User.email) == email, User.deleted_at.is_(None))
+    user = (await session.execute(stmt)).scalar_one_or_none()
 
     if user is None:
-        # 2. Создать пользователя
         user = User(
             name=SEED_ADMIN["name"],
             email=email,
             password_hash=hash_password(SEED_ADMIN["password"]),
             is_active=SEED_ADMIN["is_active"],
-            email_verified=datetime.now(UTC),  # ← автоматически верифицирован
+            email_verified=datetime.now(UTC),
         )
         session.add(user)
         await session.flush()
@@ -558,20 +670,37 @@ async def _seed_admin_user(
     else:
         logger.info("Admin user already exists: %s", email)
 
-    # 3. Проверить связь с ролью
     stmt = select(UserRole).where(
         UserRole.user_id == user.id,
         UserRole.role_id == admin_role.id,
     )
-    result = await session.execute(stmt)
-    link = result.scalar_one_or_none()
-
-    if link is None:
-        link = UserRole(user_id=user.id, role_id=admin_role.id)
-        session.add(link)
+    if (await session.execute(stmt)).scalar_one_or_none() is None:
+        session.add(UserRole(user_id=user.id, role_id=admin_role.id))
         logger.info("Assigned role %s to %s", admin_role.name, email)
-    else:
-        logger.info("Role already assigned to %s", email)
+    await session.flush()
+
+    return user
+
+
+async def _sync_admin_permissions(session: AsyncSession, user_id: UUID) -> None:
+    """
+    Materialize the user's permissions into ``user_permissions`` (idempotent).
+
+    Authorization reads only ``user_permissions`` (ADR-ACCESS-005), so without
+    this step the seeded admin has no rights.
+
+    Материализовать права пользователя в ``user_permissions`` (идемпотентно).
+
+    Авторизация читает только ``user_permissions`` (ADR-ACCESS-005), поэтому
+    без этого шага у засидированного админа нет прав.
+    """
+    await sync_user_permissions(
+        user_id,
+        user_roles=UserRoleRepository(session),
+        role_permissions=RolePermissionRepository(session),
+        user_direct_permissions=UserDirectPermissionRepository(session),
+        user_permissions=UserPermissionRepository(session),
+    )
 
 
 async def _seed_role_permissions(
