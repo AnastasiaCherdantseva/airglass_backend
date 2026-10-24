@@ -24,11 +24,13 @@ async def login_by_email(
 ) -> UserResponse:
     # Проверка активной сессии
     session_token = request.cookies.get(SESSION_COOKIE_NAME)
+    client_ip = request.client.host if request.client else None
+    user_agent = request.headers.get("user-agent")
     auth_data = await authenticate_user(
         data.email,
         data.password,
-        user_agent=data.user_agent,
-        ip_address=data.ip_address,
+        user_agent=user_agent,
+        ip_address=client_ip,
         session_token=session_token,
         sessions=sessions,
         users=users,
