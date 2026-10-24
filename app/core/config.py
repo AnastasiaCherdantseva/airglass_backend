@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     # флаг автоматического удаления сессий
     RUN_CRON: bool = False
 
+    # FRONT
+    CORS_ORIGINS: str = "http://localhost:5173"
+
     @property
     def DATABASE_URL(self) -> str:
         return (
