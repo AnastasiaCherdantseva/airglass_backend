@@ -4,7 +4,7 @@ import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.system import ConditionType, Permission, PermissionCondition, PermissionEffect
+from app.models.system import ConditionType, Permission, PermissionCondition
 from app.models.system.role import Role
 
 
@@ -21,21 +21,21 @@ async def permission_conditions_allow(
         if p.resource == "users" and p.action == "create":
             r1 = PermissionCondition(
                 permission_id=p.id,
-                effect=PermissionEffect.ALLOW,
+                # effect=PermissionEffect.ALLOW,
                 type=ConditionType.ROLE,
                 role_id=role.id,
                 is_active=True,
             )
             r2 = PermissionCondition(
                 permission_id=p.id,
-                effect=PermissionEffect.ALLOW,
+                # effect=PermissionEffect.ALLOW,
                 type=ConditionType.ROLE,
                 role_id=inactive_role.id,
                 is_active=True,
             )
             r3 = PermissionCondition(
                 permission_id=p.id,
-                effect=PermissionEffect.ALLOW,
+                # effect=PermissionEffect.ALLOW,
                 type=ConditionType.ROLE,
                 role_id=system_role.id,
                 is_active=True,
@@ -45,7 +45,7 @@ async def permission_conditions_allow(
             continue
         new = PermissionCondition(
             permission_id=p.id,
-            effect=PermissionEffect.ALLOW,
+            # effect=PermissionEffect.ALLOW,
             type=ConditionType.SUBTREE,
             is_active=True,
         )
@@ -55,19 +55,22 @@ async def permission_conditions_allow(
     return result
 
 
-@pytest_asyncio.fixture
-async def permission_conditions_deny(
-    db_session: AsyncSession, permissions: list[Permission]
-) -> list[PermissionCondition]:
-    result = []
-    for p in permissions:
-        new = PermissionCondition(
-            permission_id=p.id, effect=PermissionEffect.DENY, type=ConditionType.ALL, is_active=True
-        )
-        db_session.add(new)
-        result.append(new)
-    await db_session.flush()
-    return result
+# @pytest_asyncio.fixture
+# async def permission_conditions_deny(
+#     db_session: AsyncSession, permissions: list[Permission]
+# ) -> list[PermissionCondition]:
+#     result = []
+#     for p in permissions:
+#         new = PermissionCondition(
+#             permission_id=p.id,
+#             # effect=PermissionEffect.DENY,
+#             type=ConditionType.ALL,
+#             is_active=True,
+#         )
+#         db_session.add(new)
+#         result.append(new)
+#     await db_session.flush()
+#     return result
 
 
 @pytest_asyncio.fixture
@@ -79,7 +82,7 @@ async def permission_conditions_allow_in_memory(
         PermissionCondition(
             id=uuid4(),
             permission_id=p.id,
-            effect=PermissionEffect.ALLOW,
+            # effect=PermissionEffect.ALLOW,
             type=ConditionType.SUBTREE,
             is_active=True,
         )
@@ -87,21 +90,21 @@ async def permission_conditions_allow_in_memory(
     ]
 
 
-@pytest_asyncio.fixture
-async def permission_conditions_deny_in_memory(
-    permissions_in_memory: list[Permission],
-) -> list[PermissionCondition]:
-    """DENY-условия для всех permissions в памяти (no DB)."""
-    return [
-        PermissionCondition(
-            id=uuid4(),
-            permission_id=p.id,
-            effect=PermissionEffect.DENY,
-            type=ConditionType.ALL,
-            is_active=True,
-        )
-        for p in permissions_in_memory
-    ]
+# @pytest_asyncio.fixture
+# async def permission_conditions_deny_in_memory(
+#     permissions_in_memory: list[Permission],
+# ) -> list[PermissionCondition]:
+#     """DENY-условия для всех permissions в памяти (no DB)."""
+#     return [
+#         PermissionCondition(
+#             id=uuid4(),
+#             permission_id=p.id,
+#             # effect=PermissionEffect.DENY,
+#             type=ConditionType.ALL,
+#             is_active=True,
+#         )
+#         for p in permissions_in_memory
+#     ]
 
 
 @pytest_asyncio.fixture
@@ -110,7 +113,7 @@ async def make_condition(db_session: AsyncSession):
         permission: Permission,
         *,
         type_: ConditionType,
-        effect: PermissionEffect = PermissionEffect.ALLOW,
+        # effect: PermissionEffect = PermissionEffect.ALLOW,
         is_active: bool = True,
         role_id: UUID | None = None,
         category_id: UUID | None = None,
@@ -119,7 +122,7 @@ async def make_condition(db_session: AsyncSession):
         condition = PermissionCondition(
             permission_id=permission.id,
             type=type_,
-            effect=effect,
+            # effect=effect,
             is_active=is_active,
             role_id=role_id,
             category_id=category_id,
@@ -138,7 +141,7 @@ def make_condition_in_memory():
         permission: Permission,
         *,
         type_: ConditionType,
-        effect: PermissionEffect = PermissionEffect.ALLOW,
+        # effect: PermissionEffect = PermissionEffect.ALLOW,
         is_active: bool = True,
         role_id: UUID | None = None,
         category_id: UUID | None = None,
@@ -148,7 +151,7 @@ def make_condition_in_memory():
             id=uuid4(),
             permission_id=permission.id,
             type=type_,
-            effect=effect,
+            # effect=effect,
             is_active=is_active,
             role_id=role_id,
             category_id=category_id,

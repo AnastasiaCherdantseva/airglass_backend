@@ -109,7 +109,7 @@ from app.models.system import (
     Permission,
     PermissionAction,
     PermissionCondition,
-    PermissionEffect,
+    # PermissionEffect,
     PermissionResource,
     PermissionZone,
     Role,
@@ -217,7 +217,7 @@ __all__ = [
     "UserOrganization",
     "UserDirectPermission",
     "ConditionType",
-    "PermissionEffect",
+    # "PermissionEffect",
     # Customers
     "Customer",
     "CustomerAddress",

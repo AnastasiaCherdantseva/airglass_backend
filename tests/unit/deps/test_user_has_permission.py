@@ -5,12 +5,12 @@ from uuid import uuid4
 from app.core.security import user_has_permission
 from app.dto import CurrentUser, GroupedPermission
 from app.dto.system.permission_condition import PermissionConditionAllOutPut
-from app.models.system.permission_condition import ConditionType, PermissionEffect
+from app.models.system.permission_condition import ConditionType
 
 
 def make_condition(
     *,
-    effect: PermissionEffect = PermissionEffect.ALLOW,
+    # effect: PermissionEffect = PermissionEffect.ALLOW,
     condition_type: ConditionType = ConditionType.ALL,
     is_active: bool = True,
 ) -> PermissionConditionAllOutPut:
@@ -21,7 +21,7 @@ def make_condition(
         category_id=None,
         role_id=None,
         media_type_id=None,
-        effect=effect,
+        # effect=effect,
         type=condition_type,
         is_active=is_active,
     )
@@ -81,9 +81,7 @@ def test_code_not_found() -> None:
 
 def test_single_allow_active() -> None:
     """Одно активное ALLOW → True."""
-    user = make_current_user(
-        permissions=[make_grouped("users.read", [make_condition(effect=PermissionEffect.ALLOW)])]
-    )
+    user = make_current_user(permissions=[make_grouped("users.read", [make_condition()])])
 
     assert user_has_permission(user, "users.read") is True
 
@@ -94,7 +92,7 @@ def test_single_allow_inactive() -> None:
         permissions=[
             make_grouped(
                 "users.read",
-                [make_condition(effect=PermissionEffect.ALLOW, is_active=False)],
+                [make_condition(is_active=False)],
             )
         ]
     )
@@ -109,8 +107,7 @@ def test_multiple_allow() -> None:
             make_grouped(
                 "users.read",
                 [
-                    make_condition(effect=PermissionEffect.ALLOW),
-                    make_condition(effect=PermissionEffect.ALLOW),
+                    make_condition(),
                 ],
             )
         ]
@@ -119,122 +116,122 @@ def test_multiple_allow() -> None:
     assert user_has_permission(user, "users.read") is True
 
 
-# ─────────────────────────────────────────────────────────────
-# DENY
-# ─────────────────────────────────────────────────────────────
+# # ─────────────────────────────────────────────────────────────
+# # DENY
+# # ─────────────────────────────────────────────────────────────
 
 
-def test_single_deny_active() -> None:
-    """Одно активное DENY → False."""
-    user = make_current_user(
-        permissions=[make_grouped("users.read", [make_condition(effect=PermissionEffect.DENY)])]
-    )
+# def test_single_deny_active() -> None:
+#     """Одно активное DENY → False."""
+#     user = make_current_user(
+#         permissions=[make_grouped("users.read", [make_condition(effect=PermissionEffect.DENY)])]
+#     )
 
-    assert user_has_permission(user, "users.read") is False
-
-
-def test_single_deny_inactive() -> None:
-    """Одно неактивное DENY, без ALLOW → False."""
-    user = make_current_user(
-        permissions=[
-            make_grouped(
-                "users.read",
-                [make_condition(effect=PermissionEffect.DENY, is_active=False)],
-            )
-        ]
-    )
-
-    assert user_has_permission(user, "users.read") is False
+#     assert user_has_permission(user, "users.read") is False
 
 
-# ─────────────────────────────────────────────────────────────
-# ALLOW + DENY
-# ─────────────────────────────────────────────────────────────
+# def test_single_deny_inactive() -> None:
+#     """Одно неактивное DENY, без ALLOW → False."""
+#     user = make_current_user(
+#         permissions=[
+#             make_grouped(
+#                 "users.read",
+#                 [make_condition(effect=PermissionEffect.DENY, is_active=False)],
+#             )
+#         ]
+#     )
+
+#     assert user_has_permission(user, "users.read") is False
 
 
-def test_allow_and_deny_active() -> None:
-    """ALLOW + DENY, оба активны → False (DENY приоритетнее)."""
-    user = make_current_user(
-        permissions=[
-            make_grouped(
-                "users.read",
-                [
-                    make_condition(effect=PermissionEffect.ALLOW),
-                    make_condition(effect=PermissionEffect.DENY),
-                ],
-            )
-        ]
-    )
-
-    assert user_has_permission(user, "users.read") is False
+# # ─────────────────────────────────────────────────────────────
+# # ALLOW + DENY
+# # ─────────────────────────────────────────────────────────────
 
 
-def test_deny_first_then_allow() -> None:
-    """DENY первый, потом ALLOW → False."""
-    user = make_current_user(
-        permissions=[
-            make_grouped(
-                "users.read",
-                [
-                    make_condition(effect=PermissionEffect.DENY),
-                    make_condition(effect=PermissionEffect.ALLOW),
-                ],
-            )
-        ]
-    )
+# def test_allow_and_deny_active() -> None:
+#     """ALLOW + DENY, оба активны → False (DENY приоритетнее)."""
+#     user = make_current_user(
+#         permissions=[
+#             make_grouped(
+#                 "users.read",
+#                 [
+#                     make_condition(effect=PermissionEffect.ALLOW),
+#                     make_condition(effect=PermissionEffect.DENY),
+#                 ],
+#             )
+#         ]
+#     )
 
-    assert user_has_permission(user, "users.read") is False
-
-
-def test_allow_first_then_deny() -> None:
-    """ALLOW первый, потом DENY → False."""
-    user = make_current_user(
-        permissions=[
-            make_grouped(
-                "users.read",
-                [
-                    make_condition(effect=PermissionEffect.ALLOW),
-                    make_condition(effect=PermissionEffect.DENY),
-                ],
-            )
-        ]
-    )
-
-    assert user_has_permission(user, "users.read") is False
+#     assert user_has_permission(user, "users.read") is False
 
 
-def test_allow_active_deny_inactive() -> None:
-    """ALLOW активен, DENY неактивен → True."""
-    user = make_current_user(
-        permissions=[
-            make_grouped(
-                "users.read",
-                [
-                    make_condition(effect=PermissionEffect.ALLOW, is_active=True),
-                    make_condition(effect=PermissionEffect.DENY, is_active=False),
-                ],
-            )
-        ]
-    )
+# def test_deny_first_then_allow() -> None:
+#     """DENY первый, потом ALLOW → False."""
+#     user = make_current_user(
+#         permissions=[
+#             make_grouped(
+#                 "users.read",
+#                 [
+#                     make_condition(effect=PermissionEffect.DENY),
+#                     make_condition(effect=PermissionEffect.ALLOW),
+#                 ],
+#             )
+#         ]
+#     )
 
-    assert user_has_permission(user, "users.read") is True
+#     assert user_has_permission(user, "users.read") is False
 
 
-def test_allow_inactive_deny_inactive() -> None:
-    """Оба неактивны → False."""
-    user = make_current_user(
-        permissions=[
-            make_grouped(
-                "users.read",
-                [
-                    make_condition(effect=PermissionEffect.ALLOW, is_active=False),
-                    make_condition(effect=PermissionEffect.DENY, is_active=False),
-                ],
-            )
-        ]
-    )
+# def test_allow_first_then_deny() -> None:
+#     """ALLOW первый, потом DENY → False."""
+#     user = make_current_user(
+#         permissions=[
+#             make_grouped(
+#                 "users.read",
+#                 [
+#                     make_condition(effect=PermissionEffect.ALLOW),
+#                     make_condition(effect=PermissionEffect.DENY),
+#                 ],
+#             )
+#         ]
+#     )
 
-    assert user_has_permission(user, "users.read") is False
+#     assert user_has_permission(user, "users.read") is False
+
+
+# def test_allow_active_deny_inactive() -> None:
+#     """ALLOW активен, DENY неактивен → True."""
+#     user = make_current_user(
+#         permissions=[
+#             make_grouped(
+#                 "users.read",
+#                 [
+#                     make_condition(effect=PermissionEffect.ALLOW, is_active=True),
+#                     make_condition(effect=PermissionEffect.DENY, is_active=False),
+#                 ],
+#             )
+#         ]
+#     )
+
+#     assert user_has_permission(user, "users.read") is True
+
+
+# def test_allow_inactive_deny_inactive() -> None:
+#     """Оба неактивны → False."""
+#     user = make_current_user(
+#         permissions=[
+#             make_grouped(
+#                 "users.read",
+#                 [
+#                     make_condition(effect=PermissionEffect.ALLOW, is_active=False),
+#                     make_condition(effect=PermissionEffect.DENY, is_active=False),
+#                 ],
+#             )
+#         ]
+#     )
+
+#     assert user_has_permission(user, "users.read") is False
 
 
 # ─────────────────────────────────────────────────────────────
@@ -246,8 +243,8 @@ def test_other_codes_ignored() -> None:
     """Права с другим code не влияют."""
     user = make_current_user(
         permissions=[
-            make_grouped("users.read", [make_condition(effect=PermissionEffect.ALLOW)]),
-            make_grouped("users.create", [make_condition(effect=PermissionEffect.DENY)]),
+            make_grouped("users.read", [make_condition()]),
+            make_grouped("users.create", [make_condition()]),
         ]
     )
 

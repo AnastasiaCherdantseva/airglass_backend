@@ -12,7 +12,11 @@ from app.dto import (
     PermissionConditionMediaOutPut,
     PermissionConditionRoleOutPut,
 )
-from app.models import ConditionType, PermissionCondition, PermissionEffect
+from app.models import (
+    ConditionType,
+    PermissionCondition,
+    # PermissionEffect
+)
 from app.repositories.base import BaseIdRepository
 
 
@@ -24,13 +28,13 @@ class PermissionConditionRepository(BaseIdRepository[PermissionCondition]):
         stmt: Select[tuple[PermissionCondition]],
         *,
         is_active: bool | None = None,
-        effect: PermissionEffect | None = None,
+        # effect: PermissionEffect | None = None,
         condition_type: ConditionType | None = None,
     ) -> Select[tuple[PermissionCondition]]:
         if is_active is not None:
             stmt = stmt.where(PermissionCondition.is_active.is_(is_active))
-        if effect is not None:
-            stmt = stmt.where(PermissionCondition.effect == effect)
+        # if effect is not None:
+        #     stmt = stmt.where(PermissionCondition.effect == effect)
         if condition_type is not None:
             stmt = stmt.where(PermissionCondition.type == condition_type)
         return stmt
@@ -42,7 +46,7 @@ class PermissionConditionRepository(BaseIdRepository[PermissionCondition]):
             category_id=p.category_id,
             role_id=p.role_id,
             media_type_id=p.media_type_id,
-            effect=p.effect,
+            # effect=p.effect,
             type=p.type,
             is_active=p.is_active,
         )
@@ -52,14 +56,18 @@ class PermissionConditionRepository(BaseIdRepository[PermissionCondition]):
         role_id: UUID,
         *,
         is_active: bool | None = None,
-        effect: PermissionEffect | None = None,
+        # effect: PermissionEffect | None = None,
     ) -> list[PermissionConditionRoleOutPut]:
         """Получить conditions типа ROLE для указанной роли."""
         stmt = select(PermissionCondition).where(
             PermissionCondition.type == ConditionType.ROLE,
             PermissionCondition.role_id == role_id,
         )
-        stmt = self._filter(stmt, is_active=is_active, effect=effect)
+        stmt = self._filter(
+            stmt,
+            is_active=is_active,
+            # effect=effect
+        )
         result = await self.db.execute(stmt)
         permissions = result.scalars().all()
         returned: list[PermissionConditionRoleOutPut] = []
@@ -72,7 +80,7 @@ class PermissionConditionRepository(BaseIdRepository[PermissionCondition]):
                     id=p.id,
                     permission_id=p.permission_id,
                     role_id=p.role_id,
-                    effect=p.effect,
+                    # effect=p.effect,
                     type=p.type,
                     is_active=p.is_active,
                 )
@@ -84,14 +92,18 @@ class PermissionConditionRepository(BaseIdRepository[PermissionCondition]):
         category_id: UUID,
         *,
         is_active: bool | None = None,
-        effect: PermissionEffect | None = None,
+        # effect: PermissionEffect | None = None,
     ) -> list[PermissionConditionCategoryOutPut]:
         """Получить conditions типа CATEGORY для указанной КАТЕГОРИИ."""
         stmt = select(PermissionCondition).where(
             PermissionCondition.type == ConditionType.CATEGORY,
             (PermissionCondition.category_id == category_id),
         )
-        stmt = self._filter(stmt, is_active=is_active, effect=effect)
+        stmt = self._filter(
+            stmt,
+            is_active=is_active,
+            # effect=effect
+        )
         result = await self.db.execute(stmt)
         permissions = result.scalars().all()
         returned: list[PermissionConditionCategoryOutPut] = []
@@ -102,7 +114,7 @@ class PermissionConditionRepository(BaseIdRepository[PermissionCondition]):
                     id=p.id,
                     permission_id=p.permission_id,
                     category_id=p.category_id,
-                    effect=p.effect,
+                    # effect=p.effect,
                     type=p.type,
                     is_active=p.is_active,
                 )
@@ -114,14 +126,18 @@ class PermissionConditionRepository(BaseIdRepository[PermissionCondition]):
         media_type_id: UUID,
         *,
         is_active: bool | None = None,
-        effect: PermissionEffect | None = None,
+        # effect: PermissionEffect | None = None,
     ) -> list[PermissionConditionMediaOutPut]:
         """Получить conditions типа MEDIA_TYPE для указанноГО ТИПА МЕДИА."""
         stmt = select(PermissionCondition).where(
             (PermissionCondition.type == ConditionType.MEDIA),
             (PermissionCondition.media_type_id == media_type_id),
         )
-        stmt = self._filter(stmt, is_active=is_active, effect=effect)
+        stmt = self._filter(
+            stmt,
+            is_active=is_active,
+            # effect=effect
+        )
         result = await self.db.execute(stmt)
 
         permissions = result.scalars().all()
@@ -133,7 +149,7 @@ class PermissionConditionRepository(BaseIdRepository[PermissionCondition]):
                     id=p.id,
                     permission_id=p.permission_id,
                     media_type_id=p.media_type_id,
-                    effect=p.effect,
+                    # effect=p.effect,
                     type=p.type,
                     is_active=p.is_active,
                 )
@@ -145,14 +161,19 @@ class PermissionConditionRepository(BaseIdRepository[PermissionCondition]):
         permission_id: UUID,
         *,
         is_active: bool | None = None,
-        effect: PermissionEffect | None = None,
+        # effect: PermissionEffect | None = None,
         condition_type: ConditionType | None = None,
     ) -> list[PermissionConditionAllOutPut]:
 
         stmt = select(PermissionCondition).where(
             (PermissionCondition.permission_id == permission_id),
         )
-        stmt = self._filter(stmt, is_active=is_active, effect=effect, condition_type=condition_type)
+        stmt = self._filter(
+            stmt,
+            is_active=is_active,
+            # effect=effect,
+            condition_type=condition_type,
+        )
         result = await self.db.execute(stmt)
 
         permissions = result.scalars().all()

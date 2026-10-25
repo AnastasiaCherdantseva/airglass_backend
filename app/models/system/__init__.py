@@ -9,7 +9,7 @@ from app.models.system.permission import (
 from app.models.system.permission_condition import (
     ConditionType,
     PermissionCondition,
-    PermissionEffect,
+    # PermissionEffect,
 )
 from app.models.system.role import Role
 from app.models.system.role_permission import RolePermission
@@ -29,7 +29,7 @@ __all__ = [
     "PermissionAction",
     "PermissionCondition",
     "ConditionType",
-    "PermissionEffect",
+    # "PermissionEffect",
     "RolePermission",
     "UserRole",
     "UserPermission",

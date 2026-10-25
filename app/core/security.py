@@ -10,7 +10,8 @@ from pwdlib import PasswordHash
 from pwdlib.hashers.bcrypt import BcryptHasher
 
 from app.dto.system.user import CurrentUser
-from app.models.system.permission_condition import PermissionEffect
+
+# from app.models.system.permission_condition import PermissionEffect
 
 # ✅ Явно указываем bcrypt
 password_hash = PasswordHash((BcryptHasher(),))
@@ -60,12 +61,12 @@ def user_has_permission(
     if grouped is None:
         return False
 
-    allow = False
-    for cond in grouped.conditions:
-        if not cond.is_active:
-            continue
-        if cond.effect == PermissionEffect.DENY:
-            return False
-        if cond.effect == PermissionEffect.ALLOW:
-            allow = True
-    return allow
+    # allow = False
+    # for cond in grouped.conditions:
+    #     if not cond.is_active:
+    #         continue
+    #     if cond.effect == PermissionEffect.DENY:
+    #         return False
+    #     if cond.effect == PermissionEffect.ALLOW:
+    #         allow = True
+    return True

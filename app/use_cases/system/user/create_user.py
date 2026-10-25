@@ -7,7 +7,10 @@ import logging
 from app.core.exceptions import ConflictError, NotFoundError, PermissionDeniedError, ValidationError
 from app.core.security import hash_password
 from app.dto import CurrentUser, UserCreate, UserCreateFull, UserRoleLink, UserWithRolesOutput
-from app.models.system.permission_condition import ConditionType, PermissionEffect
+from app.models.system.permission_condition import (
+    ConditionType,
+    # PermissionEffect
+)
 from app.repositories.protocols.system.organization import OrganizationReadRepositoryProtocol
 from app.repositories.protocols.system.role import RoleReadRepositoryProtocol
 from app.repositories.protocols.system.role_permission import RolePermissionReadRepositoryProtocol
@@ -73,9 +76,9 @@ async def create_user(
     condition_roles = [
         condition.role_id
         for condition in conditions
-        if condition.effect == PermissionEffect.ALLOW
-        and condition.type == ConditionType.ROLE
-        and condition.is_active
+        if
+        # condition.effect == PermissionEffect.ALLOW and
+        condition.type == ConditionType.ROLE and condition.is_active
     ]
 
     if not data.role_ids:

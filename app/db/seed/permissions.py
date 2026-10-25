@@ -9,7 +9,7 @@ class PermissionConditionSeed(TypedDict):
     """
 
     type: str
-    effect: str
+    # effect: str
 
 
 class PermissionSeed(TypedDict):
@@ -40,9 +40,18 @@ ZONE_BY_RESOURCE: Final[dict[str, str]] = {
     "audit_log": "admin",
 }
 
-ALL: Final[PermissionConditionSeed] = {"type": "all", "effect": "allow"}
-CREATOR: Final[PermissionConditionSeed] = {"type": "creator", "effect": "allow"}
-SUBTREE: Final[PermissionConditionSeed] = {"type": "subtree", "effect": "allow"}
+ALL: Final[PermissionConditionSeed] = {
+    "type": "all",
+    # "effect": "allow"
+}
+CREATOR: Final[PermissionConditionSeed] = {
+    "type": "creator",
+    #    "effect": "allow"
+}
+SUBTREE: Final[PermissionConditionSeed] = {
+    "type": "subtree",
+    #    "effect": "allow"
+}
 
 PERMISSIONS: list[PermissionSeed] = [
     # CALCULATOR

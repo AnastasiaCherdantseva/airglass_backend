@@ -7,7 +7,11 @@ from app.dto import (
     PermissionConditionMediaOutPut,
     PermissionConditionRoleOutPut,
 )
-from app.models import ConditionType, PermissionCondition, PermissionEffect
+from app.models import (
+    ConditionType,
+    PermissionCondition,
+    # PermissionEffect
+)
 from app.repositories.protocols import (
     ReadRepositoryProtocol,
     WriteRepositoryProtocol,
@@ -24,7 +28,7 @@ class PermissionConditionReadRepositoryProtocol(
         role_id: UUID,
         *,
         is_active: bool | None = None,
-        effect: PermissionEffect | None = None,
+        # effect: PermissionEffect | None = None,
     ) -> list[PermissionConditionRoleOutPut]: ...
 
     async def get_by_category(
@@ -32,14 +36,14 @@ class PermissionConditionReadRepositoryProtocol(
         category_id: UUID,
         *,
         is_active: bool | None = None,
-        effect: PermissionEffect | None = None,
+        # effect: PermissionEffect | None = None,
     ) -> list[PermissionConditionCategoryOutPut]: ...
     async def get_by_media_type(
         self,
         media_type_id: UUID,
         *,
         is_active: bool | None = None,
-        effect: PermissionEffect | None = None,
+        # effect: PermissionEffect | None = None,
     ) -> list[PermissionConditionMediaOutPut]: ...
 
     async def get_by_permission(
@@ -47,7 +51,7 @@ class PermissionConditionReadRepositoryProtocol(
         permission_id: UUID,
         *,
         is_active: bool | None = None,
-        effect: PermissionEffect | None = None,
+        # effect: PermissionEffect | None = None,
         condition_type: ConditionType | None = None,
     ) -> list[PermissionConditionAllOutPut]: ...
 
