@@ -48,6 +48,7 @@ async def get_users(
                 is_active=u.is_active,
                 children_count=u.children_count,
                 role_ids=users_roles[u.id],
+                email_verified=u.email_verified,
             )
         )
     return UserListOutput(items=items, total=total, limit=limit, page=page)

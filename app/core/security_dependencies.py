@@ -85,6 +85,7 @@ async def get_current_user(
         permissions=conditions_groups,
         has_admin_access=has_admin_access,
         children_count=children_count,
+        email_verified=user.email_verified is not None,
     )
 
 
