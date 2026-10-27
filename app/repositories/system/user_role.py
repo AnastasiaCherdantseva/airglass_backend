@@ -79,6 +79,7 @@ class UserRoleRepository(
                 is_active=row.is_active,
                 parent_id=row.parent_id,
                 children_count=len(row.children),
+                email_verified=row.email_verified is not None,
             )
             for row in result.scalars().all()
         ]

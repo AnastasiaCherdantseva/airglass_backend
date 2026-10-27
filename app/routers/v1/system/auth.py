@@ -45,10 +45,15 @@ async def login_by_email(
         max_age=SESSION_MAX_AGE,
         path="/",
     )
-    return UserResponse(id=auth_data.id, name=auth_data.name, email=auth_data.email)
+    return UserResponse(
+        id=auth_data.id,
+        name=auth_data.name,
+        email=auth_data.email,
+        email_verified=auth_data.email_verified,
+    )
 
 
-@router.get("/me", response_model=MeResponse)
+@router.get("/me", response_model=MeResponse, status_code=status.HTTP_200_OK)
 async def get_me(
     current_user: CurrentUser = Depends(get_current_user),
 ) -> MeResponse:
@@ -60,6 +65,7 @@ async def get_me(
         email=current_user.email,
         has_admin_access=current_user.has_admin_access,
         permissions=current_user.permissions,
+        email_verified=current_user.email_verified,
     )
 
 

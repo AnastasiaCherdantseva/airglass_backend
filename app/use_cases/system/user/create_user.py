@@ -176,4 +176,5 @@ async def create_user(
         parent_id=user.parent_id,
         role_ids=data.role_ids,
         children_count=children_count,
+        email_verified=user.email_verified,
     )

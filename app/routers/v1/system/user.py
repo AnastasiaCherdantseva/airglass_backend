@@ -81,6 +81,7 @@ async def get_users_endpoint(
                 parent_id=item.parent_id,
                 role_ids=item.role_ids,
                 children_count=item.children_count,
+                email_verified=item.email_verified,
             )
             for item in result.items
         ],
@@ -142,6 +143,7 @@ async def create_user_endpoint(
         is_active=result.is_active,
         parent_id=result.parent_id,
         role_ids=result.role_ids,
+        email_verified=result.email_verified,
     )
 
 

@@ -39,6 +39,7 @@ class UserOutput(UserData):
     id: UUID
     parent_id: UUID | None
     children_count: int
+    email_verified: bool
 
 
 @dataclass(frozen=True)

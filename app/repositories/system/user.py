@@ -124,6 +124,7 @@ class UserRepository(BaseIdRepository[User]):
                 name=row.name,
                 is_active=row.is_active,
                 children_count=children_counts[row.id],
+                email_verified=row.email_verified is not None,
             )
             for row in users
         ]
@@ -176,6 +177,7 @@ class UserRepository(BaseIdRepository[User]):
             name=user.name,
             is_active=user.is_active,
             children_count=sum(1 for c in user.children if c.deleted_at is None),
+            email_verified=user.email_verified is not None,
         )
 
     async def create(self, data: UserCreateFull) -> UserOutput:
@@ -197,4 +199,5 @@ class UserRepository(BaseIdRepository[User]):
             name=user.name,
             is_active=user.is_active,
             children_count=0,
+            email_verified=user.email_verified is not None,
         )

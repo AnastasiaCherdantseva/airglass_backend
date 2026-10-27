@@ -28,6 +28,7 @@ class AuthenticatedUser:
     name: str
     email: str
     session_token: str
+    email_verified: bool
     # roles: list[RoleOutput]
 
 
@@ -98,6 +99,7 @@ async def authenticate_user(
         id=user.id,
         name=user.name,
         email=user.email,
+        email_verified=user.email_verified is not None,
         session_token=token,
         # roles=roles
     )
