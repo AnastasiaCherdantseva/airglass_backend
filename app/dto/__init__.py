@@ -19,6 +19,7 @@ from app.dto.system import (
     RoleData,
     RoleOutput,
     RolePatchData,
+    RoleWithPermissionsOutput,
     SessionData,
     SessionInput,
     SessionOutput,
@@ -50,6 +51,7 @@ __all__ = [
     "RoleData",
     "RoleOutput",
     "RolePatchData",
+    "RoleWithPermissionsOutput",
     #
     "PermissionData",
     "PermissionOutput",
