@@ -5,9 +5,10 @@ Pydantic-схемы для ролей
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import ConfigDict, Field
+from pydantic import Field
 
 from app.schemas.base import BaseSchema
+from app.schemas.system.permission import PermissionWithConditions
 
 # ============================================================
 # ROLE
@@ -26,6 +27,7 @@ class RoleCreate(RoleBase):
     """Создание роли."""
 
     is_system: bool = False
+    owner_id: UUID
 
 
 class RoleUpdate(BaseSchema):
@@ -39,11 +41,11 @@ class RoleUpdate(BaseSchema):
 class RoleResponse(RoleBase):
     """Полный ответ по роли."""
 
-    model_config = ConfigDict(from_attributes=True)
     id: UUID
     is_system: bool
 
 
 class RoleDetailResponse(RoleResponse):
+    permissions: list[PermissionWithConditions]
     created_at: datetime
     updated_at: datetime
