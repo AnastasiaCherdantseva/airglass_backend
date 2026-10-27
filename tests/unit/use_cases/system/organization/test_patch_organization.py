@@ -31,6 +31,7 @@ def _actor(user: User) -> CurrentUser:
         children_count=0,
         permissions=[],
         has_admin_access=False,
+        email_verified=user.email_verified,
     )
 
 

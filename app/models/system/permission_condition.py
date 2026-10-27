@@ -146,3 +146,12 @@ class PermissionCondition(Base):
         back_populates="condition",
         cascade="all, delete-orphan",
     )
+
+
+# Permission with code [ROLES, CATEGORY, MEDIA].READ has relationships only with condition that type = [role,category,media]
+# Permission with code [ROLES, CATEGORY, MEDIA].UPDATE has relationships only with condition that type = [role,category,media]
+# Permission with code [ROLES, CATEGORY, MEDIA].CREATE has relationships only with condition that type = [role,category,media]
+# Permission with code [ROLES, CATEGORY, MEDIA].DELETE has relationships only with condition that type = [role,category,media]
+
+
+# Permission with code USER.[CREATE, READ, UPDATE, DELETE] has relationships only with condition that type = [subtree]

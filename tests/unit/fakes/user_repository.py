@@ -106,6 +106,7 @@ class FakeUserRepository:
                 children_count=sum(
                     1 for x in self.users.values() if x.parent_id == u.id and x.deleted_at is None
                 ),
+                email_verified=u.email_verified is not None,
             )
             for u in page_items
         ]
@@ -145,6 +146,7 @@ class FakeUserRepository:
             email=data.email.strip().lower(),
             name=data.name,
             password_hash=data.password_hash,
+            email_verified=None,
         )
         self.add(user)
         return UserOutput(
@@ -154,6 +156,7 @@ class FakeUserRepository:
             name=user.name,
             is_active=user.is_active,
             children_count=0,
+            email_verified=user.email_verified is not None,
         )
 
     async def soft_delete_by_id(self, user_id: UUID) -> int:

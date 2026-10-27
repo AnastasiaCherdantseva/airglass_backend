@@ -57,6 +57,8 @@ class FakeUserRoleRepository:
                     is_system=role.is_system,
                     is_active=role.is_active,
                     owner_id=role.owner_id,
+                    created_at=role.created_at,
+                    updated_at=role.updated_at,
                 )
             )
         return result
@@ -84,6 +86,7 @@ class FakeUserRoleRepository:
                         for u in self.users.values()
                         if u.parent_id == user.id and u.deleted_at is None
                     ),
+                    email_verified=user.email_verified is not None,
                 )
             )
         return result

@@ -159,6 +159,7 @@ def make_actor(user: User, permissions: list[GroupedPermission]) -> CurrentUser:
         children_count=0,
         permissions=permissions,
         has_admin_access=False,
+        email_verified=user.email_verified,
     )
 
 

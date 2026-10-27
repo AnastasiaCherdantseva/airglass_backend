@@ -19,7 +19,7 @@ from app.core.security import is_verified_password
 from app.dto import CurrentUser, GroupedPermission, UserCreate, UserWithRolesOutput
 from app.dto.system.organization import OrganizationData
 from app.dto.system.permission_condition import PermissionConditionAllOutPut
-from app.models.system import ConditionType, PermissionEffect, Role, User
+from app.models.system import ConditionType, Role, User
 from app.use_cases.system.user.create_user import create_user
 from tests.unit.fakes.organization import FakeOrganizationRepository
 from tests.unit.fakes.role import FakeRoleRepository
@@ -76,6 +76,7 @@ def make_actor(user: User, permissions: list[GroupedPermission]) -> CurrentUser:
         children_count=0,
         permissions=permissions,
         has_admin_access=False,
+        email_verified=user.email_verified,
     )
 
 
@@ -195,7 +196,6 @@ async def test_no_suitable_role_condition_raises(
     role_in_memory: Role,
     deps: dict[str, Any],
     type_: ConditionType | None,
-    effect: PermissionEffect | None,
     is_active: bool | None,
 ) -> None:
     """USERS.CREATE without an active ROLE+ALLOW condition -> PermissionDeniedError.

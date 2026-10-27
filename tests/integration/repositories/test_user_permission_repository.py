@@ -30,7 +30,6 @@ async def test_get_grouped_one_condition(
     assert len(result) == 1
     assert result[0].code is not None
     assert len(result[0].conditions) == 1
-    assert result[0].conditions[0].effect == "allow"
 
 
 async def test_get_grouped_metadata(
@@ -59,7 +58,6 @@ async def test_get_grouped_conditions_are_full_dto(
     assert condition.id == source.id
     assert condition.permission_id == source.permission_id
     assert condition.type == source.type
-    assert condition.effect == source.effect
     assert condition.is_active == source.is_active
 
 

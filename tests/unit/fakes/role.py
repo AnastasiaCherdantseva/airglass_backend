@@ -2,6 +2,7 @@
 Fake-реализация RoleRepository для юнит-тестов.
 """
 
+from datetime import UTC, datetime
 from uuid import UUID, uuid4
 
 from app.dto.system.role import RoleData, RoleOutput, RolePatchData
@@ -67,6 +68,8 @@ class FakeRoleRepository:
             description=data.description,
             is_system=data.is_system,
             is_active=data.is_active,
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
         self.roles[role.id] = role
         return self._to_output(role)
@@ -135,4 +138,6 @@ class FakeRoleRepository:
             description=r.description,
             is_system=r.is_system,
             is_active=r.is_active,
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )

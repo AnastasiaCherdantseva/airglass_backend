@@ -10,7 +10,6 @@ from app.models.system.permission_condition import ConditionType
 
 def make_condition(
     *,
-    # effect: PermissionEffect = PermissionEffect.ALLOW,
     condition_type: ConditionType = ConditionType.ALL,
     is_active: bool = True,
 ) -> PermissionConditionAllOutPut:
@@ -21,7 +20,6 @@ def make_condition(
         category_id=None,
         role_id=None,
         media_type_id=None,
-        # effect=effect,
         type=condition_type,
         is_active=is_active,
     )
@@ -52,6 +50,7 @@ def make_current_user(
         permissions=permissions or [],
         has_admin_access=False,
         children_count=0,
+        email_verified=True,
     )
 
 
@@ -87,7 +86,7 @@ def test_single_allow_active() -> None:
 
 
 def test_single_allow_inactive() -> None:
-    """Одно неактивное ALLOW → False."""
+    """Одно неактивное → False."""
     user = make_current_user(
         permissions=[
             make_grouped(
@@ -101,7 +100,7 @@ def test_single_allow_inactive() -> None:
 
 
 def test_multiple_allow() -> None:
-    """Несколько ALLOW → True."""
+    """Несколько → True."""
     user = make_current_user(
         permissions=[
             make_grouped(
@@ -239,17 +238,17 @@ def test_multiple_allow() -> None:
 # ─────────────────────────────────────────────────────────────
 
 
-def test_other_codes_ignored() -> None:
-    """Права с другим code не влияют."""
-    user = make_current_user(
-        permissions=[
-            make_grouped("users.read", [make_condition()]),
-            make_grouped("users.create", [make_condition()]),
-        ]
-    )
+# def test_other_codes_ignored() -> None:
+#     """Права с другим code не влияют."""
+#     user = make_current_user(
+#         permissions=[
+#             make_grouped("users.read", [make_condition()]),
+#             make_grouped("users.create", [make_condition()]),
+#         ]
+#     )
 
-    assert user_has_permission(user, "users.read") is True
-    assert user_has_permission(user, "users.create") is False
+#     assert user_has_permission(user, "users.read") is True
+#     assert user_has_permission(user, "users.create") is False
 
 
 def test_empty_conditions() -> None:

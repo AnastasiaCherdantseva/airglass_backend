@@ -24,7 +24,16 @@ from app.models.system import (
 
 URL = "/api/users"
 
-ITEM_KEYS = {"id", "email", "name", "is_active", "parent_id", "role_ids", "children_count"}
+ITEM_KEYS = {
+    "id",
+    "email",
+    "name",
+    "is_active",
+    "parent_id",
+    "role_ids",
+    "children_count",
+    "email_verified",
+}
 
 MakeUser = Callable[..., Awaitable[User]]
 MakeUserRole = Callable[[User, Role], Awaitable[UserRole]]
@@ -204,6 +213,7 @@ async def test_get_users_item_fields(
         "parent_id": str(user_admin.id),
         "role_ids": [str(role.id)],
         "children_count": 1,
+        "email_verified": False if child.email_verified is None else True,
     }
 
 

@@ -62,11 +62,10 @@ def user_has_permission(
         return False
 
     # allow = False
-    # for cond in grouped.conditions:
-    #     if not cond.is_active:
-    #         continue
-    #     if cond.effect == PermissionEffect.DENY:
-    #         return False
-    #     if cond.effect == PermissionEffect.ALLOW:
-    #         allow = True
+    is_not_active = 0
+    for cond in grouped.conditions:
+        if not cond.is_active:
+            is_not_active += 1
+    if len(grouped.conditions) == is_not_active:
+        return False
     return True

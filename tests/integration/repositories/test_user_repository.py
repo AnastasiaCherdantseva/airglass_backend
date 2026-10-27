@@ -63,6 +63,7 @@ async def _make_children(make_user, parent: User, count: int = 5) -> list[User]:
             email=f"c{i}@example.com",
             parent_id=parent.id,
             created_at=base + timedelta(minutes=i),
+            email_verified=datetime.now(UTC),
         )
         for i in range(count)
     ]
@@ -497,6 +498,7 @@ async def test_get_by_parent_id_output_fields(
         name=child.name,
         is_active=child.is_active,
         children_count=1,
+        email_verified=True,
     )
 
 
@@ -507,9 +509,18 @@ async def test_get_by_parent_id_excludes_deleted_and_indirect(
 
     Мягко удалённые дети и внуки не возвращаются.
     """
-    child = await make_user(email="child@example.com", parent_id=user.id)
-    await make_user(email="deleted@example.com", parent_id=user.id, deleted_at=datetime.now(UTC))
-    await make_user(email="grandchild@example.com", parent_id=child.id)
+    child = await make_user(
+        email="child@example.com", parent_id=user.id, email_verified=datetime.now(UTC)
+    )
+    await make_user(
+        email="deleted@example.com",
+        parent_id=user.id,
+        email_verified=datetime.now(UTC),
+        deleted_at=datetime.now(UTC),
+    )
+    await make_user(
+        email="grandchild@example.com", parent_id=child.id, email_verified=datetime.now(UTC)
+    )
 
     result = await UserRepository(db_session).get_by_parent_id(user.id)
 

@@ -25,7 +25,6 @@ from app.models.system import (
     Permission,
     PermissionAction,
     PermissionCondition,
-    PermissionEffect,
     PermissionResource,
     PermissionZone,
     Role,
@@ -75,7 +74,6 @@ async def grant_users_delete(
         condition = await make_condition(
             permission=permission,
             type_=ConditionType.SUBTREE,
-            effect=PermissionEffect.ALLOW,
             is_active=True,
         )
 
@@ -212,7 +210,6 @@ async def test_delete_user_deletes_subtree_and_dependent_data(
     condition = await db_session.scalar(
         select(PermissionCondition).where(
             PermissionCondition.permission_id == permission.id,
-            PermissionCondition.effect == PermissionEffect.ALLOW,
             PermissionCondition.is_active.is_(True),
         )
     )

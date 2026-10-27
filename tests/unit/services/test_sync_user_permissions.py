@@ -100,9 +100,9 @@ async def test_sync_direct_only(
         user_permissions=fake_user_permissions_repo,
     )
     cnd_base = await fake_role_permissions_repo.get_condition_ids_by_role_id(role_in_memory.id)
-    assert [cid for (uid, cid) in fake_user_permissions_repo.links if uid == user.id] == list(
-        set([cnd.id] + cnd_base)
-    )
+    actual = {cid for (uid, cid) in fake_user_permissions_repo.links if uid == user.id}
+    expected = {cnd.id, *cnd_base}
+    assert actual == expected
 
 
 # ─────────────────────────────────────────────────────────────

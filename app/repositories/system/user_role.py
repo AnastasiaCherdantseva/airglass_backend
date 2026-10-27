@@ -56,6 +56,8 @@ class UserRoleRepository(
                 is_active=row.is_active,
                 description=row.description,
                 owner_id=row.owner_id,
+                created_at=row.created_at,
+                updated_at=row.updated_at,
             )
             for row in result.scalars().all()
         ]

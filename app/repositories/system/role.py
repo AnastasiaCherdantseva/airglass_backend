@@ -40,6 +40,8 @@ class RoleRepository(
             description=role.description,
             is_system=role.is_system,
             is_active=role.is_active,
+            created_at=role.created_at,
+            updated_at=role.updated_at,
         )
 
     async def get_by_owner_id(
