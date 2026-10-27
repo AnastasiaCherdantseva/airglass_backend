@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
-from app.dto.system.permission_condition import PermissionConditionAllOutPut
+from app.dto.system.user_permission import GroupedPermission
 
 
 @dataclass(frozen=True)
@@ -23,7 +23,7 @@ class RoleOutput(RoleData):
 
 @dataclass(frozen=True)
 class RoleWithPermissionsOutput(RoleOutput):
-    permissions: list[PermissionConditionAllOutPut]
+    permissions: list[GroupedPermission]
 
 
 @dataclass(frozen=True)

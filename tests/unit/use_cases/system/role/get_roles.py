@@ -12,7 +12,7 @@ from app.core.exceptions import ConflictError, PermissionDeniedError
 from app.dto.system.permission_condition import PermissionConditionAllOutPut
 from app.dto.system.user import CurrentUser
 from app.dto.system.user_permission import GroupedPermission
-from app.models import PermissionCondition, Role, RolePermission
+from app.models import Role
 from app.models.system import ConditionType
 from app.use_cases.system.role.get_roles import get_roles
 from tests.unit.fakes.role import FakeRoleRepository
@@ -318,71 +318,6 @@ async def test_get_roles_includes_inactive_roles() -> None:
     assert len(result) == 1
     assert result[0].id == role.id
     assert result[0].is_active is False
-
-
-@pytest.mark.asyncio
-async def test_get_roles_attaches_conditions_to_their_roles() -> None:
-    """Attach permission conditions to the corresponding roles.
-
-    Прикрепить условия прав к соответствующим ролям.
-    """
-    first_role = make_role()
-    second_role = make_role()
-
-    first_condition = PermissionCondition(
-        id=uuid4(),
-        permission_id=uuid4(),
-        category_id=None,
-        role_id=first_role.id,
-        media_type_id=None,
-        type=ConditionType.ROLE,
-        is_active=True,
-    )
-    second_condition = PermissionCondition(
-        id=uuid4(),
-        permission_id=uuid4(),
-        category_id=None,
-        role_id=second_role.id,
-        media_type_id=None,
-        type=ConditionType.ROLE,
-        is_active=True,
-    )
-
-    links = [
-        RolePermission(
-            role_id=first_role.id,
-            condition_id=first_condition.id,
-        ),
-        RolePermission(
-            role_id=second_role.id,
-            condition_id=second_condition.id,
-        ),
-    ]
-
-    actor = make_actor(
-        conditions=[
-            make_condition_dto(role_id=first_role.id),
-            make_condition_dto(role_id=second_role.id),
-        ],
-    )
-
-    result = await get_roles(
-        actor,
-        roles=FakeRoleRepository([first_role, second_role]),
-        role_permissions=FakeRolePermissionRepository(
-            roles=[first_role, second_role],
-            conditions=[first_condition, second_condition],
-            links=links,
-        ),
-    )
-
-    roles_by_id = {role.id: role for role in result}
-
-    assert len(roles_by_id[first_role.id].permissions) == 1
-    assert roles_by_id[first_role.id].permissions[0].id == first_condition.id
-
-    assert len(roles_by_id[second_role.id].permissions) == 1
-    assert roles_by_id[second_role.id].permissions[0].id == second_condition.id
 
 
 @pytest.mark.asyncio

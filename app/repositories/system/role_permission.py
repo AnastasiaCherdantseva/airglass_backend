@@ -10,6 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.dto.system.permission_condition import (
     PermissionConditionAllOutPut,
 )
+from app.dto.system.user_permission import GroupedPermission
+from app.models.system.permission import Permission
 from app.models.system.permission_condition import PermissionCondition
 from app.models.system.role_permission import RolePermission
 from app.repositories.protocols.system.role_permission import (
@@ -34,63 +36,54 @@ class RolePermissionRepository(
         )
         return list(result.scalars().all())
 
-    async def get_conditions_by_role_id(self, role_id: UUID) -> list[PermissionConditionAllOutPut]:
-        result = (
-            (
-                await self.db.execute(
-                    select(PermissionCondition).join(
-                        RolePermission, RolePermission.role_id == role_id
-                    )
-                )
-            )
-            .scalars()
-            .all()
-        )
-        return [
-            PermissionConditionAllOutPut(
-                id=obj.id,
-                permission_id=obj.permission_id,
-                is_active=obj.is_active,
-                # effect=obj.effect,
-                type=obj.type,
-                media_type_id=obj.media_type_id,
-                category_id=obj.category_id,
-                role_id=obj.role_id,
-            )
-            for obj in result
-        ]
-
     async def get_conditions_by_role_ids(
-        self, role_ids: list[UUID]
-    ) -> dict[UUID, list[PermissionConditionAllOutPut]]:
+        self,
+        role_ids: list[UUID],
+    ) -> dict[UUID, list[GroupedPermission]]:
         if not role_ids:
             return {}
 
-        rows = (
-            await self.db.execute(
-                select(RolePermission.role_id, PermissionCondition)
-                .join(
-                    PermissionCondition,
-                    RolePermission.condition_id == PermissionCondition.id,
-                )
-                .where(RolePermission.role_id.in_(role_ids))
+        stmt = (
+            select(
+                RolePermission.role_id.label("role_id"),
+                Permission.id.label("permission_id"),
+                Permission.code.label("code"),
+                PermissionCondition,
             )
-        ).all()
+            .join(
+                PermissionCondition,
+                PermissionCondition.id == RolePermission.condition_id,
+            )
+            .join(
+                Permission,
+                Permission.id == PermissionCondition.permission_id,
+            )
+            .where(RolePermission.role_id.in_(role_ids))
+        )
+        result = await self.db.execute(stmt)
+        rows = result.all()
 
-        grouped: dict[UUID, list[PermissionConditionAllOutPut]] = {}
-        for role_id, condition in rows:
-            grouped.setdefault(role_id, []).append(
+        grouped: dict[UUID, dict[UUID, GroupedPermission]] = {}
+        for role_id, permission_id, code, condition in rows:
+            role_group = grouped.setdefault(role_id, {})
+            if permission_id not in role_group:
+                role_group[permission_id] = GroupedPermission(
+                    id=permission_id,
+                    code=code,
+                    conditions=[],
+                )
+            role_group[permission_id].conditions.append(
                 PermissionConditionAllOutPut(
                     id=condition.id,
                     permission_id=condition.permission_id,
-                    is_active=condition.is_active,
-                    type=condition.type,
-                    media_type_id=condition.media_type_id,
                     category_id=condition.category_id,
                     role_id=condition.role_id,
+                    media_type_id=condition.media_type_id,
+                    type=condition.type,
+                    is_active=condition.is_active,
                 )
             )
-        return grouped
+        return {rid: list(g.values()) for rid, g in grouped.items()}
 
     async def get_role_ids_by_condition_id(self, condition_id: UUID) -> list[UUID]:
         """Все role_id, к которым привязана condition."""

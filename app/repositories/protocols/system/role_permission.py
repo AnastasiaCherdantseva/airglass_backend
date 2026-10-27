@@ -5,7 +5,7 @@ Protocols for RolePermission repository.
 from typing import Protocol
 from uuid import UUID
 
-from app.dto.system.permission_condition import PermissionConditionAllOutPut
+from app.dto.system.user_permission import GroupedPermission
 
 
 class RolePermissionReadRepositoryProtocol(Protocol):
@@ -13,13 +13,12 @@ class RolePermissionReadRepositoryProtocol(Protocol):
 
     async def get_condition_ids_by_role_id(self, role_id: UUID) -> list[UUID]: ...
     async def get_role_ids_by_condition_id(self, condition_id: UUID) -> list[UUID]: ...
-    async def get_conditions_by_role_id(
-        self, role_id: UUID
-    ) -> list[PermissionConditionAllOutPut]: ...
+
+    # async def get_conditions_by_role_id(self, role_id: UUID) -> list[GroupedPermission]: ...
 
     async def get_conditions_by_role_ids(
         self, role_ids: list[UUID]
-    ) -> dict[UUID, list[PermissionConditionAllOutPut]]: ...
+    ) -> dict[UUID, list[GroupedPermission]]: ...
 
 
 class RolePermissionWriteRepositoryProtocol(Protocol):

@@ -7,6 +7,7 @@ Fake-реализация RolePermissionRepository для юнит-тестов.
 from uuid import UUID
 
 from app.dto.system.permission_condition import PermissionConditionAllOutPut
+from app.dto.system.user_permission import GroupedPermission
 from app.models import Permission, PermissionCondition, Role, RolePermission
 
 
@@ -48,13 +49,13 @@ class FakeRolePermissionRepository:
     async def get_conditions_by_role_ids(
         self,
         role_ids: list[UUID],
-    ) -> dict[UUID, list[PermissionConditionAllOutPut]]:
-        """Return permission conditions grouped by role ID.
+    ) -> dict[UUID, list[GroupedPermission]]:
+        """Return grouped permissions per role id.
 
-        Возвращает условия прав, сгруппированные по идентификатору роли.
+        Возвращает сгруппированные права по идентификатору роли.
         """
         requested_role_ids = set(role_ids)
-        result: dict[UUID, list[PermissionConditionAllOutPut]] = {}
+        grouped: dict[UUID, dict[UUID, GroupedPermission]] = {}
 
         for role_id, condition_id in self.links:
             if role_id not in requested_role_ids:
@@ -64,7 +65,18 @@ class FakeRolePermissionRepository:
             if condition is None:
                 continue
 
-            result.setdefault(role_id, []).append(
+            permission = self.permissions.get(condition.permission_id)
+            if permission is None:
+                continue
+
+            role_group = grouped.setdefault(role_id, {})
+            if permission.id not in role_group:
+                role_group[permission.id] = GroupedPermission(
+                    id=permission.id,
+                    code=permission.code,
+                    conditions=[],
+                )
+            role_group[permission.id].conditions.append(
                 PermissionConditionAllOutPut(
                     id=condition.id,
                     permission_id=condition.permission_id,
@@ -76,4 +88,4 @@ class FakeRolePermissionRepository:
                 )
             )
 
-        return result
+        return {role_id: list(g.values()) for role_id, g in grouped.items()}
