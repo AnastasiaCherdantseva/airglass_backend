@@ -2,7 +2,7 @@
 
 from uuid import uuid4
 
-from app.models.system import ConditionType, PermissionEffect, PermissionResource
+from app.models.system import ConditionType, PermissionResource
 from app.repositories.system.user_permission import UserPermissionRepository
 
 # ─────────────────────────────────────────────────────────────
@@ -68,8 +68,8 @@ async def test_get_grouped_multiple_conditions_same_permission(
 ):
     """Несколько conditions для одного permission → одна группа."""
     permission = permissions[0]
-    c1 = await make_condition(permission, type_=ConditionType.ALL, effect=PermissionEffect.ALLOW)
-    c2 = await make_condition(permission, type_=ConditionType.SUBTREE, effect=PermissionEffect.DENY)
+    c1 = await make_condition(permission, type_=ConditionType.ALL)
+    c2 = await make_condition(permission, type_=ConditionType.SUBTREE)
     await make_user_permission(user, c1)
     await make_user_permission(user, c2)
 
@@ -227,7 +227,6 @@ async def test_has_admin_access_true(
     condition = await make_condition(
         admin_permission,
         type_=ConditionType.ALL,
-        effect=PermissionEffect.ALLOW,
         is_active=True,
     )
     await make_user_permission(user, condition)
@@ -250,7 +249,6 @@ async def test_has_admin_access_false_public_only(
     condition = await make_condition(
         public_permission,
         type_=ConditionType.ALL,
-        effect=PermissionEffect.ALLOW,
     )
     await make_user_permission(user, condition)
     repo = UserPermissionRepository(db_session)
@@ -281,7 +279,6 @@ async def test_has_admin_access_false_inactive_condition(
     condition = await make_condition(
         admin_permission,
         type_=ConditionType.ALL,
-        effect=PermissionEffect.ALLOW,
         is_active=False,
     )
     await make_user_permission(user, condition)
@@ -304,7 +301,6 @@ async def test_has_admin_access_isolated_by_user(
     condition = await make_condition(
         admin_permission,
         type_=ConditionType.ALL,
-        effect=PermissionEffect.ALLOW,
     )
     await make_user_permission(users[0], condition)
     repo = UserPermissionRepository(db_session)
@@ -360,19 +356,3 @@ async def test_delete_by_user_ids_empty_and_unknown(db_session):
 
     assert await repo.delete_by_user_ids([]) == 0
     assert await repo.delete_by_user_ids([uuid4()]) == 0
-
-
-async def test_has_admin_access_false_deny_only(
-    db_session, user, permissions, make_condition, make_user_permission
-):
-    """False if the only admin condition is DENY.
-
-    False, если единственное admin-условие - DENY.
-    """
-    admin_permission = next(p for p in permissions if p.resource == PermissionResource.PRODUCTS)
-    condition = await make_condition(
-        admin_permission, type_=ConditionType.ALL, effect=PermissionEffect.DENY
-    )
-    await make_user_permission(user, condition)
-
-    assert await UserPermissionRepository(db_session).has_admin_access(user.id) is False

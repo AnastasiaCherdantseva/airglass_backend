@@ -42,7 +42,7 @@ CREATE_CODE = "USERS.CREATE"
 def make_condition(
     *,
     type_: ConditionType = ConditionType.ROLE,
-    effect: PermissionEffect = PermissionEffect.ALLOW,
+    # effect: PermissionEffect = PermissionEffect.ALLOW,
     is_active: bool = True,
     role_id: UUID | None = None,
 ) -> PermissionConditionAllOutPut:
@@ -56,7 +56,7 @@ def make_condition(
         category_id=None,
         role_id=role_id,
         media_type_id=None,
-        effect=effect,
+        # effect=effect,
         type=type_,
         is_active=is_active,
     )
@@ -183,12 +183,11 @@ async def test_no_users_create_permission_raises(
 
 
 @pytest.mark.parametrize(
-    ("type_", "effect", "is_active"),
+    ("type_", "is_active"),
     [
-        pytest.param(ConditionType.SUBTREE, PermissionEffect.ALLOW, True, id="wrong_type"),
-        pytest.param(ConditionType.ROLE, PermissionEffect.DENY, True, id="deny"),
-        pytest.param(ConditionType.ROLE, PermissionEffect.ALLOW, False, id="inactive"),
-        pytest.param(None, None, None, id="no_conditions"),
+        pytest.param(ConditionType.SUBTREE, True, id="wrong_type"),
+        pytest.param(ConditionType.ROLE, False, id="inactive"),
+        pytest.param(None, None, id="no_conditions"),
     ],
 )
 async def test_no_suitable_role_condition_raises(
@@ -206,11 +205,7 @@ async def test_no_suitable_role_condition_raises(
     conditions = (
         []
         if type_ is None
-        else [
-            make_condition(
-                type_=type_, effect=effect, is_active=is_active, role_id=role_in_memory.id
-            )
-        ]
+        else [make_condition(type_=type_, is_active=is_active, role_id=role_in_memory.id)]
     )
     group = GroupedPermission(id=uuid4(), code=CREATE_CODE, conditions=conditions)
     actor = make_actor(users_in_memory[1], [group])

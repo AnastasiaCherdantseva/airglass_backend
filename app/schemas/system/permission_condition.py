@@ -1,7 +1,10 @@
 # from typing import Optional
 from uuid import UUID
 
-from app.models.system.permission_condition import ConditionType, PermissionEffect
+from app.models.system.permission_condition import (
+    ConditionType,
+    #    PermissionEffect
+)
 
 # from decimal import Decimal
 from app.schemas.base import BaseSchema
@@ -11,7 +14,7 @@ class PermissionConditionBase(BaseSchema):
     id: UUID
     permission_id: UUID
     type: ConditionType
-    effect: PermissionEffect
+    # effect: PermissionEffect
     is_active: bool
 
 

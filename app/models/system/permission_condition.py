@@ -43,11 +43,11 @@ class ConditionType(enum.StrEnum):
     MEDIA = "media"
 
 
-class PermissionEffect(enum.StrEnum):
-    """Effect of a permission condition."""
+# class PermissionEffect(enum.StrEnum):
+#     """Effect of a permission condition."""
 
-    ALLOW = "allow"
-    DENY = "deny"
+#     ALLOW = "allow"
+#     DENY = "deny"
 
 
 class PermissionCondition(Base):
@@ -59,7 +59,7 @@ class PermissionCondition(Base):
             # BR-ACCESS-004.BR-ACCESS-009
             "permission_id",
             "type",
-            "effect",
+            # "effect",
             "category_id",
             "role_id",
             "media_type_id",
@@ -92,11 +92,11 @@ class PermissionCondition(Base):
         nullable=False,
     )
     type: Mapped[ConditionType] = mapped_column(Enum(ConditionType), nullable=False)
-    effect: Mapped[PermissionEffect] = mapped_column(
-        Enum(PermissionEffect, name="permission_effect"),
-        server_default=text("'ALLOW'"),
-        nullable=False,
-    )
+    # effect: Mapped[PermissionEffect] = mapped_column(
+    #     Enum(PermissionEffect, name="permission_effect"),
+    #     server_default=text("'ALLOW'"),
+    #     nullable=False,
+    # )
 
     category_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),

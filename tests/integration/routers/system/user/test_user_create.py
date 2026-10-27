@@ -17,7 +17,6 @@ from app.models.system import (
     Permission,
     PermissionAction,
     PermissionCondition,
-    PermissionEffect,
     PermissionResource,
     PermissionZone,
     User,
@@ -69,7 +68,6 @@ async def grant_users_create(
                 PermissionCondition.permission_id == permission.id,
                 PermissionCondition.type == ConditionType.ROLE,
                 PermissionCondition.role_id == role.id,
-                PermissionCondition.effect == PermissionEffect.ALLOW,
                 PermissionCondition.is_active.is_(True),
             )
         )
@@ -79,7 +77,6 @@ async def grant_users_create(
                 permission=permission,
                 type_=ConditionType.ROLE,
                 role_id=role.id,
-                effect=PermissionEffect.ALLOW,
                 is_active=True,
             )
 

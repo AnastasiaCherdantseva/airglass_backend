@@ -67,7 +67,7 @@ class FakeUserPermissionRepository:
                     category_id=condition.category_id,
                     role_id=condition.role_id,
                     media_type_id=condition.media_type_id,
-                    effect=condition.effect,
+                    # effect=condition.effect,
                     type=condition.type,
                     is_active=condition.is_active,
                 )

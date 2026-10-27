@@ -7,7 +7,7 @@ import pytest
 import pytest_asyncio
 from sqlalchemy import UUID
 
-from app.models.system import ConditionType, PermissionEffect
+from app.models.system import ConditionType
 from app.repositories.system.permission_condition import PermissionConditionRepository
 
 # ─────────────────────────────────────────────────────────────────────
@@ -16,7 +16,7 @@ from app.repositories.system.permission_condition import PermissionConditionRepo
 
 
 async def test_get_by_permission_returns_all_conditions(
-    db_session, permissions, permission_conditions_allow, permission_conditions_deny
+    db_session, permissions, permission_conditions_allow
 ):
     """Возвращает все conditions для permission'а: ALLOW и DENY."""
     repo = PermissionConditionRepository(db_session)
@@ -25,7 +25,7 @@ async def test_get_by_permission_returns_all_conditions(
     result = await repo.get_by_permission(target.id)
 
     assert len(result) == 4
-    assert {c.effect for c in result} == {PermissionEffect.ALLOW, PermissionEffect.DENY}
+    # assert {c.effect for c in result} == {PermissionEffect.ALLOW, PermissionEffect.DENY}
     assert all(c.permission_id == target.id for c in result)
 
 
@@ -68,34 +68,36 @@ async def test_get_by_permission_filter_is_active_false(
     assert result[0].is_active is False
 
 
-async def test_get_by_permission_filter_effect_allow(
-    db_session, permissions, permission_conditions_allow, permission_conditions_deny
-):
-    """Фильтр effect=ALLOW возвращает только ALLOW."""
-    repo = PermissionConditionRepository(db_session)
-    target = permissions[0]
+# async def test_get_by_permission_filter_effect_allow(
+#     db_session, permissions, permission_conditions_allow,
+# ):
+#     """Фильтр effect=ALLOW возвращает только ALLOW."""
+#     repo = PermissionConditionRepository(db_session)
+#     target = permissions[0]
 
-    result = await repo.get_by_permission(target.id, effect=PermissionEffect.ALLOW)
+#     result = await repo.get_by_permission(target.id, effect=PermissionEffect.ALLOW)
 
-    assert len(result) == 3
-    assert result[0].effect == PermissionEffect.ALLOW
+#     assert len(result) == 3
+#     # assert result[0].effect == PermissionEffect.ALLOW
 
 
-async def test_get_by_permission_filter_effect_deny(
-    db_session, permissions, permission_conditions_allow, permission_conditions_deny
-):
-    """Фильтр effect=DENY возвращает только DENY."""
-    repo = PermissionConditionRepository(db_session)
-    target = permissions[0]
+# async def test_get_by_permission_filter_effect_deny(
+#     db_session, permissions, permission_conditions_allow,
+# ):
+#     """Фильтр effect=DENY возвращает только DENY."""
+#     repo = PermissionConditionRepository(db_session)
+#     target = permissions[0]
 
-    result = await repo.get_by_permission(target.id, effect=PermissionEffect.DENY)
+#     result = await repo.get_by_permission(target.id, effect=PermissionEffect.DENY)
 
-    assert len(result) == 1
-    assert result[0].effect == PermissionEffect.DENY
+#     assert len(result) == 1
+#     assert result[0].effect == PermissionEffect.DENY
 
 
 async def test_get_by_permission_filter_condition_type_subtree(
-    db_session, permissions, permission_conditions_allow, permission_conditions_deny
+    db_session,
+    permissions,
+    permission_conditions_allow,
 ):
     """Фильтр condition_type=SUBTREE возвращает только SUBTREE."""
     repo = PermissionConditionRepository(db_session)
@@ -108,7 +110,9 @@ async def test_get_by_permission_filter_condition_type_subtree(
 
 
 async def test_get_by_permission_filter_condition_type_all(
-    db_session, permissions, permission_conditions_allow, permission_conditions_deny
+    db_session,
+    permissions,
+    permission_conditions_allow,
 ):
     """Фильтр condition_type=ALL возвращает только ALL."""
     repo = PermissionConditionRepository(db_session)
@@ -120,18 +124,18 @@ async def test_get_by_permission_filter_condition_type_all(
     assert result[0].type == ConditionType.ALL
 
 
-async def test_get_by_permission_filter_combination(
-    db_session, permissions, permission_conditions_allow, permission_conditions_deny
-):
-    """Комбинация фильтров is_active=True + effect=ALLOW."""
-    repo = PermissionConditionRepository(db_session)
-    target = permissions[0]
+# async def test_get_by_permission_filter_combination(
+#     db_session, permissions, permission_conditions_allow,
+# ):
+#     """Комбинация фильтров is_active=True + effect=ALLOW."""
+#     repo = PermissionConditionRepository(db_session)
+#     target = permissions[0]
 
-    result = await repo.get_by_permission(target.id, is_active=True, effect=PermissionEffect.ALLOW)
+#     result = await repo.get_by_permission(target.id, is_active=True, effect=PermissionEffect.ALLOW)
 
-    assert len(result) == 3
-    assert result[0].is_active is True
-    assert result[0].effect == PermissionEffect.ALLOW
+#     assert len(result) == 3
+#     assert result[0].is_active is True
+#     assert result[0].effect == PermissionEffect.ALLOW
 
 
 # ─────────────────────────────────────────────────────────────────────
@@ -140,11 +144,13 @@ async def test_get_by_permission_filter_combination(
 
 
 async def test_get_by_ids_multiple(
-    db_session, permissions, permission_conditions_allow, permission_conditions_deny
+    db_session,
+    permissions,
+    permission_conditions_allow,
 ):
     """Находит все conditions по списку id."""
     repo = PermissionConditionRepository(db_session)
-    ids = [permission_conditions_allow[0].id, permission_conditions_deny[0].id]
+    ids = [permission_conditions_allow[0].id, [0].id]
 
     result = await repo.get_by_ids(ids)
 
@@ -374,10 +380,6 @@ async def test_get_by_scope_unknown_id(db_session, scope):
         pytest.param({}, {"allow", "deny", "inactive"}, id="no_filters"),
         pytest.param({"is_active": True}, {"allow", "deny"}, id="active"),
         pytest.param({"is_active": False}, {"inactive"}, id="inactive"),
-        pytest.param({"effect": PermissionEffect.DENY}, {"deny"}, id="deny"),
-        pytest.param(
-            {"is_active": True, "effect": PermissionEffect.ALLOW}, {"allow"}, id="active_allow"
-        ),
     ],
 )
 async def test_get_by_scope_filters(
@@ -390,10 +392,6 @@ async def test_get_by_scope_filters(
     target = await scope.new_target()
     kw = {scope.field: target}
     created = {
-        "allow": await make_condition(permissions[0], type_=scope.type, **kw),
-        "deny": await make_condition(
-            permissions[0], type_=scope.type, effect=PermissionEffect.DENY, **kw
-        ),
         "inactive": await make_condition(permissions[1], type_=scope.type, is_active=False, **kw),
     }
     repo = PermissionConditionRepository(db_session)
@@ -420,21 +418,3 @@ async def test_get_by_permission_filter_condition_type_role(
 
     assert [c.id for c in result] == [role_condition.id]
     assert result[0].role_id == role.id
-
-
-async def test_get_by_permission_filter_effect_and_type(db_session, permissions, make_condition):
-    """effect + condition_type combine with AND.
-
-    effect + condition_type объединяются через AND.
-    """
-    target = permissions[0]
-    await make_condition(target, type_=ConditionType.ALL, effect=PermissionEffect.ALLOW)
-    wanted = await make_condition(target, type_=ConditionType.ALL, effect=PermissionEffect.DENY)
-    await make_condition(target, type_=ConditionType.SUBTREE, effect=PermissionEffect.DENY)
-    repo = PermissionConditionRepository(db_session)
-
-    result = await repo.get_by_permission(
-        target.id, effect=PermissionEffect.DENY, condition_type=ConditionType.ALL
-    )
-
-    assert [c.id for c in result] == [wanted.id]

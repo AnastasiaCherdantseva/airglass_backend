@@ -13,7 +13,7 @@ from app.dto.system.permission_condition import (
 from app.models.system import (
     ConditionType,
     PermissionCondition,
-    PermissionEffect,
+    # PermissionEffect,
 )
 
 
@@ -37,14 +37,14 @@ class FakePermissionConditionRepository:
         conditions: list[PermissionCondition],
         *,
         is_active: bool | None = None,
-        effect: PermissionEffect | None = None,
+        # effect: PermissionEffect | None = None,
         condition_type: ConditionType | None = None,
     ) -> list[PermissionCondition]:
         result = conditions
         if is_active is not None:
             result = [c for c in result if c.is_active == is_active]
-        if effect is not None:
-            result = [c for c in result if c.effect == effect]
+        # if effect is not None:
+        #     result = [c for c in result if c.effect == effect]
         if condition_type is not None:
             result = [c for c in result if c.type == condition_type]
         return result
@@ -54,7 +54,7 @@ class FakePermissionConditionRepository:
         role_id: UUID,
         *,
         is_active: bool | None = None,
-        effect: PermissionEffect | None = None,
+        # effect: PermissionEffect | None = None,
     ) -> list[PermissionConditionRoleOutPut]:
         matched = self._filter_conditions(
             [
@@ -63,14 +63,14 @@ class FakePermissionConditionRepository:
                 if c.type == ConditionType.ROLE and c.role_id == role_id
             ],
             is_active=is_active,
-            effect=effect,
+            # effect=effect,
         )
         return [
             PermissionConditionRoleOutPut(
                 id=c.id,
                 permission_id=c.permission_id,
                 role_id=c.role_id,
-                effect=c.effect,
+                # effect=c.effect,
                 type=c.type,
                 is_active=c.is_active,
             )
@@ -82,7 +82,7 @@ class FakePermissionConditionRepository:
         category_id: UUID,
         *,
         is_active: bool | None = None,
-        effect: PermissionEffect | None = None,
+        # effect: PermissionEffect | None = None,
     ) -> list[PermissionConditionCategoryOutPut]:
         matched = self._filter_conditions(
             [
@@ -91,14 +91,14 @@ class FakePermissionConditionRepository:
                 if c.type == ConditionType.CATEGORY and c.category_id == category_id
             ],
             is_active=is_active,
-            effect=effect,
+            # effect=effect,
         )
         return [
             PermissionConditionCategoryOutPut(
                 id=c.id,
                 permission_id=c.permission_id,
                 category_id=c.category_id,
-                effect=c.effect,
+                # effect=c.effect,
                 type=c.type,
                 is_active=c.is_active,
             )
@@ -110,7 +110,7 @@ class FakePermissionConditionRepository:
         media_type_id: UUID,
         *,
         is_active: bool | None = None,
-        effect: PermissionEffect | None = None,
+        # effect: PermissionEffect | None = None,
     ) -> list[PermissionConditionMediaOutPut]:
         matched = self._filter_conditions(
             [
@@ -119,14 +119,14 @@ class FakePermissionConditionRepository:
                 if c.type == ConditionType.MEDIA and c.media_type_id == media_type_id
             ],
             is_active=is_active,
-            effect=effect,
+            # effect=effect,
         )
         return [
             PermissionConditionMediaOutPut(
                 id=c.id,
                 permission_id=c.permission_id,
                 media_type_id=c.media_type_id,
-                effect=c.effect,
+                # effect=c.effect,
                 type=c.type,
                 is_active=c.is_active,
             )
@@ -138,13 +138,13 @@ class FakePermissionConditionRepository:
         permission_id: UUID,
         *,
         is_active: bool | None = None,
-        effect: PermissionEffect | None = None,
+        # effect: PermissionEffect | None = None,
         condition_type: ConditionType | None = None,
     ) -> list[PermissionConditionAllOutPut]:
         matched = self._filter_conditions(
             [c for c in self.conditions.values() if c.permission_id == permission_id],
             is_active=is_active,
-            effect=effect,
+            # effect=effect,
             condition_type=condition_type,
         )
         return [self._to_all_output(c) for c in matched]

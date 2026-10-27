@@ -1,14 +1,17 @@
 from dataclasses import dataclass
 from uuid import UUID
 
-from app.models.system.permission_condition import ConditionType, PermissionEffect
+from app.models.system.permission_condition import (
+    ConditionType,
+    # PermissionEffect
+)
 
 
 @dataclass(frozen=True)
 class PermissionConditionData:
     permission_id: UUID
     is_active: bool
-    effect: PermissionEffect
+    # effect: PermissionEffect
     type: ConditionType
 
 

@@ -12,7 +12,10 @@ from app.dto import (
     PermissionConditionAllOutPut,
 )
 from app.models.system.permission import Permission, PermissionZone
-from app.models.system.permission_condition import PermissionCondition, PermissionEffect
+from app.models.system.permission_condition import (
+    PermissionCondition,
+    # PermissionEffect
+)
 from app.models.system.user_permission import UserPermission
 from app.repositories.protocols.system.user_permission import (
     UserPermissionReadRepositoryProtocol,
@@ -66,7 +69,7 @@ class UserPermissionRepository(
                     category_id=condition.category_id,
                     role_id=condition.role_id,
                     media_type_id=condition.media_type_id,
-                    effect=condition.effect,
+                    # effect=condition.effect,
                     type=condition.type,
                     is_active=condition.is_active,
                 )
@@ -87,7 +90,7 @@ class UserPermissionRepository(
             .where(
                 UserPermission.user_id == user_id,
                 PermissionCondition.is_active.is_(True),
-                PermissionCondition.effect == PermissionEffect.ALLOW,
+                # PermissionCondition.effect == PermissionEffect.ALLOW,
                 Permission.zone == PermissionZone.ADMIN,
             )
             .limit(1)

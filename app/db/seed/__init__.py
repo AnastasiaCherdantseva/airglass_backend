@@ -58,7 +58,7 @@ from app.models.system.permission import PermissionZone
 from app.models.system.permission_condition import (
     ConditionType,
     PermissionCondition,
-    PermissionEffect,
+    # PermissionEffect,
 )
 from app.models.templates import BindingType, GalleryRule, GalleryRuleCondition
 from app.models.usage import UsageRole
@@ -470,12 +470,12 @@ async def _seed_permissions(
         conditions: list[PermissionCondition] = []
         for cond_seed in perm_seed["conditions"]:
             cond_type = ConditionType(cond_seed["type"])
-            cond_effect = PermissionEffect(cond_seed["effect"])
+            # cond_effect = PermissionEffect(cond_seed["effect"])
 
             stmt = select(PermissionCondition).where(
                 PermissionCondition.permission_id == permission.id,
                 PermissionCondition.type == cond_type,
-                PermissionCondition.effect == cond_effect,
+                # PermissionCondition.effect == cond_effect,
             )
             condition = (await session.execute(stmt)).scalar_one_or_none()
 
@@ -483,7 +483,7 @@ async def _seed_permissions(
                 condition = PermissionCondition(
                     permission_id=permission.id,
                     type=cond_type,
-                    effect=cond_effect,
+                    # effect=cond_effect,
                     is_active=True,
                 )
                 session.add(condition)
@@ -722,8 +722,8 @@ async def _seed_role_permissions(
         for cond in perm_conditions:
             if cond.type != ConditionType.ALL:
                 continue
-            if cond.effect != PermissionEffect.ALLOW:
-                continue
+            # if cond.effect != PermissionEffect.ALLOW:
+            #     continue
 
             key = (admin_role.id, cond.id)
             if key in existing:
