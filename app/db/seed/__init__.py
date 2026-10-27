@@ -82,6 +82,7 @@ async def seed_all(db: AsyncSession) -> None:
     # 1. Независимые справочники
     roles = await _seed_roles(db)
     permissions = await _seed_permissions(db)
+    permissions = await _seed_users_create_role_conditions(db, permissions, roles)
     await _seed_role_permissions(db, roles, permissions)
     await _seed_project_statuses(db)
     await _seed_media_types(db)
@@ -708,22 +709,26 @@ async def _seed_role_permissions(
     roles: dict[str, Role],
     conditions: dict[str, list[PermissionCondition]],
 ) -> None:
-    """Создать связи роль ↔ условие (идемпотентно)."""
+    print("DEBUG [role_perms]: START")
     result = await session.execute(select(RolePermission.role_id, RolePermission.condition_id))
     existing = {(row[0], row[1]) for row in result.all()}
+    print(f"DEBUG [role_perms]: existing links count = {len(existing)}")
 
     admin_role = roles.get("SYSTEM_ADMIN")
     if admin_role is None:
         print("   ⚠️  Роль SYSTEM_ADMIN не найдена")
         return
+    print(f"DEBUG [role_perms]: admin_role.id = {admin_role.id}")
 
     added = 0
     for perm_code, perm_conditions in conditions.items():
+        print(
+            f"DEBUG [role_perms]: perm_code={perm_code}, conditions count = {len(perm_conditions)}"
+        )
         for cond in perm_conditions:
-            if cond.type != ConditionType.ALL:
-                continue
-            # if cond.effect != PermissionEffect.ALLOW:
-            #     continue
+            print(
+                f"DEBUG [role_perms]:   cond.id={cond.id}, type={cond.type}, in_existing={(admin_role.id, cond.id) in existing}"
+            )
 
             key = (admin_role.id, cond.id)
             if key in existing:
@@ -743,6 +748,7 @@ async def _seed_role_permissions(
         print(f"   • Связи SYSTEM_ADMIN ↔ условия: добавлено {added}")
     else:
         print("   • Связи SYSTEM_ADMIN ↔ условия: уже загружены")
+    print("DEBUG [role_perms]: END")
 
 
 # ============================================================
@@ -927,3 +933,56 @@ async def _seed_usage_roles(db: AsyncSession) -> dict[str, UsageRole]:
         print("   • Роли использования: уже загружены")
 
     return existing
+
+
+async def _seed_users_create_role_conditions(
+    session: AsyncSession,
+    conditions: dict[str, list[PermissionCondition]],
+    roles: dict[str, Role],
+) -> dict[str, list[PermissionCondition]]:
+    stmt = select(Permission).where(
+        Permission.resource == "USERS",
+        Permission.action == "CREATE",
+    )
+    permission = (await session.execute(stmt)).scalar_one_or_none()
+    if permission is None:
+        permission = Permission(
+            name="Создание пользователя",
+            resource="USERS",
+            action="CREATE",
+            zone=PermissionZone.ADMIN,
+        )
+        session.add(permission)
+        await session.flush()
+
+    permission_conditions = conditions.setdefault(permission.code, [])
+
+    # Загружаем ВСЕ ROLE-условия для USERS.CREATE (новые + существующие)
+    stmt = select(PermissionCondition).where(
+        PermissionCondition.permission_id == permission.id,
+        PermissionCondition.type == ConditionType.ROLE,
+        PermissionCondition.role_id.is_not(None),
+    )
+    existing_conditions = (await session.execute(stmt)).scalars().all()
+    existing_by_role: dict[UUID, PermissionCondition] = {
+        c.role_id: c for c in existing_conditions if c.role_id is not None
+    }
+
+    added = 0
+    for role_code, role in roles.items():
+        condition = existing_by_role.get(role.id)
+        if condition is None:
+            condition = PermissionCondition(
+                permission_id=permission.id,
+                type=ConditionType.ROLE,
+                role_id=role.id,
+                is_active=True,
+            )
+            session.add(condition)
+            added += 1
+        # добавляем в conditions, даже если условие уже было в БД
+        if condition not in permission_conditions:
+            permission_conditions.append(condition)
+
+    await session.flush()
+    return conditions

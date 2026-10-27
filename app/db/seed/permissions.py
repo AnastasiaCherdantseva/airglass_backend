@@ -52,6 +52,10 @@ SUBTREE: Final[PermissionConditionSeed] = {
     "type": "subtree",
     #    "effect": "allow"
 }
+CREATOR: Final[PermissionConditionSeed] = {
+    "type": "creator",
+    #    "effect": "allow"
+}
 
 PERMISSIONS: list[PermissionSeed] = [
     # CALCULATOR
@@ -66,45 +70,45 @@ PERMISSIONS: list[PermissionSeed] = [
         "resource": "users",
         "action": "create",
         "name": "Создание пользователей",
-        "conditions": [ALL, SUBTREE],
+        "conditions": [],
     },
     {
         "resource": "users",
         "action": "read",
         "name": "Просмотр пользователей",
-        "conditions": [ALL, SUBTREE],
+        "conditions": [SUBTREE],
     },
     {
         "resource": "users",
         "action": "update",
         "name": "Редактирование пользователей",
-        "conditions": [ALL, SUBTREE],
+        "conditions": [SUBTREE],
     },
     {
         "resource": "users",
         "action": "delete",
         "name": "Удаление пользователей",
-        "conditions": [ALL, SUBTREE],
+        "conditions": [SUBTREE],
     },
     # ROLES
     {
         "resource": "roles",
         "action": "create",
         "name": "Создание ролей",
-        "conditions": [ALL, SUBTREE],
+        "conditions": [ALL],
     },
-    {"resource": "roles", "action": "read", "name": "Просмотр ролей", "conditions": [ALL, SUBTREE]},
+    {"resource": "roles", "action": "read", "name": "Просмотр ролей", "conditions": [ALL, CREATOR]},
     {
         "resource": "roles",
         "action": "update",
         "name": "Редактирование ролей",
-        "conditions": [ALL, SUBTREE],
+        "conditions": [CREATOR],
     },
     {
         "resource": "roles",
         "action": "delete",
         "name": "Удаление ролей",
-        "conditions": [ALL, SUBTREE],
+        "conditions": [CREATOR],
     },
     # PRODUCTS
     {"resource": "products", "action": "create", "name": "Создание товаров", "conditions": [ALL]},
