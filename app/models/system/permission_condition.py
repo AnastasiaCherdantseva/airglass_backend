@@ -64,6 +64,7 @@ class PermissionCondition(Base):
             "role_id",
             "media_type_id",
             name="uq_permission_condition",
+            postgresql_nulls_not_distinct=True,
         ),
         # ADR-ACCESS-011
         CheckConstraint(
