@@ -6,7 +6,7 @@ UseCase: получить роли, доступные текущему поль
 
 import logging
 from uuid import UUID
-
+from sqlalchemy.exc import IntegrityError
 from app.core.exceptions import ConflictError, PermissionDeniedError, ValidationError
 from app.dto import (
     CurrentUser,
@@ -18,40 +18,67 @@ from app.dto.system.user_permission import GroupedPermission
 from app.models.system.permission_condition import ConditionType
 from app.repositories.protocols.system import (
     RolePermissionRepositoryProtocol,
-    RoleWriteRepositoryProtocol,
+    RoleRepositoryProtocol,
     PermissionReadRepositoryProtocol
 )
 
 logger = logging.getLogger(__name__)
-USERS_CREATE = "USERS.CREATE"
-ROLES_READ = "ROLES.READ"
 
 
 async def create_role(
     actor: CurrentUser,
     data: RoleCreate,
     *,
-    roles: RoleWriteRepositoryProtocol,
+    roles: RoleRepositoryProtocol,
     role_permissions: RolePermissionRepositoryProtocol,
     permissions: PermissionReadRepositoryProtocol,
 ) -> RoleWithPermissionsOutput:
-    
-    actorConditionIds = set()
-    for permission in actor.permissions:
-        for condition in permission.conditions:
-            actorConditionIds.add(condition.id)
-    missing = actorConditionIds - set(data.conditions)
-    if missing:
+    if actor.id != data.owner_id:
         logger.info(
-            "Create role error: actor with id (%s) try ro create role with conditions (%s) but he has not this coditions",
+            "Create role error: actor with id (%s) try to create role with another owner id (%s)",
             actor.id,
-            missing,
+            data.owner_id,
         )
-        raise PermissionDeniedError(f"Недостаточно прав.")
+        raise ValidationError(f"Вы не можете создавать роли не пренадлежащие вам.")
+    
+    actor_condition_ids = {
+        condition.id
+        for permission in actor.permissions
+        for condition in permission.conditions
+    }
+    requested = set(data.conditions)
+    foreign = requested - actor_condition_ids
+    if foreign:
+        logger.info(
+            "Create role error: actor (id=%s) tried to use conditions he has no access to: %s",
+            actor.id,
+            foreign,
+        )
+        raise PermissionDeniedError("Недостаточно прав.")
+    
+    normalise_name = data.name.strip().capitalize()
+    data.name = normalise_name
 
-    new_role = await roles.create(data)
+    try:
+        new_role = await roles.create(data)
+        conditions_for_role_count = await role_permissions.add_links_for_role(new_role.id, data.conditions)
+    except IntegrityError as exc:
+        constraint_name = (
+            getattr(exc.orig, "constraint_name", None)
+            or getattr(getattr(exc.orig, "diag", None), "constraint_name", None)
+            or getattr(getattr(exc.orig, "__cause__", None), "constraint_name", "")
+        )
+        if constraint_name == "uq_role_owner_name":
+            logger.info(
+                "Create role error: actor with id (%s) already has role with name %s",
+                data.owner_id,
+                data.name,
+            )
+            raise ConflictError(f"У вас уже существует роль с таким именем.")
+        logger.exception("Unexpected IntegrityError in create_organization")
+        raise ConflictError("Не удалось создать роль.") from exc
 
-    conditions_for_role_count = await role_permissions.add_links_for_role(new_role.id, data.conditions)
+
     if conditions_for_role_count < len(data.conditions):
         logger.info(
             "Create role error: added %s relationships for role&conds, but It was expected %s.",
@@ -70,7 +97,7 @@ async def create_role(
         src = actor_perms_by_id.get(permission.id)
         if src is None:
             continue
-        conds_ids_set = set(conds_ids)
+        conds_ids_set = set(data.conditions)
         filtered = [c for c in src.conditions if c.id in conds_ids_set]
         if filtered:
             grouped.append(
@@ -85,7 +112,7 @@ async def create_role(
         owner_id=new_role.owner_id,
         description=new_role.description,
         is_system=new_role.is_system,
-        is_active=-new_role.is_active,
+        is_active=new_role.is_active,
         id=new_role.id,
         created_at=new_role.created_at,
         updated_at=new_role.updated_at,
