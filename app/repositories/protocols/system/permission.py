@@ -3,6 +3,7 @@ Protocols for the users repos.
 """
 
 from typing import Protocol
+from uuid import UUID
 
 from app.dto import PermissionOutput
 from app.models import Permission
@@ -16,6 +17,7 @@ class PermissionReadRepositoryProtocol(ReadRepositoryProtocol[Permission], Proto
     """Read Permissions."""
 
     async def get_by_code(self, code: str) -> PermissionOutput | None: ...
+    async def get_by_conditions(self, condition_ids:list[UUID]) -> dict[PermissionOutput, list[UUID]]: ...
 
 
 class PermissionWriteRepositoryProtocol(WriteRepositoryProtocol[Permission], Protocol):
