@@ -49,7 +49,7 @@ class UserPermissionRepository(
                 UserPermission,
                 UserPermission.condition_id == PermissionCondition.id,
             )
-            .where(UserPermission.user_id == user_id)
+            .where(UserPermission.user_id == user_id, PermissionCondition.is_active==True)
         )
         result = await self.db.execute(stmt)
         rows = result.all()
