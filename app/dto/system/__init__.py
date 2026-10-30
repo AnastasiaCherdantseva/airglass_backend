@@ -16,7 +16,7 @@ from app.dto.system.permission_condition import (
     PermissionConditionRoleData,
     PermissionConditionRoleOutPut,
 )
-from app.dto.system.role import RoleData, RoleOutput, RolePatchData, RoleWithPermissionsOutput
+from app.dto.system.role import RoleData, RoleOutput, RolePatchData, RoleWithPermissionsOutput,RoleCreate
 from app.dto.system.session import SessionData, SessionInput, SessionOutput
 from app.dto.system.user import (
     CurrentUser,
@@ -49,6 +49,7 @@ __all__ = [
     "RoleOutput",
     "RoleWithPermissionsOutput",
     "RolePatchData",
+    "RoleCreate",
     #
     "PermissionData",
     "PermissionOutput",
