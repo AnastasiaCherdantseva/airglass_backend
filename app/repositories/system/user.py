@@ -2,6 +2,7 @@
 Репозиторий пользователей.
 """
 
+import logging
 from datetime import UTC, datetime
 from uuid import UUID
 
@@ -10,6 +11,8 @@ from sqlalchemy import func, select, text
 from app.dto import UserCreateFull, UserOutput, UserPatchInput
 from app.models import User
 from app.repositories.base import BaseIdRepository
+
+logger = logging.getLogger(__name__)
 
 
 class UserRepository(BaseIdRepository[User]):
@@ -99,7 +102,7 @@ class UserRepository(BaseIdRepository[User]):
         self, parent_id: UUID, *, limit: int = 10, page: int = 0
     ) -> list[UserOutput]:
         # Удаленные пользователи не попадают
-        offset = page * limit
+        offset = (page - 1) * limit
         stmt = (
             select(User)
             .where(
@@ -184,10 +187,12 @@ class UserRepository(BaseIdRepository[User]):
         normalized = data.email.strip().lower()
         user = User(
             parent_id=data.parent_id,
-            is_active=data.is_active,
+            # is_active=data.is_active,
             email=normalized,
             name=data.name,
             password_hash=data.password_hash,
+            email_verified=datetime.now(UTC),
+            is_active=True,
         )
         self.add(user)
         await self.flush()
