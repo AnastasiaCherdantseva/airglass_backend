@@ -81,7 +81,7 @@ async def create_user(
         condition.type == ConditionType.ROLE and condition.is_active
     ]
 
-    if not data.role_ids:
+    if not data.role_ids or len(data.role_ids) == 0:
         logger.info(
             "User create failed: The new user must have at least one role",
         )
