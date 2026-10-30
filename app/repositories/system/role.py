@@ -84,7 +84,7 @@ class RoleRepository(
             name=data.name,
             owner_id=data.owner_id,
             description=data.description,
-            is_system=data.is_system,
+            is_system=False,
             is_active=data.is_active,
         )
         self.db.add(role)
