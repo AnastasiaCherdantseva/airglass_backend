@@ -7,6 +7,7 @@ from uuid import UUID
 from sqlalchemy import Select, delete, select, update
 
 from app.dto import RoleData, RoleOutput, RolePatchData
+from app.dto.system.role import RoleCreate
 from app.models.system.role import Role
 from app.repositories.base import BaseIdRepository
 from app.repositories.protocols.system.role import (
@@ -58,6 +59,17 @@ class RoleRepository(
         roles = result.scalars().all()
         return [self._to_output(r) for r in roles]
 
+    async def get_by_owner_id_and_name(
+        self,
+        owner_id: UUID,
+        name: str,
+    ) -> RoleOutput | None:
+        stmt = select(Role).where(Role.owner_id == owner_id, Role.name==name)
+        result = await self.db.execute(stmt)
+        role = result.scalar_one_or_none()
+        if role is None: return None
+        return self._to_output(role)
+    
     async def get_ids_by_owner_ids(
         self,
         owner_ids: list[UUID],
@@ -78,7 +90,7 @@ class RoleRepository(
         roles = result.scalars().all()
         return [self._to_output(r) for r in roles]
 
-    async def create(self, data: RoleData) -> RoleOutput:
+    async def create(self, data: RoleCreate) -> RoleOutput:
         """Создать новую роль."""
         role = Role(
             name=data.name,
