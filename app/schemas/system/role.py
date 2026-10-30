@@ -21,13 +21,13 @@ class RoleBase(BaseSchema):
     name: str = Field(min_length=2, max_length=255)
     description: str | None = Field(None, max_length=1000)
     is_active: bool = True
+    owner_id: UUID | None
 
 
 class RoleCreate(RoleBase):
     """Создание роли."""
 
     is_system: bool = False
-    owner_id: UUID
 
 
 class RoleUpdate(BaseSchema):

@@ -43,6 +43,7 @@ async def get_roles_endpoint(
             id=role.id,
             name=role.name,
             description=role.description,
+            owner_id=role.owner_id,
             is_active=role.is_active,
             is_system=role.is_system,
             created_at=role.created_at,
