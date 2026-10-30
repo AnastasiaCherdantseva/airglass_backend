@@ -97,7 +97,7 @@ PERMISSIONS: list[PermissionSeed] = [
         "name": "Создание ролей",
         "conditions": [ALL],
     },
-    {"resource": "roles", "action": "read", "name": "Просмотр ролей", "conditions": [ALL, CREATOR]},
+    {"resource": "roles", "action": "read", "name": "Просмотр ролей", "conditions": [CREATOR]},
     {
         "resource": "roles",
         "action": "update",

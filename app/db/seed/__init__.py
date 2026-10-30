@@ -81,8 +81,7 @@ async def seed_all(db: AsyncSession) -> None:
 
     # 1. Независимые справочники
     roles = await _seed_roles(db)
-    permissions = await _seed_permissions(db)
-    permissions = await _seed_users_create_role_conditions(db, permissions, roles)
+    permissions = await _seed_permissions(db, roles)
     await _seed_role_permissions(db, roles, permissions)
     await _seed_project_statuses(db)
     await _seed_media_types(db)
@@ -428,23 +427,33 @@ async def _seed_roles(session: AsyncSession) -> dict[str, Role]:
 
 async def _seed_permissions(
     session: AsyncSession,
+    roles: dict[str, Role],
 ) -> dict[str, list[PermissionCondition]]:
     """
     Create permissions and their conditions (idempotent).
 
-    A permission is looked up by (resource, action), because ``code`` is a
-    DB-computed column (``USERS.CREATE``).
+    For ``ROLES.READ`` and ``USERS.CREATE`` additionally create one
+    ``ROLE``-type condition per role from ``roles``.
 
-    Returns:
-        ``{"USERS.CREATE": [PermissionCondition, ...]}``.
-
-    Создать права и их варианты (идемпотентно).
-
-    Право ищется по (resource, action), так как ``code`` — вычисляемая
+    Права ищутся по ``(resource, action)``, потому что ``code`` — вычисляемая
     колонка БД (``USERS.CREATE``).
 
+    Дополнительно для ``ROLES.READ`` и ``USERS.CREATE`` создаётся по одному
+    условию типа ``ROLE`` на каждую роль из ``roles``.
+
+    Args:
+        session: AsyncSession.
+        roles: Mapping ``code -> Role`` (результат ``_seed_roles``).
+
     Returns:
-        ``{"USERS.CREATE": [PermissionCondition, ...]}``.
+        ``{"USERS.CREATE": [PermissionCondition, ...], ...}``.
+
+    Args:
+        session: AsyncSession.
+        roles: Словарь ``code -> Role``.
+
+    Returns:
+        ``{"USERS.CREATE": [PermissionCondition, ...], ...}``.
     """
     result_map: dict[str, list[PermissionCondition]] = {}
 
@@ -471,12 +480,10 @@ async def _seed_permissions(
         conditions: list[PermissionCondition] = []
         for cond_seed in perm_seed["conditions"]:
             cond_type = ConditionType(cond_seed["type"])
-            # cond_effect = PermissionEffect(cond_seed["effect"])
 
             stmt = select(PermissionCondition).where(
                 PermissionCondition.permission_id == permission.id,
                 PermissionCondition.type == cond_type,
-                # PermissionCondition.effect == cond_effect,
             )
             condition = (await session.execute(stmt)).scalar_one_or_none()
 
@@ -484,15 +491,41 @@ async def _seed_permissions(
                 condition = PermissionCondition(
                     permission_id=permission.id,
                     type=cond_type,
-                    # effect=cond_effect,
                     is_active=True,
                 )
                 session.add(condition)
                 await session.flush()
-
             conditions.append(condition)
 
-        result_map[f"{resource.name}.{action.name}"] = conditions
+        code = f"{resource.name}.{action.name}"
+
+        # ROLES.READ / USERS.CREATE: добавить по одному ROLE-условию на роль
+        if code in ("USERS.CREATE"):
+            stmt = select(PermissionCondition).where(
+                PermissionCondition.permission_id == permission.id,
+                PermissionCondition.type == ConditionType.ROLE,
+                PermissionCondition.role_id.is_not(None),
+            )
+            existing_conditions = (await session.execute(stmt)).scalars().all()
+            existing_by_role: dict[UUID, PermissionCondition] = {
+                c.role_id: c for c in existing_conditions if c.role_id is not None
+            }
+
+            for role_code, role in roles.items():
+                condition = existing_by_role.get(role.id)
+                if condition is None:
+                    condition = PermissionCondition(
+                        permission_id=permission.id,
+                        type=ConditionType.ROLE,
+                        role_id=role.id,
+                        is_active=True,
+                    )
+                    session.add(condition)
+                    await session.flush()
+                if condition not in conditions:
+                    conditions.append(condition)
+
+        result_map[code] = conditions
 
     return result_map
 
@@ -933,56 +966,3 @@ async def _seed_usage_roles(db: AsyncSession) -> dict[str, UsageRole]:
         print("   • Роли использования: уже загружены")
 
     return existing
-
-
-async def _seed_users_create_role_conditions(
-    session: AsyncSession,
-    conditions: dict[str, list[PermissionCondition]],
-    roles: dict[str, Role],
-) -> dict[str, list[PermissionCondition]]:
-    stmt = select(Permission).where(
-        Permission.resource == "USERS",
-        Permission.action == "CREATE",
-    )
-    permission = (await session.execute(stmt)).scalar_one_or_none()
-    if permission is None:
-        permission = Permission(
-            name="Создание пользователя",
-            resource="USERS",
-            action="CREATE",
-            zone=PermissionZone.ADMIN,
-        )
-        session.add(permission)
-        await session.flush()
-
-    permission_conditions = conditions.setdefault(permission.code, [])
-
-    # Загружаем ВСЕ ROLE-условия для USERS.CREATE (новые + существующие)
-    stmt = select(PermissionCondition).where(
-        PermissionCondition.permission_id == permission.id,
-        PermissionCondition.type == ConditionType.ROLE,
-        PermissionCondition.role_id.is_not(None),
-    )
-    existing_conditions = (await session.execute(stmt)).scalars().all()
-    existing_by_role: dict[UUID, PermissionCondition] = {
-        c.role_id: c for c in existing_conditions if c.role_id is not None
-    }
-
-    added = 0
-    for role_code, role in roles.items():
-        condition = existing_by_role.get(role.id)
-        if condition is None:
-            condition = PermissionCondition(
-                permission_id=permission.id,
-                type=ConditionType.ROLE,
-                role_id=role.id,
-                is_active=True,
-            )
-            session.add(condition)
-            added += 1
-        # добавляем в conditions, даже если условие уже было в БД
-        if condition not in permission_conditions:
-            permission_conditions.append(condition)
-
-    await session.flush()
-    return conditions
