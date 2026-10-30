@@ -22,12 +22,12 @@ class RoleOutput(RoleData):
     updated_at: datetime
 
 @dataclass(frozen=True)
-class RoleCreate(RoleData):
+class RoleCreate:
     name: str
     owner_id: UUID
     description: str | None
     conditions: list[UUID]
-    is_active: bool | None
+    is_active: bool
 
 
 @dataclass(frozen=True)
