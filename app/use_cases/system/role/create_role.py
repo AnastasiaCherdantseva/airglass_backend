@@ -4,6 +4,7 @@ UseCase: get roles available to the current user.
 UseCase: получить роли, доступные текущему пользователю.
 """
 
+from dataclasses import replace
 import logging
 from uuid import UUID
 from sqlalchemy.exc import IntegrityError
@@ -39,7 +40,7 @@ async def create_role(
             actor.id,
             data.owner_id,
         )
-        raise ValidationError(f"Вы не можете создавать роли не пренадлежащие вам.")
+        raise PermissionDeniedError(f"Вы не можете создавать роли не пренадлежащие вам.")
     
     actor_condition_ids = {
         condition.id
@@ -56,12 +57,12 @@ async def create_role(
         )
         raise PermissionDeniedError("Недостаточно прав.")
     
-    normalise_name = data.name.strip().capitalize()
-    data.name = normalise_name
+    normalised_name = data.name.strip().capitalize()
+    normalised_data = replace(data, name=normalised_name)
 
     try:
-        new_role = await roles.create(data)
-        conditions_for_role_count = await role_permissions.add_links_for_role(new_role.id, data.conditions)
+        new_role = await roles.create(normalised_data)
+        conditions_for_role_count = await role_permissions.add_links_for_role(new_role.id, normalised_data.conditions)
     except IntegrityError as exc:
         constraint_name = (
             getattr(exc.orig, "constraint_name", None)
@@ -71,23 +72,23 @@ async def create_role(
         if constraint_name == "uq_role_owner_name":
             logger.info(
                 "Create role error: actor with id (%s) already has role with name %s",
-                data.owner_id,
-                data.name,
+                normalised_data.owner_id,
+                normalised_data.name,
             )
             raise ConflictError(f"У вас уже существует роль с таким именем.")
         logger.exception("Unexpected IntegrityError in create_organization")
         raise ConflictError("Не удалось создать роль.") from exc
 
 
-    if conditions_for_role_count < len(data.conditions):
+    if conditions_for_role_count < len(normalised_data.conditions):
         logger.info(
             "Create role error: added %s relationships for role&conds, but It was expected %s.",
             conditions_for_role_count,
-            len(data.conditions),
+            len(normalised_data.conditions),
         )
         raise ConflictError(f"Не удалось добавить все права к роли.")
 
-    perms_for_conds = await permissions.get_by_conditions(data.conditions)
+    perms_for_conds = await permissions.get_by_conditions(normalised_data.conditions)
 
     actor_perms_by_id: dict[UUID, GroupedPermission] = {
         p.id: p for p in actor.permissions
@@ -97,7 +98,7 @@ async def create_role(
         src = actor_perms_by_id.get(permission.id)
         if src is None:
             continue
-        conds_ids_set = set(data.conditions)
+        conds_ids_set = set(normalised_data.conditions)
         filtered = [c for c in src.conditions if c.id in conds_ids_set]
         if filtered:
             grouped.append(
