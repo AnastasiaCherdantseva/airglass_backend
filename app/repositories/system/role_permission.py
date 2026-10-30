@@ -4,7 +4,7 @@ RolePermission repository — link between role and permission condition.
 
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.dto.system.permission_condition import (
@@ -93,3 +93,19 @@ class RolePermissionRepository(
             )
         )
         return list(result.scalars().all())
+
+    # WRITE
+
+    async def add_links_for_role(self, role_id:UUID, condition_ids:list[UUID]) -> int: 
+        if not condition_ids:
+            return 0
+        stmt = (
+            insert(RolePermission)
+            .values([
+                {"role_id": role_id, "condition_id": condition_id}
+                for condition_id in condition_ids
+            ])
+            .returning(RolePermission.condition_id) 
+        )
+        result = await self.db.execute(stmt)
+        return result.rowcount

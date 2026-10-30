@@ -19,6 +19,7 @@ from app.repositories.protocols.system.role import (
 from app.repositories.protocols.system.role_permission import (
     RolePermissionReadRepositoryProtocol,
     RolePermissionWriteRepositoryProtocol,
+    RolePermissionRepositoryProtocol
 )
 from app.repositories.protocols.system.session import (
     SessionReadRepositoryProtocol,
@@ -64,13 +65,18 @@ __all__ = [
     #
     "PermissionReadRepositoryProtocol",
     "PermissionWriteRepositoryProtocol",
+
     "PermissionConditionReadRepositoryProtocol",
     "PermissionConditionWriteRepositoryProtocol",
+
     "RolePermissionReadRepositoryProtocol",
     "RolePermissionWriteRepositoryProtocol",
+    "RolePermissionRepositoryProtocol",
+
     "RoleReadRepositoryProtocol",
     "RoleWriteRepositoryProtocol",
     "RoleRepositoryProtocol",
+    
     "UserPermissionReadRepositoryProtocol",
     "UserPermissionWriteRepositoryProtocol",
     "UserPermissionRepositoryProtocol",
