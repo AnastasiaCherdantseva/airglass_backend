@@ -25,6 +25,7 @@ class PermissionResource(enum.StrEnum):
     ROLES = "roles"
     PRODUCTS = "products"
     CATEGORIES = "categories"
+    ORGANIZATIONS = "organizations"
     TEMPLATES = "templates"
     PROJECTS = "projects"
     CUSTOMERS = "customers"
@@ -60,23 +61,9 @@ class Permission(Base):
     __tablename__ = "permissions"
     __table_args__ = (
         Index("ix_permission_resource_action", "resource", "action"),
-        # CheckConstraint(
-        #     """
-        #     NOT (
-        #         (resource = 'USERS'      AND action = 'ARCHIVE') OR
-        #         (resource = 'PROJECTS'   AND action IN ('IMPORT', 'EXPORT')) OR
-        #         (resource = 'CUSTOMERS'  AND action = 'ARCHIVE') OR
-        #         (resource = 'MEDIA'      AND action IN ('ARCHIVE', 'EXPORT', 'IMPORT')) OR
-        #         (resource = 'CALCULATOR' AND action IN ('ARCHIVE', 'IMPORT')) OR
-        #         (resource = 'SETTINGS'   AND action IN ('CREATE', 'DELETE', 'ARCHIVE', 'EXPORT', 'IMPORT')) OR
-        #         (resource = 'AUDIT_LOG'  AND action IN ('CREATE', 'UPDATE', 'DELETE', 'ARCHIVE', 'IMPORT'))
-        #     )
-        #     """,
-        #     name="ck_permission_forbidden_combinations",
-        # ),
         CheckConstraint(
             """
-        (resource IN ('USERS', 'ROLES', 'PROJECTS', 'CUSTOMERS', 'CALCULATOR', 'MEDIA')
+        (resource IN ('USERS', 'ROLES','ORGANIZATIONS', 'PROJECTS', 'CUSTOMERS', 'CALCULATOR', 'MEDIA')
             AND zone = 'PUBLIC') OR
         (resource IN ('PRODUCTS', 'CATEGORIES', 'TEMPLATES', 'SUPPLIERS', 'SETTINGS', 'AUDIT_LOG')
             AND zone = 'ADMIN')

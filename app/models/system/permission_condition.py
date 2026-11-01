@@ -25,6 +25,7 @@ from app.models.base import Base
 if TYPE_CHECKING:
     from app.models.catalog import Category
     from app.models.media import MediaType
+    from app.models.system.organizations import Organization
     from app.models.system.permission import Permission
     from app.models.system.role import Role
     from app.models.system.role_permission import RolePermission
@@ -41,6 +42,7 @@ class ConditionType(enum.StrEnum):
     CREATOR = "creator"
     SUBTREE = "subtree"
     MEDIA = "media"
+    ORGANIZATION = "organization"
 
 
 # class PermissionEffect(enum.StrEnum):
@@ -63,18 +65,20 @@ class PermissionCondition(Base):
             "category_id",
             "role_id",
             "media_type_id",
+            "organization_id",
             name="uq_permission_condition",
             postgresql_nulls_not_distinct=True,
         ),
         # ADR-ACCESS-011
         CheckConstraint(
             """
-            (type = 'ALL'      AND category_id IS NULL AND role_id IS NULL AND media_type_id IS NULL) OR
-            (type = 'CATEGORY' AND category_id IS NOT NULL AND role_id IS NULL AND media_type_id IS NULL) OR
-            (type = 'ROLE'     AND role_id IS NOT NULL AND category_id IS NULL AND media_type_id IS NULL) OR
-            (type = 'CREATOR'  AND category_id IS NULL AND role_id IS NULL AND media_type_id IS NULL) OR
-            (type = 'SUBTREE'  AND category_id IS NULL AND role_id IS NULL AND media_type_id IS NULL) OR
-            (type = 'MEDIA'    AND category_id IS NULL AND role_id IS NULL AND media_type_id IS NOT NULL)
+            (type = 'ALL'          AND category_id IS NULL AND role_id IS NULL AND media_type_id IS NULL AND organization_id IS NULL) OR
+            (type = 'CATEGORY'     AND category_id IS NOT NULL AND role_id IS NULL AND media_type_id IS NULL AND organization_id IS NULL) OR
+            (type = 'ROLE'         AND role_id IS NOT NULL AND category_id IS NULL AND media_type_id IS NULL AND organization_id IS NULL) OR
+            (type = 'CREATOR'      AND category_id IS NULL AND role_id IS NULL AND media_type_id IS NULL AND organization_id IS NULL) OR
+            (type = 'SUBTREE'      AND category_id IS NULL AND role_id IS NULL AND media_type_id IS NULL AND organization_id IS NULL) OR
+            (type = 'MEDIA'        AND category_id IS NULL AND role_id IS NULL AND media_type_id IS NOT NULL AND organization_id IS NULL) OR
+            (type = 'ORGANIZATION' AND category_id IS NULL AND role_id IS NULL AND media_type_id IS NULL AND organization_id IS NOT NULL)
             """,
             name="ck_permission_condition_type",
         ),
@@ -116,6 +120,11 @@ class PermissionCondition(Base):
         ForeignKey("roles.id", ondelete="CASCADE"),
         nullable=True,
     )
+    organization_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("organizations.id", ondelete="CASCADE"),
+        nullable=True,
+    )
     #  ADR-ACCESS-004.
     is_active: Mapped[bool] = mapped_column(
         Boolean, default=True, server_default=text("true"), nullable=False
@@ -131,6 +140,8 @@ class PermissionCondition(Base):
     media_type: Mapped["MediaType | None"] = relationship(back_populates="conditions")
     # ADR-ACCESS-011
     role: Mapped["Role | None"] = relationship(back_populates="conditions")
+
+    organization: Mapped["Organization | None"] = relationship(back_populates="conditions")
 
     # BR-ACCESS-029
     role_permissions: Mapped[list["RolePermission"]] = relationship(
@@ -149,10 +160,11 @@ class PermissionCondition(Base):
     )
 
 
-# Permission with code [ROLES, CATEGORY, MEDIA].READ has relationships only with condition that type = [role,category,media]
+# Permission with code [ROLES, CATEGORY, MEDIA].READ has relationships only with condition that type = [CREATOR]
 # Permission with code [ROLES, CATEGORY, MEDIA].UPDATE has relationships only with condition that type = [role,category,media]
-# Permission with code [ROLES, CATEGORY, MEDIA].CREATE has relationships only with condition that type = [role,category,media]
-# Permission with code [ROLES, CATEGORY, MEDIA].DELETE has relationships only with condition that type = [role,category,media]
+# Permission with code [ROLES, CATEGORY, MEDIA].CREATE has relationships only with condition that type = [ALL]
+# Permission with code [ROLES, CATEGORY, MEDIA].DELETE has relationships only with condition that type = [CREATOR]
 
 
+# Permission with code USER.[CREATE] has relationships only with condition that type = [role]
 # Permission with code USER.[CREATE, READ, UPDATE, DELETE] has relationships only with condition that type = [subtree]

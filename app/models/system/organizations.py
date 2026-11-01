@@ -9,10 +9,7 @@ from app.models.base import Base
 from app.models.mixins import TimestampMixin
 
 if TYPE_CHECKING:
-    from app.models import (
-        User,
-        UserOrganization,
-    )
+    from app.models import PermissionCondition, User, UserOrganization
 
 
 class Organization(
@@ -53,6 +50,10 @@ class Organization(
     )
     # BR-ORG-006.ADR-ORG-007.
     user_links: Mapped[list["UserOrganization"]] = relationship(
+        back_populates="organization",
+        cascade="all, delete-orphan",
+    )
+    conditions: Mapped[list["PermissionCondition"]] = relationship(
         back_populates="organization",
         cascade="all, delete-orphan",
     )
