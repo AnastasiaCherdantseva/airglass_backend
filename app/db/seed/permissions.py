@@ -78,13 +78,13 @@ PERMISSIONS: list[PermissionSeed] = [
         "resource": "users",
         "action": "update",
         "name": "Редактирование пользователей",
-        "conditions": [SUBTREE],
+        "conditions": [CREATOR],
     },
     {
         "resource": "users",
         "action": "delete",
         "name": "Удаление пользователей",
-        "conditions": [SUBTREE],
+        "conditions": [CREATOR],
     },
     # ROLES
     {
