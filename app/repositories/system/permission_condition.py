@@ -12,6 +12,7 @@ from app.dto import (
     PermissionConditionMediaOutPut,
     PermissionConditionRoleOutPut,
 )
+from app.dto.system.permission_condition import PermissionConditionAllData
 from app.models import (
     ConditionType,
     PermissionCondition,
@@ -46,7 +47,7 @@ class PermissionConditionRepository(BaseIdRepository[PermissionCondition]):
             category_id=p.category_id,
             role_id=p.role_id,
             media_type_id=p.media_type_id,
-            # effect=p.effect,
+            organization_id=p.organization_id,
             type=p.type,
             is_active=p.is_active,
         )
@@ -56,7 +57,6 @@ class PermissionConditionRepository(BaseIdRepository[PermissionCondition]):
         role_id: UUID,
         *,
         is_active: bool | None = None,
-        # effect: PermissionEffect | None = None,
     ) -> list[PermissionConditionRoleOutPut]:
         """Получить conditions типа ROLE для указанной роли."""
         stmt = select(PermissionCondition).where(
@@ -66,7 +66,6 @@ class PermissionConditionRepository(BaseIdRepository[PermissionCondition]):
         stmt = self._filter(
             stmt,
             is_active=is_active,
-            # effect=effect
         )
         result = await self.db.execute(stmt)
         permissions = result.scalars().all()
@@ -92,7 +91,6 @@ class PermissionConditionRepository(BaseIdRepository[PermissionCondition]):
         category_id: UUID,
         *,
         is_active: bool | None = None,
-        # effect: PermissionEffect | None = None,
     ) -> list[PermissionConditionCategoryOutPut]:
         """Получить conditions типа CATEGORY для указанной КАТЕГОРИИ."""
         stmt = select(PermissionCondition).where(
@@ -126,7 +124,6 @@ class PermissionConditionRepository(BaseIdRepository[PermissionCondition]):
         media_type_id: UUID,
         *,
         is_active: bool | None = None,
-        # effect: PermissionEffect | None = None,
     ) -> list[PermissionConditionMediaOutPut]:
         """Получить conditions типа MEDIA_TYPE для указанноГО ТИПА МЕДИА."""
         stmt = select(PermissionCondition).where(
@@ -136,7 +133,6 @@ class PermissionConditionRepository(BaseIdRepository[PermissionCondition]):
         stmt = self._filter(
             stmt,
             is_active=is_active,
-            # effect=effect
         )
         result = await self.db.execute(stmt)
 
@@ -161,7 +157,6 @@ class PermissionConditionRepository(BaseIdRepository[PermissionCondition]):
         permission_id: UUID,
         *,
         is_active: bool | None = None,
-        # effect: PermissionEffect | None = None,
         condition_type: ConditionType | None = None,
     ) -> list[PermissionConditionAllOutPut]:
 
@@ -223,27 +218,27 @@ class PermissionConditionRepository(BaseIdRepository[PermissionCondition]):
     #     )
     #     return result.rowcount or 0
 
-    # async def create(self, data: PermissionConditionAllData) -> PermissionConditionAllOutPut:
-    #     """Create a new permission condition."""
-    #     condition = PermissionCondition(
-    #         permission_id=data.permission_id,
-    #         type=data.type,
-    #         effect=data.effect,
-    #         category_id=data.category_id,
-    #         media_type_id=data.media_type_id,
-    #         role_id=data.role_id,
-    #         is_active=data.is_active,
-    #     )
-    #     self.db.add(condition)
-    #     await self.db.flush()
-    #     await self.db.refresh(condition)
-    #     return PermissionConditionAllOutPut(
-    #         id=condition.id,
-    #         permission_id=condition.permission_id,
-    #         category_id=condition.category_id,
-    #         media_type_id=condition.media_type_id,
-    #         role_id=condition.role_id,
-    #         effect=condition.effect,
-    #         type=condition.type,
-    #         is_active=condition.is_active,
-    #     )
+    async def create(self, data: PermissionConditionAllData) -> PermissionConditionAllOutPut:
+        """Create a new permission condition."""
+        condition = PermissionCondition(
+            permission_id=data.permission_id,
+            type=data.type,
+            category_id=data.category_id,
+            media_type_id=data.media_type_id,
+            role_id=data.role_id,
+            organization_id=data.organization_id,
+            is_active=data.is_active,
+        )
+        self.db.add(condition)
+        await self.db.flush()
+        await self.db.refresh(condition)
+        return PermissionConditionAllOutPut(
+            id=condition.id,
+            permission_id=condition.permission_id,
+            category_id=condition.category_id,
+            media_type_id=condition.media_type_id,
+            organization_id=condition.organization_id,
+            role_id=condition.role_id,
+            type=condition.type,
+            is_active=condition.is_active,
+        )

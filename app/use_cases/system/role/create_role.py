@@ -4,26 +4,40 @@ UseCase: get roles available to the current user.
 UseCase: получить роли, доступные текущему пользователю.
 """
 
-from dataclasses import replace
 import logging
+from dataclasses import replace
 from uuid import UUID
+
 from sqlalchemy.exc import IntegrityError
-from app.core.exceptions import ConflictError, PermissionDeniedError, ValidationError
+
+from app.core.exceptions import ConflictError, PermissionDeniedError
 from app.dto import (
     CurrentUser,
     RoleWithPermissionsOutput,
 )
-from app.dto.system.permission_condition import PermissionConditionAllOutPut
+from app.dto.system.permission_condition import PermissionConditionAllData
 from app.dto.system.role import RoleCreate
 from app.dto.system.user_permission import GroupedPermission
 from app.models.system.permission_condition import ConditionType
 from app.repositories.protocols.system import (
     RolePermissionRepositoryProtocol,
     RoleRepositoryProtocol,
-    PermissionReadRepositoryProtocol
 )
+from app.repositories.protocols.system.permission_condition import (
+    PermissionConditionWriteRepositoryProtocol,
+)
+from app.repositories.protocols.system.user_direct_permission import (
+    UserDirectPermissionWriteRepositoryProtocol,
+)
+from app.repositories.protocols.system.user_permission import UserPermissionWriteRepositoryProtocol
+from app.services.condition_package import build_full_conditions_package
+from app.services.grant_conditions import grant_conditions_to_user
 
 logger = logging.getLogger(__name__)
+
+NEW_ROLE_CONDITION_CODES: dict[str, ConditionType] = {
+    "USERS.CREATE": ConditionType.ROLE,
+}
 
 
 async def create_role(
@@ -32,37 +46,38 @@ async def create_role(
     *,
     roles: RoleRepositoryProtocol,
     role_permissions: RolePermissionRepositoryProtocol,
-    permissions: PermissionReadRepositoryProtocol,
+    permission_conditions: PermissionConditionWriteRepositoryProtocol,
+    user_direct_permissions: UserDirectPermissionWriteRepositoryProtocol,
+    user_permissions: UserPermissionWriteRepositoryProtocol,
 ) -> RoleWithPermissionsOutput:
+
+    # 1. Проверить кому присваивается роль
     if actor.id != data.owner_id:
         logger.info(
             "Create role error: actor with id (%s) try to create role with another owner id (%s)",
             actor.id,
             data.owner_id,
         )
-        raise PermissionDeniedError(f"Вы не можете создавать роли не пренадлежащие вам.")
-    
-    actor_condition_ids = {
-        condition.id
-        for permission in actor.permissions
-        for condition in permission.conditions
-    }
-    requested = set(data.conditions)
-    foreign = requested - actor_condition_ids
-    if foreign:
-        logger.info(
-            "Create role error: actor (id=%s) tried to use conditions he has no access to: %s",
-            actor.id,
-            foreign,
-        )
-        raise PermissionDeniedError("Недостаточно прав.")
-    
+        raise PermissionDeniedError("Вы не можете создавать роли не пренадлежащие вам.")
+
+    # 3. Полный пакет прав, если фронт прислал права которые должны идти только вместе без своих пар
+    full_ids = build_full_conditions_package(
+        actor=actor,
+        requested_condition_ids=set(data.conditions),
+    )
+
+    # 4. нормализуем данные
     normalised_name = data.name.strip().capitalize()
-    normalised_data = replace(data, name=normalised_name)
+    normalised_data = replace(data, name=normalised_name, conditions=list(full_ids))
 
     try:
+        # 5. Пытаемся создать новую роль
         new_role = await roles.create(normalised_data)
-        conditions_for_role_count = await role_permissions.add_links_for_role(new_role.id, normalised_data.conditions)
+
+        # 6. Выдаем ем права
+        conditions_for_role_count = await role_permissions.add_links_for_role(
+            new_role.id, normalised_data.conditions
+        )
     except IntegrityError as exc:
         constraint_name = (
             getattr(exc.orig, "constraint_name", None)
@@ -75,39 +90,65 @@ async def create_role(
                 normalised_data.owner_id,
                 normalised_data.name,
             )
-            raise ConflictError(f"У вас уже существует роль с таким именем.")
+            raise ConflictError("У вас уже существует роль с таким именем.") from exc
         logger.exception("Unexpected IntegrityError in create_organization")
         raise ConflictError("Не удалось создать роль.") from exc
 
-
+    # 7. Проверяем что все права выдались
     if conditions_for_role_count < len(normalised_data.conditions):
         logger.info(
             "Create role error: added %s relationships for role&conds, but It was expected %s.",
             conditions_for_role_count,
             len(normalised_data.conditions),
         )
-        raise ConflictError(f"Не удалось добавить все права к роли.")
+        raise ConflictError("Не удалось добавить все права к роли.")
 
-    perms_for_conds = await permissions.get_by_conditions(normalised_data.conditions)
+    # 8. Создать новые условия для управления ролью
+    #    (USERS.CREATE/ROLE с role_id=new_role.id)
+    #    — только если USERS.CREATE был среди запрошенных условий.
 
-    actor_perms_by_id: dict[UUID, GroupedPermission] = {
-        p.id: p for p in actor.permissions
-    }
-    grouped = []
-    for permission, conds_ids in  perms_for_conds.items():
-        src = actor_perms_by_id.get(permission.id)
-        if src is None:
+    new_conditions: list[UUID] = []
+    for code, cond_type in NEW_ROLE_CONDITION_CODES.items():
+        permission = next((p for p in actor.permissions if p.code == code), None)
+        if permission is None:
+            logger.warning(
+                "Create role warning: permission %s not found (actor=%s, role=%s) — skipped",
+                code,
+                actor.id,
+                new_role.id,
+            )
             continue
-        conds_ids_set = set(normalised_data.conditions)
-        filtered = [c for c in src.conditions if c.id in conds_ids_set]
+        new_data = PermissionConditionAllData(
+            permission_id=permission.id,
+            type=cond_type,
+            role_id=new_role.id,
+            is_active=True,
+        )
+        new_cond = await permission_conditions.create(new_data)
+        new_conditions.append(new_cond.id)
+
+    await grant_conditions_to_user(
+        actor.id,
+        new_conditions,
+        user_direct_permissions=user_direct_permissions,
+        user_permissions=user_permissions,
+    )
+
+    # 8. Возвращаем данные
+    condition_ids_set = set(normalised_data.conditions)
+    grouped = []
+    for src in actor.permissions:
+        filtered = [c for c in src.conditions if c.id in condition_ids_set]
         if filtered:
             grouped.append(
                 GroupedPermission(
-                    id=permission.id,
-                    code=permission.code,
+                    id=src.id,
+                    code=src.code,
+                    name=src.name,
                     conditions=filtered,
                 )
             )
+
     return RoleWithPermissionsOutput(
         name=new_role.name,
         owner_id=new_role.owner_id,
@@ -117,6 +158,5 @@ async def create_role(
         id=new_role.id,
         created_at=new_role.created_at,
         updated_at=new_role.updated_at,
-        permissions=grouped
+        permissions=grouped,
     )
-    

@@ -12,11 +12,18 @@ from app.dto.system.permission_condition import (
     PermissionConditionData,
     PermissionConditionMediaData,
     PermissionConditionMediaOutPut,
+    PermissionConditionOrganizationOutPut,
     PermissionConditionOutPut,
     PermissionConditionRoleData,
     PermissionConditionRoleOutPut,
 )
-from app.dto.system.role import RoleData, RoleOutput, RolePatchData, RoleWithPermissionsOutput,RoleCreate
+from app.dto.system.role import (
+    RoleCreate,
+    RoleData,
+    RoleOutput,
+    RolePatchData,
+    RoleWithPermissionsOutput,
+)
 from app.dto.system.session import SessionData, SessionInput, SessionOutput
 from app.dto.system.user import (
     CurrentUser,
@@ -60,6 +67,7 @@ __all__ = [
     "PermissionConditionAllData",
     "PermissionConditionOutPut",
     "PermissionConditionRoleOutPut",
+    "PermissionConditionOrganizationOutPut",
     "PermissionConditionCategoryOutPut",
     "PermissionConditionAllOutPut",
     "PermissionConditionMediaData",

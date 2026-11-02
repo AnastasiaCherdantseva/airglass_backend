@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from uuid import UUID
 
 from app.models.system.permission_condition import (
@@ -32,14 +32,15 @@ class PermissionConditionMediaData(PermissionConditionData):
 
 @dataclass(frozen=True)
 class PermissionConditionAllData(PermissionConditionData):
-    category_id: UUID | None
-    role_id: UUID | None
-    media_type_id: UUID | None
+    category_id: UUID | None = field(default=None)
+    role_id: UUID | None = field(default=None)
+    media_type_id: UUID | None = field(default=None)
+    organization_id: UUID | None = field(default=None)
 
 
 @dataclass(frozen=True)
 class PermissionConditionOutPut(PermissionConditionData):
-    id: UUID | None
+    id: UUID
 
 
 @dataclass(frozen=True)
@@ -58,7 +59,13 @@ class PermissionConditionMediaOutPut(PermissionConditionOutPut):
 
 
 @dataclass(frozen=True)
+class PermissionConditionOrganizationOutPut(PermissionConditionOutPut):
+    organization_id: UUID
+
+
+@dataclass(frozen=True)
 class PermissionConditionAllOutPut(PermissionConditionOutPut):
-    category_id: UUID | None
-    role_id: UUID | None
-    media_type_id: UUID | None
+    category_id: UUID | None = field(default=None)
+    role_id: UUID | None = field(default=None)
+    media_type_id: UUID | None = field(default=None)
+    organization_id: UUID | None = field(default=None)

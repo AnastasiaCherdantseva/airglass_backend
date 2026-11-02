@@ -5,6 +5,7 @@ from app.use_cases.system.organization.delete_organization import delete_organiz
 from app.use_cases.system.organization.get_organizations import get_organizations
 from app.use_cases.system.organization.patch_organization import patch_organization
 from app.use_cases.system.role.get_roles import get_roles
+from app.use_cases.system.role.create_role import create_role
 from app.use_cases.system.user.create_user import create_user
 from app.use_cases.system.user.delete_user import delete_user
 from app.use_cases.system.user.get_users import get_users
@@ -20,4 +21,5 @@ __all__ = [
     "get_organizations",
     "patch_organization",
     "get_roles",
+    "create_role",
 ]

@@ -39,6 +39,7 @@ class UserPermissionRepository(
             select(
                 Permission.id.label("permission_id"),
                 Permission.code.label("code"),
+                Permission.name.label("name"),
                 PermissionCondition,
             )
             .join(
@@ -49,17 +50,18 @@ class UserPermissionRepository(
                 UserPermission,
                 UserPermission.condition_id == PermissionCondition.id,
             )
-            .where(UserPermission.user_id == user_id, PermissionCondition.is_active==True)
+            .where(UserPermission.user_id == user_id, PermissionCondition.is_active)
         )
         result = await self.db.execute(stmt)
         rows = result.all()
 
         grouped: dict[UUID, GroupedPermission] = {}
-        for id, code, condition in rows:
+        for id, code, name, condition in rows:
             if id not in grouped:
                 grouped[id] = GroupedPermission(
                     id=id,
                     code=code,
+                    name=name,
                     conditions=[],
                 )
             grouped[id].conditions.append(
@@ -69,6 +71,7 @@ class UserPermissionRepository(
                     category_id=condition.category_id,
                     role_id=condition.role_id,
                     media_type_id=condition.media_type_id,
+                    organization_id=condition.organization_id,
                     # effect=condition.effect,
                     type=condition.type,
                     is_active=condition.is_active,
@@ -123,5 +126,13 @@ class UserPermissionRepository(
         """Удалить все conditions пользователя. Возвращает rowcount."""
         result = await self.db.execute(
             delete(UserPermission).where(UserPermission.user_id.in_(user_ids))
+        )
+        return result.rowcount or 0
+
+    async def add_links(self, user_id: UUID, condition_ids: list[UUID]) -> int:
+        result = await self.db.execute(
+            insert(UserPermission).values(
+                [{"user_id": user_id, "condition_id": id} for id in condition_ids]
+            )
         )
         return result.rowcount or 0

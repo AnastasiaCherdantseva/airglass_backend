@@ -13,7 +13,7 @@ from app.schemas.system import (
     PermissionFull,
     PermissionWithConditions,
     RoleBase,
-    RoleCreate,
+    RoleCreateRequest,
     RoleDetailResponse,
     RoleResponse,
     RoleUpdate,
@@ -42,7 +42,7 @@ __all__ = [
     "PermissionConditionRole",
     # ROLE
     "RoleBase",
-    "RoleCreate",
+    "RoleCreateRequest",
     "RoleUpdate",
     "RoleResponse",
     "RoleDetailResponse",

@@ -7,6 +7,7 @@ from app.dto import (
     PermissionConditionMediaOutPut,
     PermissionConditionRoleOutPut,
 )
+from app.dto.system.permission_condition import PermissionConditionAllData
 from app.models import (
     ConditionType,
     PermissionCondition,
@@ -68,4 +69,4 @@ class PermissionConditionWriteRepositoryProtocol(
 
     # async def delete_by_permission_ids(self, permission_ids: list[UUID]) -> int: ...
 
-    # async def create(self, data: PermissionConditionAllData) -> PermissionConditionAllOutPut: ...
+    async def create(self, data: PermissionConditionAllData) -> PermissionConditionAllOutPut: ...

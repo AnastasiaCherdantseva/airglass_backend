@@ -16,6 +16,7 @@ class GroupedPermission:
 
     id: UUID
     code: str
+    name: str
     conditions: list[PermissionConditionAllOutPut]
 
 

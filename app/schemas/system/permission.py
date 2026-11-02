@@ -13,6 +13,7 @@ from app.schemas.system.permission_condition import PermissionConditionAll
 class PermissionBase(BaseSchema):
     id: UUID
     code: str = Field(min_length=1, max_length=150)
+    name: str = Field(min_length=1, max_length=255)
 
 
 class PermissionFull(PermissionBase):

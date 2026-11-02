@@ -36,6 +36,16 @@ class RolePermissionRepository(
         )
         return list(result.scalars().all())
 
+    async def get_condition_ids_by_role_ids(self, role_ids: list[UUID]) -> list[UUID]:
+        result = await self.db.execute(
+            select(RolePermission.condition_id)
+            .where(
+                RolePermission.role_id.in_(role_ids),
+            )
+            .distinct()
+        )
+        return list(result.scalars().all())
+
     async def get_conditions_by_role_ids(
         self,
         role_ids: list[UUID],
@@ -48,6 +58,7 @@ class RolePermissionRepository(
                 RolePermission.role_id.label("role_id"),
                 Permission.id.label("permission_id"),
                 Permission.code.label("code"),
+                Permission.name.label("name"),
                 PermissionCondition,
             )
             .join(
@@ -64,12 +75,13 @@ class RolePermissionRepository(
         rows = result.all()
 
         grouped: dict[UUID, dict[UUID, GroupedPermission]] = {}
-        for role_id, permission_id, code, condition in rows:
+        for role_id, permission_id, code, name, condition in rows:
             role_group = grouped.setdefault(role_id, {})
             if permission_id not in role_group:
                 role_group[permission_id] = GroupedPermission(
                     id=permission_id,
                     code=code,
+                    name=name,
                     conditions=[],
                 )
             role_group[permission_id].conditions.append(
@@ -79,6 +91,7 @@ class RolePermissionRepository(
                     category_id=condition.category_id,
                     role_id=condition.role_id,
                     media_type_id=condition.media_type_id,
+                    organization_id=condition.organization_id,
                     type=condition.type,
                     is_active=condition.is_active,
                 )
@@ -96,16 +109,11 @@ class RolePermissionRepository(
 
     # WRITE
 
-    async def add_links_for_role(self, role_id:UUID, condition_ids:list[UUID]) -> int: 
+    async def add_links_for_role(self, role_id: UUID, condition_ids: list[UUID]) -> int:
         if not condition_ids:
             return 0
-        stmt = (
-            insert(RolePermission)
-            .values([
-                {"role_id": role_id, "condition_id": condition_id}
-                for condition_id in condition_ids
-            ])
-            .returning(RolePermission.condition_id) 
+        stmt = insert(RolePermission).values(
+            [{"role_id": role_id, "condition_id": condition_id} for condition_id in condition_ids]
         )
         result = await self.db.execute(stmt)
         return result.rowcount

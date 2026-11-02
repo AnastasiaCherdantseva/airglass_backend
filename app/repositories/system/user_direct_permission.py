@@ -4,7 +4,7 @@ UserDirectPermission repository — manual overrides.
 
 from uuid import UUID
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.system.user_direct_permission import UserDirectPermission
@@ -43,4 +43,23 @@ class UserDirectPermissionRepository(
         stmt = delete(UserDirectPermission).where(UserDirectPermission.user_id.in_(user_ids))
         result = await self.db.execute(stmt)
         await self.db.flush()
+        return result.rowcount
+
+    async def add_link(self, user_id: UUID, condition_id: UUID) -> None:
+        await self.db.execute(
+            insert(UserDirectPermission).values(user_id=user_id, condition_id=condition_id)
+        )
+        await self.db.flush()
+
+    async def add_links(self, user_id: UUID, condition_ids: list[UUID]) -> int:
+        if not condition_ids:
+            return 0
+        result = await self.db.execute(
+            insert(UserDirectPermission).values(
+                [
+                    {"user_id": user_id, "condition_id": condition_id}
+                    for condition_id in condition_ids
+                ]
+            )
+        )
         return result.rowcount
