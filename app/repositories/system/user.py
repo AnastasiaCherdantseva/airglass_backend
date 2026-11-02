@@ -42,6 +42,9 @@ class UserRepository(BaseIdRepository[User]):
         return list(result.scalars().all())
 
     async def is_in_subtree(self, root_id: UUID, user_id: UUID) -> bool:
+        """
+        Проверяет является ли user_id частью дерева root_id (рекурсивно)
+        """
         stmt = text(
             """
             WITH RECURSIVE subtree AS (
