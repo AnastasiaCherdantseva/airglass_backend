@@ -41,11 +41,12 @@ async def sync_user_permissions(
     if not roles:
         logger.info("Sync user permissions failed: roles for user not found(user: %s)", user_id)
         raise NotFoundError("Не удалось найти роли пользователя.")
+
     # 2. Conditions из ролей
-    conditions_from_roles: list[UUID] = []
-    for role in roles:
-        role_conditions = await role_permissions.get_condition_ids_by_role_id(role.id)
-        conditions_from_roles.extend(role_conditions)
+    role_ids = [r.id for r in roles]
+    conditions_from_roles: list[UUID] = await role_permissions.get_condition_ids_by_role_ids(
+        role_ids
+    )
 
     # 3. Direct conditions
     conditions_from_direct = await user_direct_permissions.get_condition_ids_by_user_id(user_id)
