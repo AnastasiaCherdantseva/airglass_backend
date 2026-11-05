@@ -5,9 +5,12 @@ from fastapi import APIRouter, Depends, status
 from app.core.security_dependencies import get_current_user
 from app.dto import CurrentUser
 from app.dto.system.organization import OrganizationData, OrganizationPatch
-from app.repositories.deps import get_organization_repo, get_user_organization_repo
+from app.repositories.deps import get_organization_repo, get_permission_condition_repo, get_user_direct_permission_repo, get_user_organization_repo, get_user_permission_repo
 from app.repositories.system.organization import OrganizationRepository
+from app.repositories.system.permission_condition import PermissionConditionRepository
+from app.repositories.system.user_direct_permission import UserDirectPermissionRepository
 from app.repositories.system.user_organization import UserOrganizationRepository
+from app.repositories.system.user_permission import UserPermissionRepository
 from app.schemas import OrganizationResponse
 from app.schemas.system.organization import OrganizationCreateRequest, OrganizationPatchSchema
 from app.use_cases import (
@@ -76,6 +79,11 @@ async def create_organization_endpoint(
     current_user: CurrentUser = Depends(get_current_user),
     organizations: OrganizationRepository = Depends(get_organization_repo),
     user_organizations: UserOrganizationRepository = Depends(get_user_organization_repo),
+    permission_conditions: PermissionConditionRepository = Depends(get_permission_condition_repo),
+    user_direct_permissions: UserDirectPermissionRepository = Depends(
+        get_user_direct_permission_repo
+    ),
+    user_permissions: UserPermissionRepository = Depends(get_user_permission_repo),
 ) -> OrganizationResponse:
     data = OrganizationData(
         name=body.name,
@@ -83,6 +91,9 @@ async def create_organization_endpoint(
         address=body.address,
     )
     result = await create_organization(
-        current_user, data, organizations=organizations, user_organizations=user_organizations
+        current_user, data, organizations=organizations, user_organizations=user_organizations,
+        permission_conditions=permission_conditions,
+        user_direct_permissions=user_direct_permissions,
+        user_permissions=user_permissions
     )
     return OrganizationResponse.from_domain(result)
