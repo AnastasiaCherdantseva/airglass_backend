@@ -247,7 +247,7 @@ PERMISSIONS: list[PermissionSeed] = [
         "resource": "organizations",
         "action": "read",
         "name": "Использование организаций",
-        "conditions": [],
+        "conditions": [CREATOR],
     },
     {
         "resource": "organizations",
