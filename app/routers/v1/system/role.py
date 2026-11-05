@@ -4,10 +4,14 @@ Users router.
 Роутер пользователей.
 """
 
+from typing import Any
+from uuid import UUID
+
 from fastapi import APIRouter, Depends, status
 
 from app.core.security_dependencies import (
     get_current_user,
+    repos_for_sync_permissions,
     require_permission,
 )
 from app.dto import CurrentUser, RoleCreate
@@ -17,6 +21,7 @@ from app.repositories.deps import (
     get_role_repo,
     get_user_direct_permission_repo,
     get_user_permission_repo,
+    get_user_role_repo,
 )
 from app.repositories.system import (
     PermissionConditionRepository,
@@ -25,12 +30,15 @@ from app.repositories.system import (
 )
 from app.repositories.system.user_direct_permission import UserDirectPermissionRepository
 from app.repositories.system.user_permission import UserPermissionRepository
+from app.repositories.system.user_role import UserRoleRepository
 from app.schemas.system.role import RoleCreateRequest, RoleDetailResponse
 from app.use_cases.system import create_role, get_roles
+from app.use_cases.system.role.delete_role import delete_role
 
 router = APIRouter(prefix="/roles", tags=["Роли"])
 
 ROLES_CREATE = "ROLES.CREATE"
+ROLES_DELETE = "ROLES.DELETE"
 
 
 @router.get(
@@ -114,4 +122,28 @@ async def create_role_endpoint(
         created_at=role.created_at,
         updated_at=role.updated_at,
         permissions=role.permissions,
+    )
+
+
+@router.delete(
+    "/{role_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_permission(ROLES_DELETE))],
+)
+async def delete_role_endpoint(
+    role_id: UUID,
+    current_user: CurrentUser = Depends(get_current_user),
+    roles: RoleRepository = Depends(get_role_repo),
+    user_roles: UserRoleRepository = Depends(get_user_role_repo),
+    repos_for_sync: dict[str, Any] = Depends(repos_for_sync_permissions),
+) -> None:
+    """
+    Удалить роль, принадлежащую текущему пользователю.
+    """
+    await delete_role(
+        current_user,
+        role_id,
+        roles=roles,
+        user_roles=user_roles,
+        deps_for_sync=repos_for_sync,
     )

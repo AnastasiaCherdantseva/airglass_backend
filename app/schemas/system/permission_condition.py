@@ -22,6 +22,7 @@ class PermissionConditionAll(PermissionConditionBase):
     category_id: UUID | None
     media_type_id: UUID | None
     role_id: UUID | None
+    organization_id: UUID | None
 
 
 class PermissionConditionCategory(PermissionConditionBase):

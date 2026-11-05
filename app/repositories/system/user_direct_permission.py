@@ -62,4 +62,5 @@ class UserDirectPermissionRepository(
                 ]
             )
         )
+        await self.db.flush()
         return result.rowcount

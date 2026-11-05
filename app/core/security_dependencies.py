@@ -17,14 +17,18 @@ from app.core.security import (
 )
 from app.dto import CurrentUser
 from app.repositories.deps import (
+    get_permission_condition_repo,
+    get_permission_repo,
     get_role_permission_repo,
     get_session_repo,
     get_user_direct_permission_repo,
+    get_user_organization_repo,
     get_user_permission_repo,
     get_user_repo,
     get_user_role_repo,
 )
 from app.repositories.system import SessionRepository, UserPermissionRepository, UserRepository
+from app.repositories.system.permission import PermissionRepository
 from app.repositories.system.role_permission import RolePermissionRepository
 from app.repositories.system.user_direct_permission import UserDirectPermissionRepository
 from app.repositories.system.user_role import UserRoleRepository
@@ -117,10 +121,16 @@ def repos_for_sync_permissions(
         get_user_direct_permission_repo
     ),
     user_permissions: UserPermissionRepository = Depends(get_user_permission_repo),
+    permission_conditions: UserPermissionRepository = Depends(get_permission_condition_repo),
+    user_organizations: UserPermissionRepository = Depends(get_user_organization_repo),
+    permissions: PermissionRepository = Depends(get_permission_repo),
 ) -> dict[str, Any]:
     return {
         "user_roles": user_roles,
         "role_permissions": role_permissions,
         "user_direct_permissions": user_direct_permissions,
         "user_permissions": user_permissions,
+        "permission_conditions": permission_conditions,
+        "user_organizations": user_organizations,
+        "permissions": permissions,
     }
