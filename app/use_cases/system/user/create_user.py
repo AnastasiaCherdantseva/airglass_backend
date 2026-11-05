@@ -3,24 +3,26 @@ UseCase: получить пользователя по id.
 """
 
 import logging
+from typing import Any
+from uuid import UUID
 
 from app.core.exceptions import ConflictError, NotFoundError, PermissionDeniedError, ValidationError
 from app.core.security import hash_password
 from app.dto import CurrentUser, UserCreate, UserCreateFull, UserRoleLink, UserWithRolesOutput
+from app.dto.system.permission_condition import PermissionConditionAllOutPut
 from app.models.system.permission_condition import (
     ConditionType,
     # PermissionEffect
 )
-from app.repositories.protocols.system.organization import OrganizationReadRepositoryProtocol
-from app.repositories.protocols.system.role import RoleReadRepositoryProtocol
-from app.repositories.protocols.system.role_permission import RolePermissionReadRepositoryProtocol
-from app.repositories.protocols.system.user import UserRepositoryProtocol
-from app.repositories.protocols.system.user_direct_permission import (
-    UserDirectPermissionReadRepositoryProtocol,
-)
-from app.repositories.protocols.system.user_organization import UserOrganizationRepositoryProtocol
-from app.repositories.protocols.system.user_permission import UserPermissionWriteRepositoryProtocol
-from app.repositories.protocols.system.user_role import UserRoleRepositoryProtocol
+from app.repositories.protocols.system import (
+    UserOrganizationRepositoryProtocol,
+    UserPermissionWriteRepositoryProtocol,
+    UserRoleRepositoryProtocol,
+    OrganizationReadRepositoryProtocol,
+    RoleReadRepositoryProtocol,
+    RolePermissionReadRepositoryProtocol,
+    UserRepositoryProtocol,
+    UserDirectPermissionRepositoryProtocol)
 from app.services.sync_user_permissions import sync_user_permissions
 
 logger = logging.getLogger(__name__)
@@ -33,11 +35,8 @@ async def create_user(
     users: UserRepositoryProtocol,
     roles: RoleReadRepositoryProtocol,
     user_role: UserRoleRepositoryProtocol,
-    role_permissions: RolePermissionReadRepositoryProtocol,
-    user_direct_permissions: UserDirectPermissionReadRepositoryProtocol,
-    user_permissions: UserPermissionWriteRepositoryProtocol,
-    organizations: OrganizationReadRepositoryProtocol,
-    user_organizations: UserOrganizationRepositoryProtocol,
+    user_direct_permissions: UserDirectPermissionRepositoryProtocol,
+    deps_for_sync: dict[str, Any],
 ) -> UserWithRolesOutput:
     """
     Create a user, validate requested roles and organizations, and sync permissions.
@@ -118,33 +117,23 @@ async def create_user(
         )
         raise ConflictError(f"Пользователь с почтой {data.email} уже существует.")
 
-    if data.organization_ids:
-        found_orgs = await organizations.get_by_ids(data.organization_ids)
-        found_ids = {o.id for o in found_orgs}
-        missing_ids = [oid for oid in data.organization_ids if oid not in found_ids]
-
-        if missing_ids:
+    if data.additional_condition_ids:
+        actor_conditions: dict[UUID, tuple[str, PermissionConditionAllOutPut]] = {
+            cond.id: (perm.code, cond)
+            for perm in actor.permissions
+            for cond in perm.conditions
+        }
+        foreign = data.additional_condition_ids - actor_conditions.keys()
+        if foreign:
             logger.info(
-                "User create failed: Organizations not found (ids: %s)",
-                missing_ids,
-            )
-            missing_ids_str = ", ".join(str(item) for item in missing_ids)
-            raise NotFoundError(f"Не найдены организации: {missing_ids_str}")
-
-        foreign_ids = [
-            organization.id for organization in found_orgs if organization.owner_id != actor.id
-        ]
-        if foreign_ids:
-            logger.info(
-                "User create failed: Actor(%s) does not own organizations (ids: %s)",
+                "User create failed: User(%s) has not conditions(%s) to share with new user",
                 actor.id,
-                foreign_ids,
+                foreign,
             )
-            foreign_ids_str = ", ".join(str(item) for item in foreign_ids)
             raise PermissionDeniedError(
-                f"Пользователь не является владельцем организаций: {foreign_ids_str}"
+                f"Пользователь {actor.id} не может назначать передаваемые права: {len(foreign)} шт."
             )
-
+        
     password_hash = hash_password(data.password)
 
     full_data = UserCreateFull(
@@ -156,17 +145,12 @@ async def create_user(
     )
     user = await users.create(full_data)
 
+    await user_direct_permissions.add_links(user.id,data.additional_condition_ids)
+
     role_links = [UserRoleLink(user_id=user.id, role_id=role_id) for role_id in data.role_ids]
     await user_role.add_links(role_links)
 
-    await user_organizations.add_links_to_user(user.id, data.organization_ids)
-    await sync_user_permissions(
-        user.id,
-        user_roles=user_role,
-        role_permissions=role_permissions,
-        user_direct_permissions=user_direct_permissions,
-        user_permissions=user_permissions,
-    )
+    await sync_user_permissions(user.id, **deps_for_sync)
     children_count = await users.count_by_parent_id(user.id)
     return UserWithRolesOutput(
         email=user.email,

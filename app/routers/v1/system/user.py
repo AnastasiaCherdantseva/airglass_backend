@@ -4,11 +4,12 @@ Users router.
 Роутер пользователей.
 """
 
+from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, status
 
-from app.core.security_dependencies import get_current_user, require_permission
+from app.core.security_dependencies import get_current_user, repos_for_sync_permissions, require_permission
 from app.dto import CurrentUser, UserCreate
 from app.repositories.deps import (
     get_organization_repo,
@@ -103,13 +104,10 @@ async def create_user_endpoint(
     users: UserRepository = Depends(get_user_repo),
     roles: RoleRepository = Depends(get_role_repo),
     user_role: UserRoleRepository = Depends(get_user_role_repo),
-    role_permissions: RolePermissionRepository = Depends(get_role_permission_repo),
     user_direct_permissions: UserDirectPermissionRepository = Depends(
         get_user_direct_permission_repo
     ),
-    user_permissions: UserPermissionRepository = Depends(get_user_permission_repo),
-    organizations: OrganizationRepository = Depends(get_organization_repo),
-    user_organizations: UserOrganizationRepository = Depends(get_user_organization_repo),
+    repos_for_sync: dict[str, Any] = Depends(repos_for_sync_permissions),
 ) -> UserWithRolesResponse:
     """
     Create a user with roles on behalf of the current user.
@@ -122,7 +120,7 @@ async def create_user_endpoint(
         is_active=False,  # BR-USERS-003ы
         password=body.password,
         role_ids=body.role_ids,
-        organization_ids=body.organization_ids,
+        additional_condition_ids=body.additional_condition_ids,
     )
     result = await create_user(
         current_user,
@@ -130,11 +128,8 @@ async def create_user_endpoint(
         users=users,
         roles=roles,
         user_role=user_role,
-        role_permissions=role_permissions,
         user_direct_permissions=user_direct_permissions,
-        user_permissions=user_permissions,
-        organizations=organizations,
-        user_organizations=user_organizations,
+        deps_for_sync=repos_for_sync
     )
     return UserWithRolesResponse(
         id=result.id,
