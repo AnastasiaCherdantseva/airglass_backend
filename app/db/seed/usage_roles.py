@@ -7,5 +7,11 @@ USAGE_ROLES = [
     {
         "code": "BINDING_COMPONENT",
         "name": "Элемент обвязки",
+        "description": "Появляется в обвязках",
+    },
+    {
+        "code": "GLASS_COMPONENT",
+        "name": "Стекло на чертеже",
+        "description": "Ведет себя как стекло при расчетах",
     },
 ]

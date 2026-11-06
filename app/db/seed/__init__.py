@@ -969,6 +969,7 @@ async def _seed_usage_roles(db: AsyncSession) -> dict[str, UsageRole]:
         obj = UsageRole(
             code=item["code"],
             name=item["name"],
+            description=item["description"],
         )
         db.add(obj)
         existing[item["code"]] = obj
