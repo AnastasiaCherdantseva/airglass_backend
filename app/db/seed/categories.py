@@ -1,351 +1,355 @@
-"""
-Seed-данные для категорий (дерево).
-
-Структура: (id, parent_code, name, code, sort_order)
-
-⚠️ Подкатегории-материалы/серии/типы схлопнуты в родительские категории.
-"""
+# Справочник категорий, сформированный из листа Categories_Ids.
+# sort_order — позиция категории среди элементов с тем же parent_code.
 
 CATEGORIES = [
-    # ============================================
-    # 1. ДВЕРНЫЕ ДОВОДЧИКИ
-    # ============================================
     {
         "code": "door_closers",
         "parent_code": None,
         "name": "Дверные доводчики",
         "sort_order": 1,
     },
-
-    # ============================================
-    # 2. ДИСТАНЦИОННЫЕ ДЕРЖАТЕЛИ
-    # ============================================
     {
-        "code": "remote_holders",
+        "code": "closer_door_top_mounting_outdoor_and_frost_resistant",
+        "parent_code": "door_closers",
+        "name": "Доводчик дверной верхнего монтажа, уличный и морозоустойчивый",
+        "sort_order": 1,
+    },
+    {
+        "code": "closers_for_concealed_mounting",
+        "parent_code": "door_closers",
+        "name": "Доводчики для скрытого монтажа",
+        "sort_order": 2,
+    },
+    {
+        "code": "spacers_and_standoffs",
         "parent_code": None,
         "name": "Дистанционные держатели",
         "sort_order": 2,
     },
     {
         "code": "aluminum_holders",
-        "parent_code": "remote_holders",
+        "parent_code": "spacers_and_standoffs",
         "name": "Алюминиевые держатели",
         "sort_order": 1,
     },
     {
         "code": "holders_without_drilling",
-        "parent_code": "remote_holders",
+        "parent_code": "spacers_and_standoffs",
         "name": "Держатели без сверления",
         "sort_order": 2,
     },
     {
-        "code": "desktop_sign_holders",
-        "parent_code": "remote_holders",
+        "code": "holders_tabletop_signs",
+        "parent_code": "spacers_and_standoffs",
         "name": "Держатели настольных табличек",
         "sort_order": 3,
     },
     {
-        "code": "cone_holders",
-        "parent_code": "remote_holders",
+        "code": "conical_holders",
+        "parent_code": "spacers_and_standoffs",
         "name": "Конусные держатели",
         "sort_order": 4,
     },
     {
         "code": "metal_holders",
-        "parent_code": "remote_holders",
+        "parent_code": "spacers_and_standoffs",
         "name": "Металлические держатели",
         "sort_order": 5,
     },
-
-    # ============================================
-    # 3. ДЛЯ ВИТРИН И МЕБЕЛИ ИЗ СТЕКЛА
-    # ============================================
     {
-        "code": "glass_showcases_furniture",
+        "code": "glass_display_case_furniture_hardware",
         "parent_code": None,
         "name": "Для витрин и мебели из стекла",
         "sort_order": 3,
     },
     {
-        "code": "facade_dampers",
-        "parent_code": "glass_showcases_furniture",
-        "name": "Амортизаторы для фасадов",
+        "code": "dampers_for_facades",
+        "parent_code": "glass_display_case_furniture_hardware",
+        "name": "амортизаторы для фасадов",
         "sort_order": 1,
     },
     {
-        "code": "bushings_plugs_washers_connectors",
-        "parent_code": "glass_showcases_furniture",
+        "code": "bushings_pins_washers_connectors",
+        "parent_code": "glass_display_case_furniture_hardware",
         "name": "Втулки, фишки, шайбы, соединители",
         "sort_order": 2,
     },
     {
-        "code": "glass_tables",
-        "parent_code": "glass_showcases_furniture",
+        "code": "for_glass_tables",
+        "parent_code": "glass_display_case_furniture_hardware",
         "name": "Для стеклянных столов",
         "sort_order": 3,
     },
     {
-        "code": "glass_showcase_locks",
-        "parent_code": "glass_showcases_furniture",
+        "code": "locks_for_glass_display_cases",
+        "parent_code": "glass_display_case_furniture_hardware",
         "name": "Замки для стеклянных витрин",
         "sort_order": 4,
     },
     {
-        "code": "glass_furniture_hinges",
-        "parent_code": "glass_showcases_furniture",
+        "code": "hinges_for_furniture_made_of_glass",
+        "parent_code": "glass_display_case_furniture_hardware",
         "name": "Петли для мебели из стекла",
         "sort_order": 5,
     },
     {
-        "code": "glass_shelf_holders",
-        "parent_code": "glass_showcases_furniture",
+        "code": "shelf_supports_for_glass",
+        "parent_code": "glass_display_case_furniture_hardware",
         "name": "Полкодержатели для стекла",
         "sort_order": 6,
     },
     {
-        "code": "glass_showcase_handles",
-        "parent_code": "glass_showcases_furniture",
+        "code": "handles_for_glass_display_cases",
+        "parent_code": "glass_display_case_furniture_hardware",
         "name": "Ручки для стеклянных витрин",
         "sort_order": 7,
     },
     {
-        "code": "stoppers_fixers_rollers",
-        "parent_code": "glass_showcases_furniture",
+        "code": "stops_fixings_rollers",
+        "parent_code": "glass_display_case_furniture_hardware",
         "name": "Стопора, фиксаторы, ролики",
         "sort_order": 8,
     },
     {
         "code": "cable_system",
-        "parent_code": "glass_showcases_furniture",
+        "parent_code": "glass_display_case_furniture_hardware",
         "name": "Тросовая система",
         "sort_order": 9,
     },
-
-    # ============================================
-    # 4. ДЛЯ ДУШЕВЫХ ИЗ СТЕКЛА
-    # ============================================
     {
-        "code": "glass_showers",
+        "code": "shower_glass_hardware",
         "parent_code": None,
         "name": "Для душевых из стекла",
         "sort_order": 4,
     },
     {
-        "code": "glass_8mm",
-        "parent_code": "glass_showers",
-        "name": "Стекло 8мм",
+        "code": "accessories_for_bathroom",
+        "parent_code": "shower_glass_hardware",
+        "name": "Аксессуары для ванной",
         "sort_order": 1,
     },
     {
-        "code": "bathroom_accessories",
-        "parent_code": "glass_showers",
-        "name": "Аксессуары для ванной",
+        "code": "locks_for_shower_enclosures",
+        "parent_code": "shower_glass_hardware",
+        "name": "Замки для душевых кабин",
         "sort_order": 2,
     },
     {
-        "code": "shower_cabin_locks",
-        "parent_code": "glass_showers",
-        "name": "Замки для душевых кабин",
+        "code": "protective_coatings_hendlex",
+        "parent_code": "shower_glass_hardware",
+        "name": "Защитные покрытия HENDLEX",
         "sort_order": 3,
     },
     {
-        "code": "hendlex_protective_coatings",
-        "parent_code": "glass_showers",
-        "name": "Защитные покрытия HENDLEX",
-        "sort_order": 4,
-    },
-    {
-        "code": "rod_hinge_kit",
-        "parent_code": "glass_showers",
-        "name": "Комплект штанга-петля",
+        "code": "connectors_for_shower_enclosures",
+        "parent_code": "shower_glass_hardware",
+        "name": "Коннекторы для душевых кабин",
         "sort_order": 5,
     },
     {
-        "code": "shower_cabin_connectors",
-        "parent_code": "glass_showers",
-        "name": "Коннекторы для душевых кабин",
+        "code": "connectors_for_top_bracing",
+        "parent_code": "shower_glass_hardware",
+        "name": "Коннекторы для штанг верхней обвязки",
         "sort_order": 6,
     },
     {
-        "code": "top_frame_rod_connectors",
-        "parent_code": "glass_showers",
-        "name": "Коннекторы для штанг верхней обвязки",
+        "code": "glass_holders_555",
+        "parent_code": "connectors_for_top_bracing",
+        "name": "Стеклодержатели 555",
+        "sort_order": 1,
+    },
+    {
+        "code": "hinges_for_shower_enclosures",
+        "parent_code": "shower_glass_hardware",
+        "name": "Петли для душевых кабин",
         "sort_order": 7,
     },
     {
-        "code": "shower_cabin_hinges",
-        "parent_code": "glass_showers",
-        "name": "Петли для душевых кабин",
+        "code": "single_hinges",
+        "parent_code": "hinges_for_shower_enclosures",
+        "name": "Монопетли",
+        "sort_order": 1,
+    },
+    {
+        "code": "profiles",
+        "parent_code": "shower_glass_hardware",
+        "name": "Профили",
         "sort_order": 8,
     },
     {
-        "code": "aluminum_profiles",
-        "parent_code": "glass_showers",
-        "name": "Профили из алюминия",
+        "code": "thresholds_and_connectors",
+        "parent_code": "profiles",
+        "name": "Пороги и соединители",
+        "sort_order": 1,
+    },
+    {
+        "code": "connectors_and_for_profiles",
+        "parent_code": "profiles",
+        "name": "Соединители и уголки для профиля",
+        "sort_order": 6,
+    },
+    {
+        "code": "profile_p",
+        "parent_code": "shower_glass_hardware",
+        "name": "Профиль п-образный",
         "sort_order": 9,
     },
     {
-        "code": "u_shaped_profile_aisi304",
-        "parent_code": "glass_showers",
-        "name": "Профиль п-образный AISI304",
-        "sort_order": 10,
-    },
-    {
-        "code": "sliding_shower_systems",
-        "parent_code": "glass_showers",
-        "name": "Раздвижные душевые системы",
+        "code": "consumables_materials",
+        "parent_code": "shower_glass_hardware",
+        "name": "Расходные материалы",
         "sort_order": 11,
     },
     {
-        "code": "consumables",
-        "parent_code": "glass_showers",
-        "name": "Расходные материалы",
+        "code": "adjustable_stabilizing",
+        "parent_code": "shower_glass_hardware",
+        "name": "Регулируемые стабилизационные штанги",
         "sort_order": 12,
     },
     {
-        "code": "adjustable_stabilization_rods",
-        "parent_code": "glass_showers",
-        "name": "Регулируемые стабилизационные штанги",
+        "code": "handles_for_shower",
+        "parent_code": "shower_glass_hardware",
+        "name": "Ручки для душевых",
         "sort_order": 13,
     },
     {
-        "code": "shower_handles",
-        "parent_code": "glass_showers",
-        "name": "Ручки для душевых",
+        "code": "handles_knob",
+        "parent_code": "handles_for_shower",
+        "name": "Ручки кнобы",
+        "sort_order": 1,
+    },
+    {
+        "code": "handles_for_doors_sliding_wardrobe",
+        "parent_code": "handles_for_shower",
+        "name": "Ручки для раздвижных дверей (купе)",
+        "sort_order": 2,
+    },
+    {
+        "code": "handles_scob",
+        "parent_code": "handles_for_shower",
+        "name": "Ручки скоба",
+        "sort_order": 3,
+    },
+    {
+        "code": "silicones_and_sealants",
+        "parent_code": "shower_glass_hardware",
+        "name": "Силиконы и герметики",
         "sort_order": 14,
     },
     {
-        "code": "silicones_sealants",
-        "parent_code": "glass_showers",
-        "name": "Силиконы и герметики",
+        "code": "glass_8",
+        "parent_code": "shower_glass_hardware",
+        "name": "Стекло 8мм",
         "sort_order": 15,
     },
     {
-        "code": "shower_stoppers",
-        "parent_code": "glass_showers",
+        "code": "stops",
+        "parent_code": "shower_glass_hardware",
         "name": "Стопоры",
         "sort_order": 16,
     },
     {
-        "code": "shower_rods_tracks",
-        "parent_code": "glass_showers",
+        "code": "tubes_top_bracing_for_shower_enclosures",
+        "parent_code": "shower_glass_hardware",
         "name": "Трубы (штанги верхней обвязки/треки) для душевых кабин",
         "sort_order": 17,
     },
     {
-        "code": "shower_seals",
-        "parent_code": "glass_showers",
+        "code": "seals_for_shower",
+        "parent_code": "shower_glass_hardware",
         "name": "Уплотнители для душевых",
         "sort_order": 18,
     },
-
-    # ============================================
-    # 5. ДЛЯ МАЯТНИКОВЫХ ДВЕРЕЙ
-    # ============================================
     {
-        "code": "pendulum_doors",
+        "code": "swing_door_hardware",
         "parent_code": None,
         "name": "Для маятниковых дверей",
         "sort_order": 5,
     },
     {
-        "code": "classic_holders",
-        "parent_code": "pendulum_doors",
-        "name": "Держатели «Классика»",
+        "code": "holders_classic",
+        "parent_code": "swing_door_hardware",
+        "name": 'Держатели "Классика"',
         "sort_order": 1,
     },
     {
-        "code": "floor_door_closer",
-        "parent_code": "pendulum_doors",
+        "code": "closer_floor",
+        "parent_code": "swing_door_hardware",
         "name": "Доводчик напольный",
         "sort_order": 2,
     },
     {
-        "code": "pendulum_locks",
-        "parent_code": "pendulum_doors",
+        "code": "locks",
+        "parent_code": "swing_door_hardware",
         "name": "Замки",
         "sort_order": 3,
     },
     {
-        "code": "entrance_door_handles",
-        "parent_code": "pendulum_doors",
+        "code": "handles_for_entrance_doors",
+        "parent_code": "swing_door_hardware",
         "name": "Ручки для входных дверей",
         "sort_order": 4,
     },
     {
-        "code": "handles_with_lock",
-        "parent_code": "pendulum_doors",
+        "code": "handles_with",
+        "parent_code": "swing_door_hardware",
         "name": "Ручки с замком",
         "sort_order": 5,
     },
     {
-        "code": "vector_system",
-        "parent_code": "pendulum_doors",
+        "code": "system_vector",
+        "parent_code": "swing_door_hardware",
         "name": "Система Вектор",
         "sort_order": 6,
     },
     {
-        "code": "classic_system",
-        "parent_code": "pendulum_doors",
+        "code": "system_classic",
+        "parent_code": "swing_door_hardware",
         "name": "Система Классика",
         "sort_order": 7,
     },
     {
-        "code": "pendulum_system_8300",
-        "parent_code": "pendulum_doors",
+        "code": "system_swing_doors_8300",
+        "parent_code": "swing_door_hardware",
         "name": "Система маятниковых дверей 8300",
         "sort_order": 8,
     },
     {
-        "code": "door_stop",
-        "parent_code": "pendulum_doors",
+        "code": "door",
+        "parent_code": "swing_door_hardware",
         "name": "Упор дверной",
         "sort_order": 9,
     },
     {
-        "code": "snd_ea",
-        "parent_code": "pendulum_doors",
-        "name": "SND EA",
-        "sort_order": 10,
-    },
-
-    # ============================================
-    # 6. ДЛЯ МЕЖКОМНАТНЫХ ДВЕРЕЙ
-    # ============================================
-    {
-        "code": "interior_doors",
+        "code": "interior_door_hardware",
         "parent_code": None,
         "name": "Для межкомнатных дверей",
         "sort_order": 6,
     },
     {
-        "code": "interior_locks",
-        "parent_code": "interior_doors",
+        "code": "locks_interior",
+        "parent_code": "interior_door_hardware",
         "name": "Замки межкомнатные",
         "sort_order": 1,
     },
     {
-        "code": "glass_door_frames",
-        "parent_code": "interior_doors",
+        "code": "frames_for_glass_doors",
+        "parent_code": "interior_door_hardware",
         "name": "Коробки для стеклянных дверей",
         "sort_order": 2,
     },
     {
-        "code": "lock_cylinders",
-        "parent_code": "interior_doors",
+        "code": "cylinders",
+        "parent_code": "interior_door_hardware",
         "name": "Личинки (личины) замка",
         "sort_order": 3,
     },
     {
-        "code": "glass_interior_door_hinges",
-        "parent_code": "interior_doors",
+        "code": "hinges_for_glass_interior_doors",
+        "parent_code": "interior_door_hardware",
         "name": "Петли для стеклянных межкомнатных дверей",
         "sort_order": 4,
     },
-
-    # ============================================
-    # 7. ЗАЖИМНЫЕ ПРОФИЛИ
-    # ============================================
     {
         "code": "clamping_profiles",
         "parent_code": None,
@@ -353,7 +357,7 @@ CATEGORIES = [
         "sort_order": 7,
     },
     {
-        "code": "clamping_profile_100mm",
+        "code": "clamping_profile_100_for_glass",
         "parent_code": "clamping_profiles",
         "name": "Зажимной профиль 100мм для стеклянных ограждений",
         "sort_order": 1,
@@ -365,7 +369,7 @@ CATEGORIES = [
         "sort_order": 2,
     },
     {
-        "code": "clamping_profile_sindikat",
+        "code": "clamping_profile",
         "parent_code": "clamping_profiles",
         "name": "Зажимной профиль Синдикат",
         "sort_order": 3,
@@ -376,10 +380,6 @@ CATEGORIES = [
         "name": "Опорный профиль",
         "sort_order": 4,
     },
-
-    # ============================================
-    # 8. ЗАМКИ ДЛЯ СТЕКЛЯННЫХ ДВЕРЕЙ
-    # ============================================
     {
         "code": "glass_door_locks",
         "parent_code": None,
@@ -387,107 +387,95 @@ CATEGORIES = [
         "sort_order": 8,
     },
     {
-        "code": "mechanical_glass_locks",
+        "code": "locks_for_glass",
         "parent_code": "glass_door_locks",
         "name": "Замки механические для стекла",
         "sort_order": 1,
     },
     {
-        "code": "push_handle_glass_locks",
+        "code": "locks_c_for_glass_doors",
         "parent_code": "glass_door_locks",
         "name": "Замки c нажимной ручкой для стеклянных дверей",
         "sort_order": 2,
     },
-
-    # ============================================
-    # 9. ИЗДЕЛИЯ ИЗ НЕРЖАВЕЮЩЕЙ СТАЛИ
-    # ============================================
     {
         "code": "stainless_steel_products",
         "parent_code": None,
         "name": "Изделия из нержавеющей стали",
         "sort_order": 9,
     },
-
-    # ============================================
-    # 10. ИНСТРУМЕНТ И МАТЕРИАЛЫ ДЛЯ ОБРАБОТКИ СТЕКЛА
-    # ============================================
     {
-        "code": "glass_processing_tools_materials",
+        "code": "glass_processing_tools_and_supplies",
         "parent_code": None,
         "name": "Инструмент и материалы для обработки стекла",
         "sort_order": 10,
     },
     {
-        "code": "manual_glass_cutting_tools",
-        "parent_code": "glass_processing_tools_materials",
+        "code": "tools_for_manual_cutting_glass",
+        "parent_code": "glass_processing_tools_and_supplies",
         "name": "Инструмент для ручной резки стекла",
         "sort_order": 1,
     },
     {
-        "code": "matting_liquid_paste",
-        "parent_code": "glass_processing_tools_materials",
+        "code": "mattifying_liquid_and_paste",
+        "parent_code": "glass_processing_tools_and_supplies",
         "name": "Матирующая жидкость и паста",
         "sort_order": 2,
     },
     {
-        "code": "cerium_oxide",
-        "parent_code": "glass_processing_tools_materials",
+        "code": "oxide_cerium",
+        "parent_code": "glass_processing_tools_and_supplies",
         "name": "Оксид церия",
         "sort_order": 3,
     },
     {
-        "code": "foam_sealant_gun",
-        "parent_code": "glass_processing_tools_materials",
+        "code": "gun_for_foam_and",
+        "parent_code": "glass_processing_tools_and_supplies",
         "name": "Пистолет для пены и герметика",
         "sort_order": 4,
     },
     {
-        "code": "glass_carrying_suction_cups",
-        "parent_code": "glass_processing_tools_materials",
+        "code": "suction_cups_for_handling_glass",
+        "parent_code": "glass_processing_tools_and_supplies",
         "name": "Присоски для переноски стекла",
         "sort_order": 5,
     },
     {
-        "code": "tension_belts",
-        "parent_code": "glass_processing_tools_materials",
+        "code": "straps_ratchet",
+        "parent_code": "glass_processing_tools_and_supplies",
         "name": "Ремни стяжные",
         "sort_order": 6,
     },
     {
         "code": "satinator",
-        "parent_code": "glass_processing_tools_materials",
+        "parent_code": "glass_processing_tools_and_supplies",
         "name": "Сатинатор",
         "sort_order": 7,
     },
     {
-        "code": "glass_drills",
-        "parent_code": "glass_processing_tools_materials",
+        "code": "drill_bits",
+        "parent_code": "glass_processing_tools_and_supplies",
         "name": "Сверла по стеклу",
         "sort_order": 8,
     },
     {
-        "code": "glass_transport_corner",
-        "parent_code": "glass_processing_tools_materials",
+        "code": "corner_transport_for_glass",
+        "parent_code": "glass_processing_tools_and_supplies",
         "name": "Уголок транспортировочный для стекла",
         "sort_order": 9,
     },
     {
         "code": "uv_bonding",
-        "parent_code": "glass_processing_tools_materials",
+        "parent_code": "glass_processing_tools_and_supplies",
         "name": "УФ-склейка",
         "sort_order": 10,
     },
     {
         "code": "electrocorundum",
-        "parent_code": "glass_processing_tools_materials",
+        "parent_code": "glass_processing_tools_and_supplies",
         "name": "Электрокорунд",
         "sort_order": 11,
     },
-
-    # ============================================
-    # 11. КРЕПЕЖНЫЕ ИЗДЕЛИЯ
-    # ============================================
     {
         "code": "fasteners",
         "parent_code": None,
@@ -501,7 +489,7 @@ CATEGORIES = [
         "sort_order": 1,
     },
     {
-        "code": "stainless_fasteners",
+        "code": "hardware_made_of_steel",
         "parent_code": "fasteners",
         "name": "Метизы из нержавеющей стали",
         "sort_order": 2,
@@ -512,10 +500,6 @@ CATEGORIES = [
         "name": "Шпильки",
         "sort_order": 3,
     },
-
-    # ============================================
-    # 12. МЕБЕЛЬНАЯ ФУРНИТУРА
-    # ============================================
     {
         "code": "furniture_hardware",
         "parent_code": None,
@@ -523,598 +507,554 @@ CATEGORIES = [
         "sort_order": 12,
     },
     {
-        "code": "mail_locks",
+        "code": "locks_mailbox",
         "parent_code": "furniture_hardware",
         "name": "Замки почтовые",
         "sort_order": 1,
     },
     {
-        "code": "panel_locks",
+        "code": "locks_cabinet",
         "parent_code": "furniture_hardware",
         "name": "Замки щитовые",
         "sort_order": 2,
     },
     {
-        "code": "wardrobe_sliding_rollers",
+        "code": "rollers_for_wardrobe_sliding_wardrobe",
         "parent_code": "furniture_hardware",
         "name": "Ролики для шкафа купе",
         "sort_order": 3,
     },
     {
-        "code": "door_stops",
+        "code": "stops_door",
         "parent_code": "furniture_hardware",
         "name": "Упоры дверные",
         "sort_order": 4,
     },
-
-    # ============================================
-    # 13. МЕБЕЛЬНЫЕ КОЛЕСА И КОЛЕСНЫЕ РОЛИКИ ДЛЯ МЕБЕЛИ
-    # ============================================
     {
-        "code": "furniture_wheels_rollers",
+        "code": "furniture_wheels_and_rollers",
         "parent_code": None,
         "name": "Мебельные колеса и колесные ролики для мебели",
         "sort_order": 13,
     },
     {
-        "code": "hardware_wheels",
-        "parent_code": "furniture_wheels_rollers",
+        "code": "wheels",
+        "parent_code": "furniture_wheels_and_rollers",
         "name": "Аппаратные колеса",
         "sort_order": 1,
     },
     {
-        "code": "waste_container_wheels",
-        "parent_code": "furniture_wheels_rollers",
+        "code": "wheels_for_waste_containers",
+        "parent_code": "furniture_wheels_and_rollers",
         "name": "Колеса для мусорных контейнеров",
         "sort_order": 2,
     },
     {
-        "code": "furniture_wheel",
-        "parent_code": "furniture_wheels_rollers",
+        "code": "wheel_furniture",
+        "parent_code": "furniture_wheels_and_rollers",
         "name": "Колесо мебельное",
         "sort_order": 3,
     },
     {
-        "code": "industrial_rubber_wheels",
-        "parent_code": "furniture_wheels_rollers",
+        "code": "industrial_wheels_series_rubber",
+        "parent_code": "furniture_wheels_and_rollers",
         "name": "Промышленные колеса серия резина",
         "sort_order": 4,
     },
-
-    # ============================================
-    # 14. НЕРЖАВЕЮЩИЕ ПОРУЧНИ С ПАЗОМ
-    # ============================================
     {
-        "code": "stainless_handrails_with_groove",
+        "code": "stainless_steel_handrails",
         "parent_code": None,
         "name": "Нержавеющие поручни с пазом",
         "sort_order": 14,
     },
     {
-        "code": "handrail_tools_consumables",
-        "parent_code": "stainless_handrails_with_groove",
+        "code": "tools_and_consumables_materials",
+        "parent_code": "stainless_steel_handrails",
         "name": "Инструмент и расходные материалы",
         "sort_order": 1,
     },
     {
         "code": "handrail_components_25_21",
-        "parent_code": "stainless_handrails_with_groove",
+        "parent_code": "stainless_steel_handrails",
         "name": "Поручень комплектующие 25*21",
         "sort_order": 2,
     },
     {
-        "code": "handrail_components_40_40",
-        "parent_code": "stainless_handrails_with_groove",
+        "code": "handrail_components_40",
+        "parent_code": "stainless_steel_handrails",
         "name": "Поручень комплектующие 40*40",
         "sort_order": 3,
     },
     {
         "code": "handrail_components_40_60",
-        "parent_code": "stainless_handrails_with_groove",
+        "parent_code": "stainless_steel_handrails",
         "name": "Поручень комплектующие 40*60",
         "sort_order": 4,
     },
     {
         "code": "handrail_components_d42_4",
-        "parent_code": "stainless_handrails_with_groove",
+        "parent_code": "stainless_steel_handrails",
         "name": "Поручень комплектующие d42.4",
         "sort_order": 5,
     },
     {
         "code": "handrail_components_d48_3",
-        "parent_code": "stainless_handrails_with_groove",
+        "parent_code": "stainless_steel_handrails",
         "name": "Поручень комплектующие d48.3",
         "sort_order": 6,
     },
     {
-        "code": "u_shaped_handrail",
-        "parent_code": "stainless_handrails_with_groove",
+        "code": "handrail",
+        "parent_code": "stainless_steel_handrails",
         "name": "Поручень П-образный",
         "sort_order": 7,
     },
-
-    # ============================================
-    # 15. НОВИНКИ
-    # ============================================
     {
-        "code": "new_arrivals",
+        "code": "sliding_systems",
         "parent_code": None,
-        "name": "Новинки",
+        "name": "Раздвижные системы",
         "sort_order": 15,
     },
     {
-        "code": "sliding_systems",
-        "parent_code": "new_arrivals",
-        "name": "Раздвижные системы",
+        "code": "sliding_system_hl",
+        "parent_code": "sliding_systems",
+        "name": "Раздвижная система серии HL",
         "sort_order": 1,
+    },
+    {
+        "code": "sliding_system_sa",
+        "parent_code": "sliding_systems",
+        "name": "Раздвижная система серии SA",
+        "sort_order": 2,
+    },
+    {
+        "code": "sliding_systems_with",
+        "parent_code": "sliding_systems",
+        "name": "Раздвижные системы с доводчиком",
+        "sort_order": 3,
+    },
+    {
+        "code": "sliding_systems_d100",
+        "parent_code": "sliding_systems",
+        "name": "Раздвижные системы D100",
+        "sort_order": 4,
+    },
+    {
+        "code": "series_snd4000",
+        "parent_code": "sliding_systems",
+        "name": "Серия SND4000",
+        "sort_order": 5,
+    },
+    {
+        "code": "series_snd5000",
+        "parent_code": "sliding_systems",
+        "name": "Серия SND5000",
+        "sort_order": 6,
+    },
+    {
+        "code": "system",
+        "parent_code": "sliding_systems",
+        "name": 'Система "Лаура"',
+        "sort_order": 7,
+    },
+    {
+        "code": "system_vector_alloy",
+        "parent_code": "sliding_systems",
+        "name": "Система Вектор СПЛАВ",
+        "sort_order": 8,
+    },
+    {
+        "code": "system_vector_aisi_304",
+        "parent_code": "sliding_systems",
+        "name": "Система Вектор AISI 304",
+        "sort_order": 9,
+    },
+    {
+        "code": "system_152",
+        "parent_code": "sliding_systems",
+        "name": "Система Гармония",
+        "sort_order": 10,
     },
     {
         "code": "warehouse_equipment",
-        "parent_code": "new_arrivals",
-        "name": "Складская техника",
-        "sort_order": 2,
-    },
-
-    # ============================================
-    # 16. СПАЙДЕРЫ И ФУРНИТУРА ДЛЯ СТЕКЛЯННЫХ КОЗЫРЬКОВ
-    # ============================================
-    {
-        "code": "spiders_glass_canopy_hardware",
         "parent_code": None,
-        "name": "Спайдеры и фурнитура для стеклянных козырьков",
+        "name": "Складская техника",
         "sort_order": 16,
     },
     {
-        "code": "canopies_ties_m10_aisi316",
-        "parent_code": "spiders_glass_canopy_hardware",
-        "name": "Козырьки на тягах М10 AISI 316",
+        "code": "standard_hydraulic_pallet_truck_pallet_truck",
+        "parent_code": "warehouse_equipment",
+        "name": "Стандартная гидравлическая тележка (рохла)",
         "sort_order": 1,
     },
     {
-        "code": "canopies_ties_m10_aisi304",
-        "parent_code": "spiders_glass_canopy_hardware",
+        "code": "stackers_electric_with_lift",
+        "parent_code": "warehouse_equipment",
+        "name": "Штабелеры электрические (с электроподъемом)",
+        "sort_order": 2,
+    },
+    {
+        "code": "glass_canopy_spiders_and_hardware",
+        "parent_code": None,
+        "name": "Спайдеры и фурнитура для стеклянных козырьков",
+        "sort_order": 17,
+    },
+    {
+        "code": "canopies_on_rods_10_aisi_316",
+        "parent_code": "glass_canopy_spiders_and_hardware",
+        "name": "Козырьки на тягах М10 м10 AISI 316",
+        "sort_order": 1,
+    },
+    {
+        "code": "canopies_on_rods_10_aisi_304",
+        "parent_code": "glass_canopy_spiders_and_hardware",
         "name": "Козырьки на тягах М10 AISI 304",
         "sort_order": 2,
     },
     {
-        "code": "canopies_aisi316",
-        "parent_code": "spiders_glass_canopy_hardware",
+        "code": "canopies_aisi_316",
+        "parent_code": "glass_canopy_spiders_and_hardware",
         "name": "Козырьки AISI 316",
         "sort_order": 3,
     },
     {
-        "code": "canopy_console",
-        "parent_code": "spiders_glass_canopy_hardware",
+        "code": "bracket_for_canopies",
+        "parent_code": "glass_canopy_spiders_and_hardware",
         "name": "Консоль для козырьков",
         "sort_order": 4,
     },
     {
-        "code": "canopy_fasteners_components",
-        "parent_code": "spiders_glass_canopy_hardware",
+        "code": "fasteners_and_components",
+        "parent_code": "glass_canopy_spiders_and_hardware",
         "name": "Крепежи и комплектующие",
         "sort_order": 5,
     },
     {
-        "code": "rutels_glass_triplex_glazing",
-        "parent_code": "spiders_glass_canopy_hardware",
+        "code": "rotules_for_glass_laminated_glass_and_insulated_glass",
+        "parent_code": "glass_canopy_spiders_and_hardware",
         "name": "Рутели для стекла, триплекса и стеклопакетов",
         "sort_order": 6,
     },
     {
         "code": "spiders_for_glass",
-        "parent_code": "spiders_glass_canopy_hardware",
+        "parent_code": "glass_canopy_spiders_and_hardware",
         "name": "Спайдеры для стекла",
         "sort_order": 7,
     },
     {
-        "code": "aisi304_under_tie_m10",
-        "parent_code": "spiders_glass_canopy_hardware",
-        "name": "AISI 304 под тягу М10",
+        "code": "aisi_304_for_10",
+        "parent_code": "glass_canopy_spiders_and_hardware",
+        "name": "AISI 304 под тягу м10",
         "sort_order": 8,
     },
     {
-        "code": "aisi304_under_tie_m14",
-        "parent_code": "spiders_glass_canopy_hardware",
-        "name": "AISI 304 под тягу М14",
+        "code": "aisi_304_for_14",
+        "parent_code": "glass_canopy_spiders_and_hardware",
+        "name": "AISI 304 под тягу м14",
         "sort_order": 9,
     },
     {
-        "code": "aisi316_under_tie_m10",
-        "parent_code": "spiders_glass_canopy_hardware",
-        "name": "AISI 316 под тягу М10",
+        "code": "aisi_316_for_10",
+        "parent_code": "glass_canopy_spiders_and_hardware",
+        "name": "AISI 316 под тягу м10",
         "sort_order": 10,
     },
-
-    # ============================================
-    # 17. СТЕКЛО И ЗЕРКАЛО
-    # ============================================
     {
-        "code": "glass_and_mirror",
+        "code": "glass_and_mirrors",
         "parent_code": None,
         "name": "Стекло и зеркало",
-        "sort_order": 17,
-    },
-    {
-        "code": "mirror",
-        "parent_code": "glass_and_mirror",
-        "name": "Зеркало",
-        "sort_order": 1,
-    },
-
-    # ============================================
-    # 18. СТЕКЛОДЕРЖАТЕЛИ ДЛЯ ОГРАЖДЕНИЙ
-    # ============================================
-    {
-        "code": "glass_holders_for_railings",
-        "parent_code": None,
-        "name": "Стеклодержатели для ограждений",
         "sort_order": 18,
     },
     {
-        "code": "mini_posts_railings",
-        "parent_code": "glass_holders_for_railings",
+        "code": "mirror",
+        "parent_code": "glass_and_mirrors",
+        "name": "Зеркало",
+        "sort_order": 1,
+    },
+    {
+        "code": "glass_fence_holders",
+        "parent_code": None,
+        "name": "Стеклодержатели для ограждений",
+        "sort_order": 19,
+    },
+    {
+        "code": "mini_posts",
+        "parent_code": "glass_fence_holders",
         "name": "Министойки ограждений",
         "sort_order": 1,
     },
     {
-        "code": "glass_holders_railings",
-        "parent_code": "glass_holders_for_railings",
+        "code": "glass_holders_for",
+        "parent_code": "glass_fence_holders",
         "name": "Стеклодержатели для ограждений",
         "sort_order": 2,
     },
     {
-        "code": "plate_glass_holder",
-        "parent_code": "glass_holders_for_railings",
+        "code": "plate",
+        "parent_code": "glass_fence_holders",
         "name": "Стеклодержатель пластинчатый",
         "sort_order": 3,
     },
     {
-        "code": "end_glass_holder",
-        "parent_code": "glass_holders_for_railings",
+        "code": "end",
+        "parent_code": "glass_fence_holders",
         "name": "Стеклодержатель торцевой",
         "sort_order": 4,
     },
     {
-        "code": "point_fastening_for_glass",
-        "parent_code": "glass_holders_for_railings",
+        "code": "point_mounting_for_glass",
+        "parent_code": "glass_fence_holders",
         "name": "Точечное крепление для стекла",
         "sort_order": 5,
     },
-
-    # ============================================
-    # 19. ТИПОВЫЕ ВАРИАНТЫ СТЕКЛОКОНСТРУКЦИЙ ПОД ЗАКАЗ
-    # ============================================
     {
-        "code": "typical_custom_glass_structures",
-        "parent_code": None,
-        "name": "Типовые варианты стеклоконструкций под заказ",
-        "sort_order": 19,
-    },
-    {
-        "code": "pendulum_system_vector",
-        "parent_code": "typical_custom_glass_structures",
-        "name": "Маятниковая система ВЕКТОР",
-        "sort_order": 1,
-    },
-    {
-        "code": "pendulum_system_classic",
-        "parent_code": "typical_custom_glass_structures",
-        "name": "Маятниковая система Классика",
-        "sort_order": 2,
-    },
-    {
-        "code": "sliding_system_atlant",
-        "parent_code": "typical_custom_glass_structures",
-        "name": "Раздвижная система АТЛАНТ",
-        "sort_order": 3,
-    },
-    {
-        "code": "sliding_system_harmony",
-        "parent_code": "typical_custom_glass_structures",
-        "name": "Раздвижная система ГАРМОНИЯ",
-        "sort_order": 4,
-    },
-    {
-        "code": "sliding_system_laura",
-        "parent_code": "typical_custom_glass_structures",
-        "name": "Раздвижная система ЛАУРА",
-        "sort_order": 5,
-    },
-    {
-        "code": "sliding_system_002",
-        "parent_code": "typical_custom_glass_structures",
-        "name": "Раздвижная система серии 002",
-        "sort_order": 6,
-    },
-    {
-        "code": "system_vector",
-        "parent_code": "typical_custom_glass_structures",
-        "name": "Система Вектор",
-        "sort_order": 7,
-    },
-    {
-        "code": "glass_interior_doors",
-        "parent_code": "typical_custom_glass_structures",
-        "name": "Стеклянные межкомнатные двери",
-        "sort_order": 8,
-    },
-    {
-        "code": "typical_shower_cabins",
-        "parent_code": "typical_custom_glass_structures",
-        "name": "Типовые варианты душевых кабин",
-        "sort_order": 9,
-    },
-
-    # ============================================
-    # 20. ТОВАРЫ ПО СПЕЦИАЛЬНОЙ ЦЕНЕ ОТ -30%
-    # ============================================
-    {
-        "code": "special_price_minus_30",
-        "parent_code": None,
-        "name": "Товары по специальной цене от -30%",
-        "sort_order": 20,
-    },
-    {
-        "code": "aluminum_profile",
-        "parent_code": "special_price_minus_30",
-        "name": "Алюминиевый профиль",
-        "sort_order": 1,
-    },
-    {
-        "code": "top_frame_19_19",
-        "parent_code": "special_price_minus_30",
-        "name": "Верхняя обвязка 19*19",
-        "sort_order": 2,
-    },
-    {
-        "code": "top_frame_for_25_pipe",
-        "parent_code": "special_price_minus_30",
-        "name": "Верхняя обвязка для 25 трубы",
-        "sort_order": 3,
-    },
-    {
-        "code": "table_bases",
-        "parent_code": "special_price_minus_30",
-        "name": "Подстолья для столов",
-        "sort_order": 4,
-    },
-    {
-        "code": "handle_for_glass_entrance_doors",
-        "parent_code": "special_price_minus_30",
-        "name": "Ручка для стеклянных дверей входные группы",
-        "sort_order": 5,
-    },
-
-    # ============================================
-    # 21. ТРУБЫ ИЗ НЕРЖАВЕЮЩЕЙ СТАЛИ
-    # ============================================
-    {
-        "code": "stainless_steel_pipes",
+        "code": "stainless_steel_tubes",
         "parent_code": None,
         "name": "Трубы из нержавеющей стали",
-        "sort_order": 21,
+        "sort_order": 20,
     },
-
-    # ============================================
-    # 22. УЦЕНЕННЫЕ ТОВАРЫ
-    # ============================================
-    {
-        "code": "discounted_products",
-        "parent_code": None,
-        "name": "Уцененные товары",
-        "sort_order": 22,
-    },
-
-    # ============================================
-    # 23. ФУРНИТУРА ДЛЯ ЗЕРКАЛ
-    # ============================================
     {
         "code": "mirror_hardware",
         "parent_code": None,
         "name": "Фурнитура для зеркал",
-        "sort_order": 23,
+        "sort_order": 21,
     },
     {
-        "code": "bushings_and_gaskets",
+        "code": "bushings_and",
         "parent_code": "mirror_hardware",
         "name": "Втулки и прокладки",
         "sort_order": 1,
     },
     {
-        "code": "decorative_plugs",
+        "code": "decorative_caps",
         "parent_code": "mirror_hardware",
         "name": "Декоративные заглушки",
         "sort_order": 2,
     },
     {
-        "code": "protective_film",
+        "code": "film",
         "parent_code": "mirror_hardware",
         "name": "Защитная плёнка",
         "sort_order": 3,
     },
     {
-        "code": "mirror_glue",
+        "code": "film_100_micron",
+        "parent_code": "film",
+        "name": "Пленка 100 микрон",
+        "sort_order": 1,
+    },
+    {
+        "code": "film_100_micron_black",
+        "parent_code": "film",
+        "name": "Пленка 100 микрон черная",
+        "sort_order": 2,
+    },
+    {
+        "code": "film_65_micron",
+        "parent_code": "film",
+        "name": "Пленка 65 микрон",
+        "sort_order": 3,
+    },
+    {
+        "code": "adhesive_for_mirrors",
         "parent_code": "mirror_hardware",
         "name": "Клей для зеркал",
         "sort_order": 4,
     },
     {
-        "code": "led_lighting_components",
+        "code": "components_for_led_lighting",
         "parent_code": "mirror_hardware",
         "name": "Комплектующие для диодной подсветки",
         "sort_order": 5,
     },
     {
-        "code": "fastening_without_drilling",
+        "code": "power_supply_power",
+        "parent_code": "components_for_led_lighting",
+        "name": "Блок питания",
+        "sort_order": 1,
+    },
+    {
+        "code": "switches",
+        "parent_code": "components_for_led_lighting",
+        "name": "Выключатели",
+        "sort_order": 2,
+    },
+    {
+        "code": "heating_for_mirrors",
+        "parent_code": "components_for_led_lighting",
+        "name": "Обогрев для зеркал",
+        "sort_order": 3,
+    },
+    {
+        "code": "strip_profile_for",
+        "parent_code": "components_for_led_lighting",
+        "name": "Полоса (профиль) под светодиодную ленту",
+        "sort_order": 4,
+    },
+    {
+        "code": "led_strips",
+        "parent_code": "components_for_led_lighting",
+        "name": "Светодиодные ленты",
+        "sort_order": 5,
+    },
+    {
+        "code": "mounting_without_drilling",
         "parent_code": "mirror_hardware",
         "name": "Крепление без сверления",
         "sort_order": 6,
     },
     {
-        "code": "fastening_through_holes",
+        "code": "mounting_holes",
         "parent_code": "mirror_hardware",
         "name": "Крепление через отверстия",
         "sort_order": 7,
     },
     {
-        "code": "mirror_mounts_hangers",
+        "code": "mountings_mirrors_suspensions",
         "parent_code": "mirror_hardware",
-        "name": "Крепления зеркал — подвески",
+        "name": "Крепления зеркал Подвески",
         "sort_order": 8,
     },
     {
-        "code": "aluminum_profile_for_mirrors",
+        "code": "profile_aluminum_for_mirrors",
         "parent_code": "mirror_hardware",
         "name": "Профиль алюминиевый для зеркал",
         "sort_order": 9,
     },
     {
-        "code": "mirror_lamps",
+        "code": "lights_for_mirrors",
         "parent_code": "mirror_hardware",
         "name": "Светильники для зеркал",
         "sort_order": 10,
     },
     {
-        "code": "double_sided_tape",
+        "code": "tape_double_sided",
         "parent_code": "mirror_hardware",
         "name": "Скотч двухсторониий",
         "sort_order": 11,
     },
     {
-        "code": "hidden_mirror_fastening",
+        "code": "concealed_mounting_mirrors",
         "parent_code": "mirror_hardware",
         "name": "Скрытое крепление зеркал",
         "sort_order": 12,
     },
-
-    # ============================================
-    # 24. ФУРНИТУРА ДЛЯ ОГРАЖДЕНИЙ (СТЕКЛО — НЕРЖАВЕЙКА)
-    # ============================================
     {
-        "code": "railing_hardware_glass_stainless",
+        "code": "glass_stainless_steel_fence_hardware",
         "parent_code": None,
-        "name": "Фурнитура для ограждений (стекло — нержавейка)",
-        "sort_order": 24,
+        "name": "Фурнитура для ограждений (стекло- нержавейка)",
+        "sort_order": 22,
     },
     {
-        "code": "ready_railing_posts",
-        "parent_code": "railing_hardware_glass_stainless",
+        "code": "assembled_posts_for",
+        "parent_code": "glass_stainless_steel_fence_hardware",
         "name": "Готовые стойки для ограждений",
         "sort_order": 1,
     },
     {
-        "code": "decorative_post_caps",
-        "parent_code": "railing_hardware_glass_stainless",
+        "code": "decorative_covers_for_posts",
+        "parent_code": "glass_stainless_steel_fence_hardware",
         "name": "Декоративные крышки для стоек",
         "sort_order": 2,
     },
     {
-        "code": "handrail_holders",
-        "parent_code": "railing_hardware_glass_stainless",
+        "code": "holders",
+        "parent_code": "glass_stainless_steel_fence_hardware",
         "name": "Держатели поручней",
         "sort_order": 3,
     },
     {
-        "code": "crossbar_holders",
-        "parent_code": "railing_hardware_glass_stainless",
+        "code": "holders_rods",
+        "parent_code": "glass_stainless_steel_fence_hardware",
         "name": "Держатели ригеля",
         "sort_order": 4,
     },
     {
-        "code": "handrail_glass_holder",
-        "parent_code": "railing_hardware_glass_stainless",
+        "code": "holder_glass",
+        "parent_code": "glass_stainless_steel_fence_hardware",
         "name": "Держатель поручня-стекла",
         "sort_order": 5,
     },
     {
-        "code": "plugs",
-        "parent_code": "railing_hardware_glass_stainless",
+        "code": "caps",
+        "parent_code": "glass_stainless_steel_fence_hardware",
         "name": "Заглушки",
         "sort_order": 6,
     },
     {
-        "code": "post_bases_fasteners",
-        "parent_code": "railing_hardware_glass_stainless",
-        "name": "Низы стоек, крепежи, основания",
+        "code": "bases_posts_fasteners_bases",
+        "parent_code": "glass_stainless_steel_fence_hardware",
+        "name": "Низы стоек, крепежи,основания",
         "sort_order": 7,
     },
     {
-        "code": "bends_and_connectors",
-        "parent_code": "railing_hardware_glass_stainless",
+        "code": "elbows_and_connectors",
+        "parent_code": "glass_stainless_steel_fence_hardware",
         "name": "Отводы и соединители",
         "sort_order": 8,
     },
     {
-        "code": "pvc_handrails",
-        "parent_code": "railing_hardware_glass_stainless",
+        "code": "handrails_pvc",
+        "parent_code": "glass_stainless_steel_fence_hardware",
         "name": "Поручни ПВХ",
         "sort_order": 9,
     },
     {
-        "code": "glass_hinges_for_railings",
-        "parent_code": "railing_hardware_glass_stainless",
+        "code": "for_glass",
+        "parent_code": "glass_stainless_steel_fence_hardware",
         "name": "Стеклопетли для стеклянных ограждений",
         "sort_order": 10,
     },
     {
-        "code": "acrylic_railing_posts",
-        "parent_code": "railing_hardware_glass_stainless",
+        "code": "posts_for_railings_made_of_acrylic",
+        "parent_code": "glass_stainless_steel_fence_hardware",
         "name": "Стойки для перил из акрила",
         "sort_order": 11,
     },
     {
-        "code": "tactile_indicators_stainless",
-        "parent_code": "railing_hardware_glass_stainless",
+        "code": "tactile_indicators_made_of_steel",
+        "parent_code": "glass_stainless_steel_fence_hardware",
         "name": "Тактильные индикаторы из нержавеющей стали",
         "sort_order": 12,
     },
     {
         "code": "flanges",
-        "parent_code": "railing_hardware_glass_stainless",
+        "parent_code": "glass_stainless_steel_fence_hardware",
         "name": "Фланцы",
         "sort_order": 13,
     },
-
-    # ============================================
-    # 25. ФУРНИТУРА ДЛЯ ПЛЕКСИ ПЕРИЛ
-    # ============================================
     {
         "code": "plexiglass_railing_hardware",
         "parent_code": None,
         "name": "Фурнитура для плекси перил",
-        "sort_order": 25,
+        "sort_order": 23,
     },
     {
-        "code": "acrylic_handrails",
+        "code": "handrails_made_of_acrylic",
         "parent_code": "plexiglass_railing_hardware",
         "name": "Поручни из акрила",
         "sort_order": 1,
     },
-
-    # ============================================
-    # 26. ФУРНИТУРА ДЛЯ САУН, БАНИ И ХАМАМ
-    # ============================================
     {
-        "code": "sauna_bath_hamam_hardware",
+        "code": "sauna_bath_hammam_hardware",
         "parent_code": None,
         "name": "Фурнитура для саун, бани и хамам",
-        "sort_order": 26,
+        "sort_order": 24,
     },
     {
-        "code": "sauna_boxes_profiles",
-        "parent_code": "sauna_bath_hamam_hardware",
+        "code": "frames_and_profiles_for_bath_steam_rooms",
+        "parent_code": "sauna_bath_hammam_hardware",
         "name": "Коробки и профиля для сауны бани парных",
         "sort_order": 1,
     },
     {
-        "code": "sauna_bath_hamam_hinges",
-        "parent_code": "sauna_bath_hamam_hardware",
+        "code": "hinges_for_bath_hammam",
+        "parent_code": "sauna_bath_hammam_hardware",
         "name": "Петли для сауны бани хамам",
         "sort_order": 2,
     },
     {
-        "code": "sauna_bath_handles",
-        "parent_code": "sauna_bath_hamam_hardware",
+        "code": "handles_for_bath",
+        "parent_code": "sauna_bath_hammam_hardware",
         "name": "Ручки для бани сауны парной",
         "sort_order": 3,
     },

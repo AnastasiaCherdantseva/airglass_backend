@@ -14,6 +14,7 @@ from app.db.seed.attribute_options import ATTRIBUTE_OPTIONS
 from app.db.seed.attributes import ATTRIBUTES
 from app.db.seed.binding_types import BINDING_TYPES
 from app.db.seed.categories import CATEGORIES
+from app.db.seed.category_attributes import RELATIONS
 from app.db.seed.category_color_groups import CATEGORY_COLOR_GROUPS
 from app.db.seed.category_material_groups import CATEGORY_MATERIAL_GROUPS
 from app.db.seed.color_groups import COLOR_GROUPS
@@ -24,6 +25,7 @@ from app.db.seed.material_groups import MATERIAL_GROUPS
 from app.db.seed.materials import MATERIALS
 from app.db.seed.media_types import MEDIA_TYPES
 from app.db.seed.permissions import PERMISSIONS, ZONE_BY_RESOURCE
+from app.db.seed.products import PRODUCTS
 from app.db.seed.project_statuses import PROJECT_STATUSES
 from app.db.seed.roles import ROLES
 from app.db.seed.units import UNITS
@@ -31,6 +33,7 @@ from app.db.seed.usage_roles import USAGE_ROLES
 from app.db.seed.users import SEED_ADMIN
 from app.db.seed.visual_types import VISUAL_TYPES
 from app.models.attributes import Attribute, AttributeDataType, AttributeOption
+from app.models.attributes.category_attribute import CategoryAttribute
 from app.models.catalog import (
     Category,
     Color,
@@ -43,6 +46,7 @@ from app.models.catalog import (
 )
 from app.models.catalog.category_color_group import CategoryColorGroup
 from app.models.catalog.category_material_group import CategoryMaterialGroup
+from app.models.catalog.product import Product, ProductStatus
 from app.models.media import MediaType
 from app.models.projects import ProjectStatus
 from app.models.system import (
@@ -62,8 +66,11 @@ from app.models.system.permission_condition import (
 )
 from app.models.templates import BindingType, GalleryRule, GalleryRuleCondition
 from app.models.usage import UsageRole
+from app.repositories.system.permission import PermissionRepository
+from app.repositories.system.permission_condition import PermissionConditionRepository
 from app.repositories.system.role_permission import RolePermissionRepository
 from app.repositories.system.user_direct_permission import UserDirectPermissionRepository
+from app.repositories.system.user_organization import UserOrganizationRepository
 from app.repositories.system.user_permission import UserPermissionRepository
 from app.repositories.system.user_role import UserRoleRepository
 from app.services.sync_user_permissions import sync_user_permissions
@@ -107,11 +114,15 @@ async def seed_all(db: AsyncSession) -> None:
 
     # 6. Категории и правила галереи (зависят от категорий)
     categories = await _seed_categories(db)
+    await _seed_category_attributes(db, categories, attributes)
     await _seed_category_color_groups(db, categories, color_groups)
     await _seed_category_material_groups(db, categories, material_groups)
     await _seed_gallery_rules(db, categories)
 
-    # 7. Админ + материализация его прав (user_permissions)
+    # 7. Товары (зависят от категорий и единиц измерения)
+    await _seed_products(db, categories, units)  # ← новое
+
+    # 8. Админ + материализация его прав (user_permissions)
     admin = await _seed_admin_user(db, roles["SYSTEM_ADMIN"])
     await _sync_admin_permissions(db, admin.id)
 
@@ -734,6 +745,9 @@ async def _sync_admin_permissions(session: AsyncSession, user_id: UUID) -> None:
         role_permissions=RolePermissionRepository(session),
         user_direct_permissions=UserDirectPermissionRepository(session),
         user_permissions=UserPermissionRepository(session),
+        permission_conditions=PermissionConditionRepository(session),
+        user_organizations=UserOrganizationRepository(session),
+        permissions=PermissionRepository(session),
     )
 
 
@@ -966,3 +980,128 @@ async def _seed_usage_roles(db: AsyncSession) -> dict[str, UsageRole]:
         print("   • Роли использования: уже загружены")
 
     return existing
+
+
+async def _seed_category_attributes(
+    db: AsyncSession,
+    categories: dict[str, Category],
+    attributes: dict[str, Attribute],
+) -> None:
+    """
+    Связать категории с атрибутами (идемпотентно).
+
+    RELATIONS: {category_code: [attribute_code, ...]}.
+    Неизвестные коды категорий/атрибутов пропускаются с предупреждением.
+    """
+    result = await db.execute(select(CategoryAttribute.category_id, CategoryAttribute.attribute_id))
+    existing = {(row[0], row[1]) for row in result.all()}
+
+    added = 0
+    skipped_categories: set[str] = set()
+    skipped_attributes: set[str] = set()
+
+    for category_code, attribute_codes in RELATIONS.items():
+        category = categories.get(category_code)
+        if category is None:
+            skipped_categories.add(category_code)
+            continue
+
+        for attribute_code in attribute_codes:
+            attribute = attributes.get(attribute_code)
+            if attribute is None:
+                skipped_attributes.add(attribute_code)
+                continue
+
+            key = (category.id, attribute.id)
+            if key in existing:
+                continue
+
+            db.add(
+                CategoryAttribute(
+                    category_id=category.id,
+                    attribute_id=attribute.id,
+                )
+            )
+            existing.add(key)
+            added += 1
+
+    if skipped_categories:
+        print(f"   ⚠️  Категории не найдены для связей с атрибутами: {sorted(skipped_categories)}")
+    if skipped_attributes:
+        print(f"   ⚠️  Атрибуты не найдены для связей с категориями: {sorted(skipped_attributes)}")
+
+    if added:
+        await db.flush()
+        print(f"   • Связи категория↔атрибут: добавлено {added}")
+    else:
+        print("   • Связи категория↔атрибут: уже загружены")
+
+
+async def _seed_products(
+    db: AsyncSession,
+    categories: dict[str, Category],
+    units: dict[str, Unit],
+) -> dict[str, Product]:
+    """
+    Загрузить товары (идемпотентно). Возвращает {name: Product}.
+
+    Категория и единица измерения ищутся по коду; если не найдены —
+    товар пропускается с предупреждением. Дубликаты по имени
+    (в рамках уже существующих или ранее добавленных в этой же пачке)
+    пропускаются.
+    """
+    result = await db.execute(select(Product))
+    existing_by_name: dict[str, Product] = {p.name: p for p in result.scalars().all()}
+
+    added = 0
+    skipped_categories: set[str] = set()
+    skipped_units: set[str] = set()
+    skipped_duplicates: set[str] = set()
+
+    for item in PRODUCTS:
+        name = item["name"]
+        if name in existing_by_name:
+            skipped_duplicates.add(name)
+            continue
+
+        category_code = item["category_code"]
+        category = categories.get(category_code)
+        if category is None:
+            skipped_categories.add(category_code)
+            continue
+
+        unit_code = item.get("unit_code", "PCS")
+        unit = units.get(unit_code)
+        if unit is None:
+            skipped_units.add(unit_code)
+            continue
+
+        obj = Product(
+            category_id=category.id,
+            unit_id=unit.id,
+            name=name,
+            description=item.get("description") or None,
+            is_active=item.get("is_active", True),
+            status=ProductStatus(item.get("status", "ACTIVE")),
+        )
+        db.add(obj)
+        existing_by_name[name] = obj
+        added += 1
+
+    if skipped_categories:
+        print(f"   ⚠️  Категории не найдены для товаров: {sorted(skipped_categories)}")
+    if skipped_units:
+        print(f"   ⚠️  Единицы измерения не найдены для товаров: {sorted(skipped_units)}")
+    if skipped_duplicates:
+        print(
+            f"   ℹ️  Товары-дубликаты по имени пропущены "
+            f"(уже в БД/в пачке): {len(skipped_duplicates)}"
+        )
+
+    if added:
+        await db.flush()
+        print(f"   • Товары: добавлено {added}")
+    else:
+        print("   • Товары: уже загружены")
+
+    return existing_by_name

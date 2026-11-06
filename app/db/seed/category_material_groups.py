@@ -3,8 +3,8 @@ Seed-данные: какие группы материалов доступны
 """
 
 CATEGORY_MATERIAL_GROUPS = [
-    {"category_code": "glass_showcase_handles", "material_group_code": "MAIN_MATERIALS"},
-    {"category_code": "shower_handles",         "material_group_code": "MAIN_MATERIALS"},
-    {"category_code": "entrance_door_handles",  "material_group_code": "MAIN_MATERIALS"},
-    {"category_code": "sliding_systems",        "material_group_code": "MAIN_MATERIALS"},
+    {"category_code": "handles_for_glass_display_cases", "material_group_code": "MAIN_MATERIALS"},
+    {"category_code": "handles_for_shower", "material_group_code": "MAIN_MATERIALS"},
+    {"category_code": "handles_for_entrance_doors", "material_group_code": "MAIN_MATERIALS"},
+    {"category_code": "sliding_systems", "material_group_code": "MAIN_MATERIALS"},
 ]
