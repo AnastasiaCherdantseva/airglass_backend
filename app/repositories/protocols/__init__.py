@@ -1,6 +1,36 @@
+from app.repositories.protocols.attributes import (
+    AttributeOptionRepositoryProtocol,
+    AttributeRepositoryProtocol,
+)
 from app.repositories.protocols.base import (
     ReadRepositoryProtocol,
     WriteRepositoryProtocol,
+)
+from app.repositories.protocols.catalog import (
+    CategoryAttributeRepositoryProtocol,
+    CategoryColorGroupRepositoryProtocol,
+    CategoryMaterialGroupRepositoryProtocol,
+    ColorGroupRepositoryProtocol,
+    ColorRepositoryProtocol,
+    ColorVisualTypeRepositoryProtocol,
+    MaterialGroupRepositoryProtocol,
+    MaterialRepositoryProtocol,
+    ProductRepositoryProtocol,
+    ProductVariantRepositoryProtocol,
+    UnitRepositoryProtocol,
+    VariantAttributeValueRepositoryProtocol,
+    VisualTypeRepositoryProtocol,
+)
+from app.repositories.protocols.media import (
+    CategoryMediaRuleRepositoryProtocol,
+    MediaFileRepositoryProtocol,
+    MediaTypeRepositoryProtocol,
+    ProductMediaRepositoryProtocol,
+)
+from app.repositories.protocols.suppliers import (
+    SupplierRepositoryProtocol,
+    SupplierVariantPriceRepositoryProtocol,
+    SupplierVariantRepositoryProtocol,
 )
 from app.repositories.protocols.system import (
     OrganizationReadRepositoryProtocol,
@@ -10,8 +40,8 @@ from app.repositories.protocols.system import (
     PermissionReadRepositoryProtocol,
     PermissionWriteRepositoryProtocol,
     RolePermissionReadRepositoryProtocol,
-    RolePermissionWriteRepositoryProtocol,
     RolePermissionRepositoryProtocol,
+    RolePermissionWriteRepositoryProtocol,
     RoleReadRepositoryProtocol,
     RoleRepositoryProtocol,
     RoleWriteRepositoryProtocol,
@@ -26,6 +56,12 @@ from app.repositories.protocols.system import (
     UserRoleReadRepositoryProtocol,
     UserRoleWriteRepositoryProtocol,
     UserWriteRepositoryProtocol,
+)
+from app.repositories.protocols.usage import (
+    CategoryUsageRoleRepositoryProtocol,
+    ProductUsageRoleRepositoryProtocol,
+    UsageRoleRepositoryProtocol,
+    VariantUsageRoleRepositoryProtocol,
 )
 
 # from app.repositories.protocols.role import (
@@ -61,4 +97,30 @@ __all__ = [
     "UserDirectPermissionReadRepositoryProtocol",
     "UserDirectPermissionWriteRepositoryProtocol",
     "UserDirectPermissionRepositoryProtocol",
+    "AttributeOptionRepositoryProtocol",
+    "AttributeRepositoryProtocol",
+    "CategoryAttributeRepositoryProtocol",
+    "CategoryColorGroupRepositoryProtocol",
+    "CategoryMaterialGroupRepositoryProtocol",
+    "ColorRepositoryProtocol",
+    "ColorGroupRepositoryProtocol",
+    "ColorVisualTypeRepositoryProtocol",
+    "MaterialRepositoryProtocol",
+    "MaterialGroupRepositoryProtocol",
+    "ProductRepositoryProtocol",
+    "ProductVariantRepositoryProtocol",
+    "UnitRepositoryProtocol",
+    "VariantAttributeValueRepositoryProtocol",
+    "VisualTypeRepositoryProtocol",
+    "CategoryMediaRuleRepositoryProtocol",
+    "MediaFileRepositoryProtocol",
+    "MediaTypeRepositoryProtocol",
+    "ProductMediaRepositoryProtocol",
+    "SupplierRepositoryProtocol",
+    "SupplierVariantRepositoryProtocol",
+    "SupplierVariantPriceRepositoryProtocol",
+    "CategoryUsageRoleRepositoryProtocol",
+    "ProductUsageRoleRepositoryProtocol",
+    "UsageRoleRepositoryProtocol",
+    "VariantUsageRoleRepositoryProtocol",
 ]
