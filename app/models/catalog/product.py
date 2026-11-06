@@ -2,19 +2,19 @@ import enum
 import uuid
 from typing import TYPE_CHECKING
 
-from sqlalchemy import String, Text, Boolean, ForeignKey, Enum, text
+from sqlalchemy import Boolean, Enum, ForeignKey, String, Text, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
-from app.models.mixins import TimestampMixin, SoftDeleteMixin
+from app.models.catalog.unit import Unit
+from app.models.mixins import SoftDeleteMixin, TimestampMixin
 
 if TYPE_CHECKING:
     from app.models.catalog.category import Category
+    from app.models.catalog.product_variant import ProductVariant
     from app.models.media.product_media import ProductMedia
     from app.models.usage.product_usage_role import ProductUsageRole
-    from app.models.catalog.product_variant import ProductVariant
-    from app.models.catalog.unit import Unit
 
 
 class ProductStatus(str, enum.Enum):
@@ -41,14 +41,14 @@ class Product(Base, TimestampMixin, SoftDeleteMixin):
         ForeignKey("units.id", ondelete="RESTRICT"),
     )
     name: Mapped[str] = mapped_column(String(255))
-    code: Mapped[str] = mapped_column(String(100), unique=True)
+    # code: Mapped[str] = mapped_column(String(100), unique=True)
     description: Mapped[str | None] = mapped_column(Text)
     is_active: Mapped[bool] = mapped_column(
         Boolean,
         default=True,
         server_default=text("true"),
     )
-    status: Mapped[ProductStatus] = mapped_column(   # ← ProductStatus, не ProductVariantStatus
+    status: Mapped[ProductStatus] = mapped_column(  # ← ProductStatus, не ProductVariantStatus
         Enum(ProductStatus),
         default=ProductStatus.ACTIVE,
         server_default=text("'ACTIVE'"),
