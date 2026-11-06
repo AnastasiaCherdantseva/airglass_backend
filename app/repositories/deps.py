@@ -29,7 +29,6 @@ from app.repositories.catalog import (
     VisualTypeRepository,
 )
 from app.repositories.media import (
-    CategoryMediaRuleRepository,
     MediaFileRepository,
     MediaTypeRepository,
     ProductMediaRepository,
@@ -315,16 +314,6 @@ def get_product_media_repo(
     Получить репозиторий медиа товаров.
     """
     return ProductMediaRepository(uow.session)
-
-
-def get_category_media_rule_repo(
-    uow: UnitOfWork = Depends(get_uow),
-) -> CategoryMediaRuleRepository:
-    """Get category media rule repository.
-
-    Получить репозиторий правил медиа категорий.
-    """
-    return CategoryMediaRuleRepository(uow.session)
 
 
 # Usage roles

@@ -60,7 +60,6 @@ from app.models.documents import (
 # MEDIA
 # ============================================
 from app.models.media import (
-    CategoryMediaRule,
     MediaFile,
     MediaType,
     ProductMedia,
@@ -189,7 +188,6 @@ __all__ = [
     "MediaType",
     "ProductMedia",
     "ProductMediaType",
-    "CategoryMediaRule",
     "UserMedia",
     # Templates
     "Template",

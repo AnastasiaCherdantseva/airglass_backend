@@ -20,6 +20,7 @@ class MediaFile(Base, TimestampMixin):
         default=uuid.uuid4,
         server_default=text("gen_random_uuid()"),
     )
+    # относительный Путь к файлу
     storage_key = Column(String(500), nullable=False)
     original_filename = Column(String(255), nullable=False)
     mime_type = Column(String(100), nullable=False)
@@ -34,6 +35,7 @@ class MediaFile(Base, TimestampMixin):
 
     # Связи
     product_media = relationship("ProductMedia", back_populates="media_file")
+    categories = relationship("Category", back_populates="media_file")
     generated_documents = relationship("GeneratedDocument", back_populates="media_file")
     user_media = relationship("UserMedia", back_populates="media_file")
     template_gallery = relationship("TemplateGallery", back_populates="media_file")
