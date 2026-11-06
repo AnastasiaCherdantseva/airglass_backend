@@ -4,9 +4,23 @@ from app.models.attributes.attribute_option import AttributeOption
 from app.repositories.protocols.base import ReadRepositoryProtocol, WriteRepositoryProtocol
 
 
-class AttributeOptionRepositoryProtocol(
+class AttributeOptionReadRepositoryProtocol(
     ReadRepositoryProtocol[AttributeOption],
+    Protocol,
+):
+    pass
+
+
+class AttributeOptionWriteRepositoryProtocol(
     WriteRepositoryProtocol[AttributeOption],
+    Protocol,
+):
+    pass
+
+
+class AttributeOptionRepositoryProtocol(
+    AttributeOptionWriteRepositoryProtocol,
+    AttributeOptionReadRepositoryProtocol,
     Protocol,
 ):
     """Repository contract for attribute options.

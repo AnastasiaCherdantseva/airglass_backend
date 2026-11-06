@@ -4,12 +4,23 @@ from app.models.usage.usage_role import UsageRole
 from app.repositories.protocols.base import ReadRepositoryProtocol, WriteRepositoryProtocol
 
 
-class UsageRoleRepositoryProtocol(
+class UsageRoleReadRepositoryProtocol(
     ReadRepositoryProtocol[UsageRole],
+    Protocol,
+):
+    pass
+
+
+class UsageRoleWriteRepositoryProtocol(
     WriteRepositoryProtocol[UsageRole],
     Protocol,
 ):
-    """Repository contract for usage roles.
+    pass
 
-    Контракт репозитория ролей использования товаров.
-    """
+
+class UsageRoleRepositoryProtocol(
+    UsageRoleReadRepositoryProtocol,
+    UsageRoleWriteRepositoryProtocol,
+    Protocol,
+):
+    pass

@@ -1,7 +1,21 @@
 from typing import Protocol
 
 
+class VariantUsageRoleReadRepositoryProtocol(
+    Protocol,
+):
+    pass
+
+
+class VariantUsageRoleWriteRepositoryProtocol(
+    Protocol,
+):
+    pass
+
+
 class VariantUsageRoleRepositoryProtocol(
+    VariantUsageRoleReadRepositoryProtocol,
+    VariantUsageRoleWriteRepositoryProtocol,
     Protocol,
 ):
     """Repository contract for variant-usage-role links.

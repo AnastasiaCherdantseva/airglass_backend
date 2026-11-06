@@ -4,9 +4,23 @@ from app.models.catalog.product_variant import ProductVariant
 from app.repositories.protocols.base import ReadRepositoryProtocol, WriteRepositoryProtocol
 
 
-class ProductVariantRepositoryProtocol(
+class ProductVariantReadRepositoryProtocol(
     ReadRepositoryProtocol[ProductVariant],
+    Protocol,
+):
+    pass
+
+
+class ProductVariantWriteRepositoryProtocol(
     WriteRepositoryProtocol[ProductVariant],
+    Protocol,
+):
+    pass
+
+
+class ProductVariantRepositoryProtocol(
+    ProductVariantReadRepositoryProtocol,
+    ProductVariantWriteRepositoryProtocol,
     Protocol,
 ):
     """Repository contract for product variants.
