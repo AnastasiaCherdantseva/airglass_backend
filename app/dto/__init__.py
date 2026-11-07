@@ -1,3 +1,4 @@
+from app.dto.catalog import CategoryOutput
 from app.dto.system import (
     CurrentUser,
     GroupedPermission,
@@ -35,6 +36,7 @@ from app.dto.system import (
     UserRoleLink,
     UserWithRolesOutput,
 )
+from app.dto.usage import UsageRoleOutput
 
 __all__ = [
     "UserPatchInput",
@@ -78,4 +80,10 @@ __all__ = [
     "UserRoleLink",
     "UserPermissionLink",
     "GroupedPermission",
+    #
+    #
+    "CategoryOutput",
+    #
+    #
+    "UsageRoleOutput",
 ]

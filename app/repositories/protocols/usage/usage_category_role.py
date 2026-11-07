@@ -1,10 +1,24 @@
 from typing import Protocol
+from uuid import UUID
 
 
 class CategoryUsageRoleReadRepositoryProtocol(
     Protocol,
 ):
-    pass
+    async def get_usage_role_ids_by_category_id(
+        self,
+        category_id: UUID,
+    ) -> list[UUID]:
+        """Get usage role IDs assigned to a category.
+
+        Получить ID ролей использования, назначенных категории.
+        """
+        ...
+
+    async def get_usage_role_ids_by_category_ids(
+        self,
+        category_ids: list[UUID],
+    ) -> dict[UUID, list[UUID]]: ...
 
 
 class CategoryUsageRoleWriteRepositoryProtocol(

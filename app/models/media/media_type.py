@@ -27,11 +27,6 @@ class MediaType(Base):
     is_system = Column(Boolean, default=False, nullable=False, server_default=text("false"))
 
     # Связи
-    category_media_rules = relationship(
-        "CategoryMediaRule",
-        back_populates="media_type",
-        cascade="all, delete-orphan",
-    )
     template_media_rules = relationship(
         "TemplateMediaRule",
         back_populates="media_type",

@@ -3,8 +3,10 @@
 """
 
 import logging
+import mimetypes
+import os
 from datetime import UTC, datetime
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,12 +19,14 @@ from app.db.seed.categories import CATEGORIES
 from app.db.seed.category_attributes import RELATIONS
 from app.db.seed.category_color_groups import CATEGORY_COLOR_GROUPS
 from app.db.seed.category_material_groups import CATEGORY_MATERIAL_GROUPS
+from app.db.seed.category_usage_roles import CATEGORY_USAGE
 from app.db.seed.color_groups import COLOR_GROUPS
 from app.db.seed.color_visual_types import COLOR_VISUAL_TYPES
 from app.db.seed.colors import ALL_COLORS
 from app.db.seed.gallery_rules import GALLERY_RULES
 from app.db.seed.material_groups import MATERIAL_GROUPS
 from app.db.seed.materials import MATERIALS
+from app.db.seed.media_files import MEDIA_FILES
 from app.db.seed.media_types import MEDIA_TYPES
 from app.db.seed.permissions import PERMISSIONS, ZONE_BY_RESOURCE
 from app.db.seed.products import PRODUCTS
@@ -48,6 +52,7 @@ from app.models.catalog.category_color_group import CategoryColorGroup
 from app.models.catalog.category_material_group import CategoryMaterialGroup
 from app.models.catalog.product import Product, ProductStatus
 from app.models.media import MediaType
+from app.models.media.media_file import MediaFile
 from app.models.projects import ProjectStatus
 from app.models.system import (
     Permission,
@@ -66,6 +71,7 @@ from app.models.system.permission_condition import (
 )
 from app.models.templates import BindingType, GalleryRule, GalleryRuleCondition
 from app.models.usage import UsageRole
+from app.models.usage.category_usage_role import CategoryUsageRole
 from app.repositories.system.permission import PermissionRepository
 from app.repositories.system.permission_condition import PermissionConditionRepository
 from app.repositories.system.role_permission import RolePermissionRepository
@@ -92,8 +98,9 @@ async def seed_all(db: AsyncSession) -> None:
     await _seed_role_permissions(db, roles, permissions)
     await _seed_project_statuses(db)
     await _seed_media_types(db)
+    # await _seed_media_files(db)
     await _seed_binding_types(db)
-    await _seed_usage_roles(db)
+    usage_roles = await _seed_usage_roles(db)
 
     # 2. Единицы измерения (нужны для атрибутов)
     units = await _seed_units(db)
@@ -113,10 +120,12 @@ async def seed_all(db: AsyncSession) -> None:
     await _seed_materials(db, material_groups)
 
     # 6. Категории и правила галереи (зависят от категорий)
-    categories = await _seed_categories(db)
+    category_media = await _seed_category_media_files(db)
+    categories = await _seed_categories(db, category_media)
     await _seed_category_attributes(db, categories, attributes)
     await _seed_category_color_groups(db, categories, color_groups)
     await _seed_category_material_groups(db, categories, material_groups)
+    await _seed_category_usage_roles(db, categories, usage_roles)
     await _seed_gallery_rules(db, categories)
 
     # 7. Товары (зависят от категорий и единиц измерения)
@@ -349,7 +358,23 @@ async def _seed_color_visual_types(
         print("   • Связи цвет↔визуализация: уже загружены")
 
 
-async def _seed_categories(db: AsyncSession) -> dict[str, Category]:
+def _attach_category_media(
+    categories: dict[str, Category],
+    category_media: dict[str, MediaFile],
+) -> None:
+    """Досоздать связь media_file у уже существующих категорий (если пусто)."""
+    for category_code, media in category_media.items():
+        category = categories.get(category_code)
+        if category is None:
+            continue
+        if category.media_file_id is None:
+            category.media_file = media
+
+
+async def _seed_categories(
+    db: AsyncSession,
+    category_media: dict[str, MediaFile],
+) -> dict[str, Category]:
     """Загрузить дерево категорий (идемпотентно). Возвращает {code: Category}."""
     result = await db.execute(select(Category))
     existing = {c.code: c for c in result.scalars().all()}
@@ -357,16 +382,20 @@ async def _seed_categories(db: AsyncSession) -> dict[str, Category]:
     to_create = [c for c in CATEGORIES if c["code"] not in existing]
 
     if not to_create:
+        _attach_category_media(existing, category_media)
+        await db.flush()
         print("   • Категории: уже загружены")
         return existing
 
     # Первый проход: создаём без родителей
     for item in to_create:
+        media = category_media.get(item["code"])
         obj = Category(
             code=item["code"],
             name=item["name"],
             sort_order=item.get("sort_order", 0),
             parent_id=None,
+            media_file=media,
         )
         db.add(obj)
         existing[item["code"]] = obj
@@ -1106,3 +1135,160 @@ async def _seed_products(
         print("   • Товары: уже загружены")
 
     return existing_by_name
+
+
+SEED_MEDIA_ROOT: str = (
+    "C:/Users/Anastasia/Desktop/Работа/new_calculator/frontend/src/assets/images/"
+)
+
+
+def _read_image_metadata(absolute_path: str) -> tuple[int, int | None, int | None]:
+    file_size = os.path.getsize(absolute_path)
+
+    width: int | None = None
+    height: int | None = None
+
+    try:
+        from PIL import Image  # noqa: WPS433 (lazy import)
+
+        with Image.open(absolute_path) as img:
+            width, height = img.size
+    except Exception:  # noqa: BLE001
+        # Pillow не установлен или файл не изображение — оставляем None.
+        pass
+
+    return file_size, width, height
+
+
+async def _seed_category_usage_roles(
+    db: AsyncSession,
+    categories: dict[str, Category],
+    usage_roles: dict[str, UsageRole],
+) -> None:
+    """
+    Связать категории с ролями использования (идемпотентно).
+
+    CATEGORY_USAGE: [{"category_code": ["usage_role_code", ...]}, ...].
+    Неизвестные коды категорий/ролей пропускаются с предупреждением.
+    """
+    result = await db.execute(
+        select(CategoryUsageRole.category_id, CategoryUsageRole.usage_role_id)
+    )
+    existing = {(row[0], row[1]) for row in result.all()}
+
+    added = 0
+    skipped_categories: set[str] = set()
+    skipped_usage_roles: set[str] = set()
+
+    for mapping in CATEGORY_USAGE:
+        for category_code, usage_role_codes in mapping.items():
+            category = categories.get(category_code)
+            if category is None:
+                skipped_categories.add(category_code)
+                continue
+
+            for usage_role_code in usage_role_codes:
+                usage_role = usage_roles.get(usage_role_code)
+                if usage_role is None:
+                    skipped_usage_roles.add(usage_role_code)
+                    continue
+
+                key = (category.id, usage_role.id)
+                if key in existing:
+                    continue
+
+                db.add(
+                    CategoryUsageRole(
+                        category_id=category.id,
+                        usage_role_id=usage_role.id,
+                    )
+                )
+                existing.add(key)
+                added += 1
+
+    if skipped_categories:
+        print(f"   ⚠️  Категории не найдены для связей с usage_roles: {sorted(skipped_categories)}")
+    if skipped_usage_roles:
+        print(
+            f"   ⚠️  Роли использования не найдены для связей с категориями: "
+            f"{sorted(skipped_usage_roles)}"
+        )
+
+    if added:
+        await db.flush()
+        print(f"   • Связи категория↔usage_role: добавлено {added}")
+    else:
+        print("   • Связи категория↔usage_role: уже загружены")
+
+
+def _resolve_media_path(storage_key: str, original_filename: str) -> tuple[str, str]:
+    """Вернуть (relative_path, absolute_path)."""
+    relative_path = os.path.join(storage_key, original_filename)
+    absolute_path = os.path.join(SEED_MEDIA_ROOT, relative_path)
+    return relative_path, absolute_path
+
+
+async def _seed_category_media_files(
+    db: AsyncSession,
+) -> dict[str, MediaFile]:
+    """
+    Создать MediaFile для категорий (идемпотентно).
+
+    Возвращает {category_code: MediaFile}.
+    Если файла на диске нет — пропускает с предупреждением.
+    """
+    result_map: dict[str, MediaFile] = {}
+
+    # Загружаем уже существующие MediaFile по storage_key
+    existing_rows = (await db.execute(select(MediaFile))).scalars().all()
+    existing_by_key: dict[str, MediaFile] = {row.storage_key: row for row in existing_rows}
+
+    added = 0
+    skipped_missing = 0
+
+    for category_code, item in MEDIA_FILES.items():
+        relative_path, absolute_path = _resolve_media_path(
+            item["storage_key"], item["original_filename"]
+        )
+
+        if not os.path.isfile(absolute_path):
+            logger.warning(
+                "Seed media file not found: %s (category=%s, skipped)",
+                absolute_path,
+                category_code,
+            )
+            skipped_missing += 1
+            continue
+
+        media = existing_by_key.get(relative_path)
+        if media is None:
+            file_size, width, height = _read_image_metadata(absolute_path)
+            mime_type, _ = mimetypes.guess_type(absolute_path)
+            mime_type = mime_type or "application/octet-stream"
+
+            media = MediaFile(
+                id=uuid4(),
+                storage_key=relative_path,
+                original_filename=item["original_filename"],
+                mime_type=mime_type,
+                file_size=file_size,
+                width=width,
+                height=height,
+                created_by=None,
+            )
+            db.add(media)
+            existing_by_key[relative_path] = media
+            added += 1
+
+        result_map[category_code] = media
+
+    if added:
+        await db.flush()
+        logger.info("Seeded category media files: added=%d", added)
+    else:
+        logger.info("Category media files: already seeded")
+
+    if skipped_missing:
+        logger.warning("Category media files: %d files missing on disk", skipped_missing)
+
+    return result_map

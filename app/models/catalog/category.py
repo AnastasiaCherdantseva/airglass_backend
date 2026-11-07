@@ -52,6 +52,7 @@ class Category(Base, TimestampMixin, SoftDeleteMixin):
         UUID(as_uuid=True),
         ForeignKey("media_files.id", ondelete="CASCADE"),
         nullable=True,
+        unique=True,
     )
 
     # Связи
@@ -74,17 +75,13 @@ class Category(Base, TimestampMixin, SoftDeleteMixin):
         back_populates="category",
         cascade="all, delete-orphan",
     )
-    media_file: Mapped[list["MediaFile"]] = relationship(
+    media_file: Mapped["MediaFile | None"] = relationship(
         "MediaFile",
-        back_populates="categories",
+        back_populates="category",
         cascade="all, delete-orphan",
+        single_parent=True,
     )
 
-    # category_media_rules: Mapped[list["CategoryMediaRule"]] = relationship(
-    #     "CategoryMediaRule",
-    #     back_populates="category",
-    #     cascade="all, delete-orphan",
-    # )
     category_color_groups: Mapped[list["CategoryColorGroup"]] = relationship(
         "CategoryColorGroup",
         back_populates="category",

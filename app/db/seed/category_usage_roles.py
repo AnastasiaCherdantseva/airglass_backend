@@ -1,0 +1,1 @@
+CATEGORY_USAGE = [{"glass_8": ["GLASS_COMPONENT"]}]
