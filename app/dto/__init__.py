@@ -1,4 +1,4 @@
-from app.dto.catalog import CategoryOutput
+from app.dto.catalog import CategoryOutput, CategoryWithRulesOutput, UnitOutput
 from app.dto.system import (
     CurrentUser,
     GroupedPermission,
@@ -83,6 +83,8 @@ __all__ = [
     #
     #
     "CategoryOutput",
+    "CategoryWithRulesOutput",
+    "UnitOutput",
     #
     #
     "UsageRoleOutput",

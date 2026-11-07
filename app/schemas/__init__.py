@@ -1,4 +1,4 @@
-from app.schemas.catalog import CategoryResponse
+from app.schemas.catalog import CategoryResponse, UnitResponse
 from app.schemas.media import MediaFileResponse
 from app.schemas.system import (
     AuthLoginRequest,
@@ -67,6 +67,7 @@ __all__ = [
     #
     #
     "CategoryResponse",
+    "UnitResponse",
     #
     #
     "MediaFileResponse",

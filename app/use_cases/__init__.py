@@ -1,3 +1,4 @@
+from app.use_cases.catalog import get_categories, get_units
 from app.use_cases.system import (
     authenticate_user,
     create_organization,
@@ -24,4 +25,6 @@ __all__ = [
     "delete_organization",
     "get_roles",
     "get_usage_roles",
+    "get_units",
+    "get_categories",
 ]
