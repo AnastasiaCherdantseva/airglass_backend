@@ -1,3 +1,5 @@
+from app.schemas.catalog import CategoryResponse
+from app.schemas.media import MediaFileResponse
 from app.schemas.system import (
     AuthLoginRequest,
     MeResponse,
@@ -26,6 +28,7 @@ from app.schemas.system import (
     meUsers,
     meUsersListItem,
 )
+from app.schemas.usage import UsageRoleResponse
 
 __all__ = [
     # AUTH
@@ -61,4 +64,13 @@ __all__ = [
     "OrganizationCreateRequest",
     "OrganizationResponse",
     "OrganizationPatchSchema",
+    #
+    #
+    "CategoryResponse",
+    #
+    #
+    "MediaFileResponse",
+    #
+    #
+    "UsageRoleResponse",
 ]

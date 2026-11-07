@@ -7,24 +7,7 @@ from datetime import datetime
 from uuid import UUID
 
 from app.schemas.base import BaseSchema
-
-
-class CategoryMediaResponse(BaseSchema):
-    """Media file metadata.
-
-    Метаданные медиафайла.
-    """
-
-    id: UUID
-    storage_key: str
-    original_filename: str
-    mime_type: str
-    file_size: int
-    width: int | None
-    height: int | None
-    created_by: UUID | None
-    created_at: datetime
-    updated_at: datetime
+from app.schemas.media.media_file import MediaFileResponse
 
 
 class CategoryResponse(BaseSchema):
@@ -44,4 +27,4 @@ class CategoryResponse(BaseSchema):
     updated_at: datetime
     attributes_ids: list[UUID]
     usage_role_ids: list[UUID]
-    media_data: CategoryMediaResponse | None
+    media_data: MediaFileResponse | None

@@ -10,6 +10,7 @@ from app.use_cases.system import (
     logout_user,
     patch_organization,
 )
+from app.use_cases.usage import get_usage_roles
 
 __all__ = [
     "get_users",
@@ -22,4 +23,5 @@ __all__ = [
     "patch_organization",
     "delete_organization",
     "get_roles",
+    "get_usage_roles",
 ]
